@@ -361,7 +361,7 @@ class CheckoutController extends Controller
                 'adc_id'      => $adc->id,
                 'amount'      => $total,
                 'type'        => 'debit',
-                'description' => 'Order(s) ' . \Illuminate\Support\Str::limit($orderNumsStr, 240, '...') . ' placed.',
+                'description' => \Illuminate\Support\Str::limit('Order(s) ' . $orderNumsStr . ' placed.', 500, '...'),
             ]);
 
             // 6. Clear cart for current pincode
