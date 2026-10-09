@@ -343,8 +343,9 @@ class CheckoutController extends Controller
                 }
 
                 // Notify Admin
+                $adminOrderTitle = 'New Order(s) Placed (' . \Illuminate\Support\Str::limit(implode(', ', $orderNumbers), 150, '...') . ')';
                 NotificationService::notifyAdmin(
-                    'New Order(s) Placed (' . implode(', ', $orderNumbers) . ')',
+                    $adminOrderTitle,
                     'ADC Order(s) placed and Seller PO(s) generated.',
                     route('admin.purchase-orders.index')
                 );
@@ -360,7 +361,7 @@ class CheckoutController extends Controller
                 'adc_id'      => $adc->id,
                 'amount'      => $total,
                 'type'        => 'debit',
-                'description' => 'Order(s) ' . $orderNumsStr . ' placed.',
+                'description' => 'Order(s) ' . \Illuminate\Support\Str::limit($orderNumsStr, 240, '...') . ' placed.',
             ]);
 
             // 6. Clear cart for current pincode
@@ -374,8 +375,8 @@ class CheckoutController extends Controller
             $firstOrder = $createdOrders[0];
             NotificationService::notifyAdc(
                 $adc->id,
-                'Order Placed Successfully (' . $orderNumsStr . ')',
-                'Your order(s) ' . $orderNumsStr . ' placed successfully.',
+                'Order Placed Successfully (' . \Illuminate\Support\Str::limit($orderNumsStr, 150, '...') . ')',
+                'Your order(s) ' . \Illuminate\Support\Str::limit($orderNumsStr, 500, '...') . ' placed successfully.',
                 route('adc.order.success', ['id' => $firstOrder->id])
             );
 

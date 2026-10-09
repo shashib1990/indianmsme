@@ -21,4 +21,9 @@ class Notification extends Model
     protected $casts = [
         'is_read' => 'boolean',
     ];
+
+    public function setTitleAttribute($value)
+    {
+        $this->attributes['title'] = \Illuminate\Support\Str::limit((string) $value, 245, '...');
+    }
 }

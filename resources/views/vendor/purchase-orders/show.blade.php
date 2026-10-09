@@ -537,6 +537,25 @@
                         <span class="text-muted">Order Date</span>
                         <span class="text-slate-700">{{ $purchaseOrder->created_at->format('d M Y, h:i A') }}</span>
                     </div>
+                    @if($purchaseOrder->adcOrder || !empty($purchaseOrder->adc_order_id))
+                        @php
+                            $vAdcOrder = $purchaseOrder->adcOrder;
+                            if (!$vAdcOrder && !empty($purchaseOrder->adc_order_id)) {
+                                $vAdcOrder = \App\Models\AdcOrder::with(['adc.adcProfile', 'adc.profile'])->find($purchaseOrder->adc_order_id);
+                            }
+                            $vAdcUser = $vAdcOrder?->adc;
+                            $vAdcProfile = $vAdcUser?->adcProfile ?? $vAdcUser?->profile;
+                            $vAdcCode = $vAdcProfile?->adc_code ?? $vAdcUser?->adc_code ?? ($vAdcUser ? ('ADC' . str_pad($vAdcUser->id, 3, '0', STR_PAD_LEFT)) : null);
+                            $vAscCode = $vAdcProfile?->code ?? $vAdcUser?->code ?? ($vAdcUser ? ('ASC' . str_pad($vAdcUser->id, 3, '0', STR_PAD_LEFT)) : null);
+                            $vCodes = array_filter(array_unique([$vAdcCode, $vAscCode]));
+                        @endphp
+                        @if(!empty($vCodes))
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Code</span>
+                                <span class="badge font-monospace px-2 py-1" style="background-color: #e6fffa; color: #0d9488; border: 1px solid #99f6e4;">{{ implode(' / ', $vCodes) }}</span>
+                            </div>
+                        @endif
+                    @endif
                     <hr class="text-muted opacity-20">
                     <div class="d-flex justify-content-between mb-2">
                         <span class="text-muted">Overall PO Status</span>

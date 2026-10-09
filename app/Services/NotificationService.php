@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Notification;
+use Illuminate\Support\Str;
 
 class NotificationService
 {
@@ -14,7 +15,7 @@ class NotificationService
         return Notification::create([
             'recipient_type' => 'admin',
             'recipient_id'   => null,
-            'title'          => $title,
+            'title'          => Str::limit($title, 245, '...'),
             'message'        => $message,
             'link'           => $link,
             'is_read'        => false,
@@ -30,7 +31,7 @@ class NotificationService
         return Notification::create([
             'recipient_type' => 'seller',
             'recipient_id'   => (int) $sellerId,
-            'title'          => $title,
+            'title'          => Str::limit($title, 245, '...'),
             'message'        => $message,
             'link'           => $link,
             'is_read'        => false,
@@ -46,7 +47,7 @@ class NotificationService
         return Notification::create([
             'recipient_type' => 'ddc',
             'recipient_id'   => (int) $ddcId,
-            'title'          => $title,
+            'title'          => Str::limit($title, 245, '...'),
             'message'        => $message,
             'link'           => $link,
             'is_read'        => false,
@@ -62,7 +63,7 @@ class NotificationService
         return Notification::create([
             'recipient_type' => 'adc',
             'recipient_id'   => (int) $adcId,
-            'title'          => $title,
+            'title'          => Str::limit($title, 245, '...'),
             'message'        => $message,
             'link'           => $link,
             'is_read'        => false,
@@ -78,7 +79,7 @@ class NotificationService
         return Notification::create([
             'recipient_type' => 'pickup_store',
             'recipient_id'   => (int) $storeId,
-            'title'          => $title,
+            'title'          => Str::limit($title, 245, '...'),
             'message'        => $message,
             'link'           => $link,
             'is_read'        => false,

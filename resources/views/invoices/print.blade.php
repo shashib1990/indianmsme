@@ -699,6 +699,8 @@
                 $canteenPincode = $adcOrder?->delivery_pincode ?: ($adcProfile?->pincode ?: ($invoice->bill_to_pincode ?: ''));
                 $canteenPhone = $adcProfile?->official_phone ?? ($adcProfile?->phone ?? ($adcUser?->mobile ?? ($invoice->bill_to_phone ?: 'N/A')));
                 $canteenGstin = $adcProfile?->gst_number ?? ($invoice->bill_to_gstin ?: 'N/A');
+                $adcCodeVal = $adcProfile?->adc_code ?? $adcUser?->adc_code ?? ($adcUser ? ('ADC' . str_pad($adcUser->id, 3, '0', STR_PAD_LEFT)) : null);
+                $ascCodeVal = $adcProfile?->code ?? $adcUser?->code ?? ($adcUser ? ('ASC' . str_pad($adcUser->id, 3, '0', STR_PAD_LEFT)) : null);
             }
         @endphp
 
@@ -706,8 +708,14 @@
         <div class="billing-row">
             <div class="billing-card">
                 <h3>Bill / Ship To</h3>
-                @if($isVirtualPo)
+                @if($isVirtualPo || $adcOrder)
                     <p><strong>{{ $canteenName }}</strong></p>
+                    @php
+                        $canteenCodes = array_filter(array_unique([$adcCodeVal, $ascCodeVal]));
+                    @endphp
+                    @if(!empty($canteenCodes))
+                        <p><strong>{{ implode(' / ', $canteenCodes) }}</strong></p>
+                    @endif
                     <p>{{ $canteenAddress }}</p>
                     <p>
                         {{ $canteenDistrict }}{{ ($canteenDistrict && $canteenState) ? ', ' : '' }}{{ $canteenState }}{{ $canteenPincode ? ' - ' . $canteenPincode : '' }}
