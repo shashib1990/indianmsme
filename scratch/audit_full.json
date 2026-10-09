@@ -1,0 +1,236 @@
+{
+    "routes": {
+        "invalid_references": [
+            {
+                "route": "admin.wallets.",
+                "file": "resources\/views\/admin\/wallets\/index.blade.php"
+            },
+            {
+                "route": "tab",
+                "file": "app\/Http\/Controllers\/Admin\/ProductApprovalController.php"
+            }
+        ],
+        "double_prefixes": [],
+        "file_prefix_issues": []
+    },
+    "models": {
+        "missing_tables": [],
+        "fillable_mismatch": []
+    },
+    "profiles": {
+        "null_unsafe": [
+            {
+                "file": "resources\/views\/admin\/external\/adc\/index.blade.php",
+                "access": [
+                    "$user->profile->designation",
+                    "$user->profile->district",
+                    "$user->profile->state"
+                ]
+            },
+            {
+                "file": "resources\/views\/admin\/external\/ddc\/edit.blade.php",
+                "access": {
+                    "0": "$user->profile->state",
+                    "1": "$user->profile->adpl_state",
+                    "2": "$user->profile->ddc_owner_name",
+                    "3": "$user->profile->company_name",
+                    "4": "$user->profile->trade_name",
+                    "5": "$user->profile->official_phone",
+                    "6": "$user->profile->official_email",
+                    "7": "$user->profile->ddc_code",
+                    "9": "$user->profile->ddc_gst_number",
+                    "10": "$user->profile->ddc_pincode",
+                    "11": "$user->profile->ddc_address",
+                    "12": "$user->profile->adpl_company_name",
+                    "13": "$user->profile->adpl_gst_number",
+                    "14": "$user->profile->adpl_pincode",
+                    "15": "$user->profile->adpl_address",
+                    "16": "$user->profile->account_holder_name",
+                    "17": "$user->profile->bank_account_number",
+                    "18": "$user->profile->ifsc_code",
+                    "19": "$user->profile->bank_name",
+                    "20": "$user->profile->branch_name",
+                    "21": "$user->profile->qr_code",
+                    "25": "$user->profile->district",
+                    "26": "$user->profile->adpl_district"
+                }
+            },
+            {
+                "file": "resources\/views\/admin\/external\/ddc\/index.blade.php",
+                "access": {
+                    "0": "$user->profile->ddc_code",
+                    "2": "$user->profile->type",
+                    "3": "$user->profile->district",
+                    "4": "$user->profile->state"
+                }
+            },
+            {
+                "file": "resources\/views\/admin\/external\/ddc\/show.blade.php",
+                "access": {
+                    "0": "$user->profile->profile_image",
+                    "4": "$user->profile->ddc_code",
+                    "5": "$user->profile->kyc_status",
+                    "6": "$user->profile->kyc_remarks",
+                    "7": "$user->profile->ddc_owner_name",
+                    "9": "$user->profile->company_name",
+                    "10": "$user->profile->trade_name",
+                    "11": "$user->profile->official_phone",
+                    "12": "$user->profile->official_email",
+                    "13": "$user->profile->ddc_gst_number",
+                    "14": "$user->profile->state",
+                    "15": "$user->profile->district",
+                    "16": "$user->profile->ddc_pincode",
+                    "17": "$user->profile->pincode",
+                    "18": "$user->profile->ddc_address",
+                    "19": "$user->profile->address",
+                    "20": "$user->profile->adpl_company_name",
+                    "21": "$user->profile->adpl_gst_number",
+                    "22": "$user->profile->adpl_state",
+                    "23": "$user->profile->adpl_district",
+                    "24": "$user->profile->adpl_pincode",
+                    "25": "$user->profile->adpl_address",
+                    "26": "$user->profile->account_holder_name",
+                    "27": "$user->profile->bank_account_number",
+                    "28": "$user->profile->ifsc_code",
+                    "29": "$user->profile->bank_name",
+                    "30": "$user->profile->branch_name",
+                    "31": "$user->profile->qr_code"
+                }
+            },
+            {
+                "file": "resources\/views\/admin\/external\/vendors\/index.blade.php",
+                "access": [
+                    "$user->profile->company_name",
+                    "$user->profile->gst_number"
+                ]
+            },
+            {
+                "file": "app\/Http\/Controllers\/Admin\/ADCUsersController.php",
+                "access": [
+                    "$row->profile->district",
+                    "$row->profile->state"
+                ]
+            },
+            {
+                "file": "app\/Http\/Controllers\/Admin\/DDCUsersController.php",
+                "access": [
+                    "$row->profile->district",
+                    "$row->profile->state"
+                ]
+            },
+            {
+                "file": "app\/Http\/Controllers\/Admin\/StaffController.php",
+                "access": [
+                    "$record->profile->is_super_admin"
+                ]
+            },
+            {
+                "file": "app\/Http\/Controllers\/Admin\/VendorUsersController.php",
+                "access": [
+                    "$row->profile->company_name",
+                    "$row->profile->seller_type",
+                    "$row->profile->gst_number"
+                ]
+            },
+            {
+                "file": "app\/Http\/Controllers\/DDC\/PurchaseOrderController.php",
+                "access": [
+                    "$ddc->profile->ddc_pincode",
+                    "$ddc->profile->pincode"
+                ]
+            },
+            {
+                "file": "app\/Services\/OrderRoutingService.php",
+                "access": [
+                    "$ddc->profile->ddc_pincode",
+                    "$ddc->profile->pincode"
+                ]
+            }
+        ],
+        "validation_issues": [
+            {
+                "file": "app\/Http\/Controllers\/Admin\/ProfileController.php",
+                "rule": "'unique:users,email,'"
+            },
+            {
+                "file": "app\/Http\/Controllers\/Admin\/StaffController.php",
+                "rule": "'unique:users'"
+            },
+            {
+                "file": "app\/Http\/Controllers\/Admin\/StaffController.php",
+                "rule": "'unique:users,email,'"
+            }
+        ]
+    },
+    "financial": {
+        "ledger_audit": {
+            "pickup_stores": {
+                "trans_table": "pickup_store_wallets",
+                "fk": "pickup_store_id",
+                "type_col": "type",
+                "amount_col": "amount",
+                "cols": [
+                    "id",
+                    "pickup_store_id",
+                    "amount",
+                    "type",
+                    "description",
+                    "reference_id",
+                    "reference_type",
+                    "created_at",
+                    "updated_at"
+                ],
+                "discrepancies_count": 0,
+                "discrepancies": []
+            }
+        }
+    },
+    "excel": [
+        {
+            "file": "app\/Imports\/PincodeImport.php",
+            "has_headings": false,
+            "has_mapping": false
+        },
+        {
+            "file": "app\/Imports\/ProductImport.php",
+            "has_headings": false,
+            "has_mapping": false
+        },
+        {
+            "file": "app\/Exports\/PincodeExport.php",
+            "has_headings": true,
+            "has_mapping": false
+        },
+        {
+            "file": "app\/Exports\/ProductSampleExport.php",
+            "has_headings": false,
+            "has_mapping": false
+        },
+        {
+            "file": "app\/Exports\/ProductUpdateExport.php",
+            "has_headings": false,
+            "has_mapping": false
+        },
+        {
+            "file": "app\/Exports\/Sheets\/ProductOptionsSheet.php",
+            "has_headings": false,
+            "has_mapping": false
+        },
+        {
+            "file": "app\/Exports\/Sheets\/ProductSampleDataSheet.php",
+            "has_headings": true,
+            "has_mapping": false
+        },
+        {
+            "file": "app\/Exports\/Sheets\/ProductUpdateDataSheet.php",
+            "has_headings": true,
+            "has_mapping": false
+        }
+    ],
+    "ajax": {
+        "missing_csrf_views": [
+            "resources\/views\/ddc\/purchase-orders\/create.blade.php",
+            "resources\/views\/web\/cart.blade.php"
+        ]
+    }
+}

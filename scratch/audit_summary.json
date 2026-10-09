@@ -1,0 +1,106 @@
+{
+    "section1_routes": {
+        "double_prefix": [],
+        "missing_routes": [
+            {
+                "route": "admin.wallets.",
+                "file": "resources\/views\/admin\/wallets\/index.blade.php"
+            },
+            {
+                "route": "admin.wallets.pickup_store",
+                "file": "resources\/views\/admin\/wallets\/pickup_store.blade.php"
+            },
+            {
+                "route": "admin.wallets.pickup_store",
+                "file": "resources\/views\/admin\/wallets\/pickup_store.blade.php"
+            },
+            {
+                "route": "admin.wallets.pickup_store.recharge",
+                "file": "resources\/views\/admin\/wallets\/pickup_store.blade.php"
+            },
+            {
+                "route": "tab",
+                "file": "app\/Http\/Controllers\/Admin\/ProductApprovalController.php"
+            }
+        ]
+    },
+    "section2_models": {
+        "missing_tables": [],
+        "fillable_mismatches": [
+            {
+                "class": "App\\Models\\SellerProfile",
+                "table": "seller_profiles",
+                "invalid_columns": [
+                    "fssai_certificate",
+                    "trade_license"
+                ]
+            }
+        ]
+    },
+    "section3_profiles": {
+        "null_unsafe_profiles": [
+            {
+                "file": "app\/Http\/Controllers\/Admin\/ADCUsersController.php",
+                "matches": [
+                    "->profile->district",
+                    "->profile->state"
+                ]
+            },
+            {
+                "file": "app\/Http\/Controllers\/Admin\/DDCUsersController.php",
+                "matches": [
+                    "->profile->district",
+                    "->profile->state"
+                ]
+            },
+            {
+                "file": "app\/Http\/Controllers\/Admin\/StaffController.php",
+                "matches": [
+                    "->profile->is_super_admin"
+                ]
+            },
+            {
+                "file": "app\/Http\/Controllers\/Admin\/VendorUsersController.php",
+                "matches": [
+                    "->profile->company_name",
+                    "->profile->seller_type",
+                    "->profile->gst_number"
+                ]
+            },
+            {
+                "file": "app\/Http\/Controllers\/DDC\/PurchaseOrderController.php",
+                "matches": [
+                    "->profile->ddc_pincode",
+                    "->profile->pincode"
+                ]
+            },
+            {
+                "file": "app\/Services\/OrderRoutingService.php",
+                "matches": [
+                    "->profile->ddc_pincode",
+                    "->profile->pincode"
+                ]
+            }
+        ],
+        "unique_user_validations": [
+            {
+                "file": "app\/Http\/Controllers\/Admin\/ProfileController.php",
+                "rules": [
+                    "'unique:users,email,'"
+                ]
+            },
+            {
+                "file": "app\/Http\/Controllers\/Admin\/StaffController.php",
+                "rules": [
+                    "'unique:users'",
+                    "'unique:users,email,'"
+                ]
+            }
+        ]
+    },
+    "section4_financial": {
+        "files_scanned": 54
+    },
+    "section5_excel_images": [],
+    "section6_ajax": []
+}

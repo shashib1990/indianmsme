@@ -1,0 +1,229 @@
+@extends('layouts.vendor')
+
+@section('title', 'Department Management')
+@section('page-title', 'Department Management')
+
+@section('content')
+    <!-- Action Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <div class="row align-items-center g-3">
+                        <div class="col-md-6">
+                            <h4 class="fw-bold text-slate-800 mb-1" style="font-family: 'Outfit', sans-serif;">Department Management</h4>
+                            <p class="text-muted small mb-0">Manage administrative departments, descriptions, and view linked roles.</p>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            @permission('departments.create')
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
+                                <iconify-icon icon="solar:add-circle-bold-duotone" class="align-middle me-1 fs-18"></iconify-icon>
+                                Add Department
+                            </button>
+                            @endpermission
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="row mb-3 g-2">
+        <div class="col-md-12">
+            <form action="{{ route('vendor.departments.index') }}" method="GET" id="filterForm" class="d-flex flex-wrap gap-2">
+                <input type="hidden" name="sort" id="formSort" value="{{ $sort }}">
+                <input type="hidden" name="order" id="formOrder" value="{{ $order }}">
+                <div class="input-group" style="max-width: 350px;">
+                    <span class="input-group-text bg-white border-end-0"><iconify-icon icon="solar:magnifer-bold-duotone" class="text-muted"></iconify-icon></span>
+                    <input type="text" name="search" class="form-control border-start-0" placeholder="Search department name or description..." value="{{ $search }}">
+                </div>
+                <select name="limit" class="form-select w-auto" onchange="this.form.submit()">
+                    <option value="10" {{ $limit == 10 ? 'selected' : '' }}>10 per page</option>
+                    <option value="25" {{ $limit == 25 || !$limit ? 'selected' : '' }}>25 per page</option>
+                    <option value="50" {{ $limit == 50 ? 'selected' : '' }}>50 per page</option>
+                    <option value="100" {{ $limit == 100 ? 'selected' : '' }}>100 per page</option>
+                </select>
+                <button type="submit" class="btn btn-outline-secondary">Filter</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-centered mb-0 text-nowrap align-middle">
+                            <thead class="bg-light bg-opacity-50 border-top border-bottom">
+                                <tr>
+                                    <th class="ps-3" style="width: 40px;">
+                                        <div class="form-check fs-15">
+                                            <input type="checkbox" class="form-check-input" id="selectAllCheckbox">
+                                        </div>
+                                    </th>
+                                    <th class="ps-2" style="width: 60px;">#</th>
+                                    <x-admin.table-header field="name" :sort="$sort" :order="$order">Department Name</x-admin.table-header>
+                                    <th>Description</th>
+                                    <x-admin.table-header field="is_active" :sort="$sort" :order="$order">Status</x-admin.table-header>
+                                    <x-admin.table-header field="created_at" :sort="$sort" :order="$order">Created At</x-admin.table-header>
+                                    <th class="text-end pe-3" style="width: 100px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($departments as $dept)
+                                    <tr>
+                                        <td class="ps-3">
+                                            <div class="form-check fs-15">
+                                                <input type="checkbox" class="form-check-input row-checkbox" value="{{ $dept->id }}">
+                                            </div>
+                                        </td>
+                                        <td class="ps-2 text-muted small">{{ $loop->iteration + (($departments->currentPage() - 1) * $departments->perPage()) }}</td>
+                                        <td class="fw-semibold text-slate-800">{{ $dept->name }}</td>
+                                        <td class="text-muted">{{ \Illuminate\Support\Str::limit($dept->description, 60) ?? '—' }}</td>
+                                        <td>
+                                            @if($dept->is_active === '1' || $dept->is_active === 1)
+                                                <span class="badge bg-success-subtle text-success px-2 py-1 fs-12">Active</span>
+                                            @else
+                                                <span class="badge bg-danger-subtle text-danger px-2 py-1 fs-12">Inactive</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-muted small">{{ $dept->created_at->format('d M Y') }}</td>
+                                        <td class="text-end pe-3">
+                                            <div class="d-inline-flex gap-1">
+                                                @permission('departments.edit')
+                                                <button class="btn btn-sm btn-outline-info d-flex align-items-center justify-content-center p-1" 
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#editModal"
+                                                    data-id="{{ $dept->id }}"
+                                                    data-name="{{ $dept->name }}"
+                                                    data-description="{{ $dept->description }}"
+                                                    data-status="{{ $dept->is_active }}"
+                                                    style="width: 28px; height: 28px;">
+                                                    <iconify-icon icon="solar:pen-bold-duotone" class="fs-14"></iconify-icon>
+                                                </button>
+                                                @endpermission
+
+                                                @permission('departments.delete')
+                                                <form action="{{ route('vendor.departments.destroy', $dept->id) }}" method="POST" class="d-inline">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger confirm-action d-flex align-items-center justify-content-center p-1"
+                                                        data-confirm-message="Delete department '{{ $dept->name }}'?"
+                                                        style="width: 28px; height: 28px;">
+                                                        <iconify-icon icon="solar:trash-bin-trash-bold-duotone" class="fs-14"></iconify-icon>
+                                                    </button>
+                                                </form>
+                                                @endpermission
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <x-admin.empty-state 
+                                        icon="solar:buildings-bold-duotone" 
+                                        title="No Departments Found" 
+                                        description="We couldn't find any department matching your query. Add your first department to get started." 
+                                        colspan="7" 
+                                    />
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+
+                    @if($departments->total() > 0)
+                        <div class="d-flex justify-content-between align-items-center px-3 py-2 border-top">
+                            <small class="text-muted">Showing {{ $departments->firstItem() }}–{{ $departments->lastItem() }} of {{ $departments->total() }}</small>
+                            @if($departments->hasPages())
+                                {{ $departments->withQueryString()->links() }}
+                            @endif
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Create Modal --}}
+    <div class="modal fade" id="createModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-semibold text-slate-800">Add New Department</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="{{ route('vendor.departments.store') }}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label text-slate-700 fw-medium">Department Name <span class="text-danger">*</span></label>
+                            <input type="text" name="name" class="form-control" placeholder="e.g. Sales" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-slate-700 fw-medium">Description</label>
+                            <textarea name="description" class="form-control" placeholder="Optional description..." rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Department</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Edit Modal --}}
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-semibold text-slate-800">Edit Department</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editForm" method="POST">
+                    @csrf @method('PUT')
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label text-slate-700 fw-medium">Department Name <span class="text-danger">*</span></label>
+                            <input type="text" name="name" id="editName" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-slate-700 fw-medium">Description</label>
+                            <textarea name="description" id="editDescription" class="form-control" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-slate-700 fw-medium">Status <span class="text-danger">*</span></label>
+                            <select name="is_active" id="editStatus" class="form-select" required>
+                                <option value="1">Active</option>
+                                <option value="0">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update Department</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+@endsection
+
+@push('scripts')
+<script>
+var departmentUpdateBaseUrl = '{{ parse_url(route("vendor.departments.update", 0), PHP_URL_PATH) }}'.replace('/0', '/');
+
+document.addEventListener('DOMContentLoaded', function () {
+    const editModal = document.getElementById('editModal');
+    if (editModal) {
+        editModal.addEventListener('show.bs.modal', function (e) {
+            const btn = e.relatedTarget;
+            document.getElementById('editForm').action = departmentUpdateBaseUrl + btn.dataset.id;
+            document.getElementById('editName').value = btn.dataset.name;
+            document.getElementById('editDescription').value = btn.dataset.description || '';
+            document.getElementById('editStatus').value = btn.dataset.status;
+        });
+    }
+});
+</script>
+@endpush
