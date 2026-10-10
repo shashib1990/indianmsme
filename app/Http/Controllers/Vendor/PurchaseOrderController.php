@@ -512,100 +512,62 @@ class PurchaseOrderController extends Controller
                 route('admin.purchase-orders.show', $purchaseOrder->id)
             );
 
-            // Create invoice if not already created, using GST Registration-wise serial series
-            $invoice = \App\Models\Invoice::where('purchase_order_id', $purchaseOrder->id)->first();
+            // Create invoice if not already created, using Category 1 Central ADPL DL Series
+            $invoice = \App\Models\Invoice::where('purchase_order_id', $purchaseOrder->id);
+            if ($purchaseOrder->adc_order_id) {
+                $invoice->orWhere('adc_order_id', $purchaseOrder->adc_order_id);
+            }
+            $invoice = $invoice->first();
+
             $extractedDetails = \App\Models\Invoice::extractInvoiceDetails($purchaseOrder);
-            $supplierGstin = $extractedDetails['dispatch_from_gstin'] ?? 'N/A';
+            $adplGstin = \App\Models\Invoice::getAdplGstin();
 
             if (!$invoice) {
-                $invoiceDetails = \App\Models\Invoice::generateNextInvoiceNumber($request->input('dispatch_date'), $supplierGstin, 'INV');
+                $invoiceDetails = \App\Models\Invoice::generateNextInvoiceNumber($request->input('dispatch_date'), $adplGstin, 'DL');
                 $invoice = \App\Models\Invoice::create(array_merge([
                     'purchase_order_id' => $purchaseOrder->id,
-                    'invoice_number' => $invoiceDetails['invoice_number'],
-                    'financial_year' => $invoiceDetails['financial_year'],
-                    'serial_number' => $invoiceDetails['serial_number'],
-                    'invoice_date' => $invoiceDetails['invoice_date'],
-                    'transporter_name' => $request->input('transporter_name'),
-                    'vehicle_number' => $request->input('vehicle_number'),
-                    'transporter_gst' => $request->input('transporter_gst'),
-                    'eway_bill_number' => $request->input('eway_bill_number'),
-                    'invoice_file' => $invoiceFileUrl,
+                    'adc_order_id'      => $purchaseOrder->adc_order_id,
+                    'type'              => $purchaseOrder->fulfillment_type === 'virtual' ? 'adpl_to_adc' : 'ddc_po',
+                    'supplier_gstin'    => $adplGstin,
+                    'invoice_number'    => $invoiceDetails['invoice_number'],
+                    'ddc_invoice_number'=> $invoiceDetails['invoice_number'],
+                    'ddc_invoice_date'  => $invoiceDetails['invoice_date'],
+                    'financial_year'    => $invoiceDetails['financial_year'],
+                    'serial_number'     => $invoiceDetails['serial_number'],
+                    'invoice_date'      => $invoiceDetails['invoice_date'],
+                    'transporter_name'  => $request->input('transporter_name'),
+                    'vehicle_number'    => $request->input('vehicle_number'),
+                    'transporter_gst'   => $request->input('transporter_gst'),
+                    'eway_bill_number'  => $request->input('eway_bill_number'),
+                    'invoice_file'      => $invoiceFileUrl,
+                    'ddc_invoice_file'  => $invoiceFileUrl,
                 ], $extractedDetails));
             } else {
                 $invoice->update([
-                    'invoice_file' => $invoiceFileUrl,
-                    'transporter_name' => $request->input('transporter_name'),
-                    'eway_bill_number' => $request->input('eway_bill_number'),
+                    'purchase_order_id' => $purchaseOrder->id,
+                    'invoice_file'      => $invoiceFileUrl,
+                    'ddc_invoice_file'  => $invoiceFileUrl,
+                    'ddc_invoice_number'=> $invoice->ddc_invoice_number ?: $invoice->invoice_number,
+                    'ddc_invoice_date'  => $invoice->ddc_invoice_date ?: $invoice->invoice_date,
+                    'transporter_name'  => $request->input('transporter_name'),
+                    'vehicle_number'    => $request->input('vehicle_number'),
+                    'transporter_gst'   => $request->input('transporter_gst'),
+                    'eway_bill_number'  => $request->input('eway_bill_number'),
                 ]);
             }
 
-            // Generate ADPL to ADC invoice for Virtual DDC orders
-            if ($purchaseOrder->fulfillment_type === 'virtual' || $purchaseOrder->adc_order_id) {
-                $adcOrder = $purchaseOrder->adcOrder;
-                $adplInvoice = \App\Models\Invoice::where(function ($q) use ($purchaseOrder, $adcOrder) {
-                    $q->where('purchase_order_id', $purchaseOrder->id);
-                    if ($adcOrder) {
-                        $q->orWhere('adc_order_id', $adcOrder->id);
-                    }
-                })
-                    ->where('type', 'adpl_to_adc')
-                    ->first();
+            // Create / Release AMA Incentive Record (SSI & FSI) for advisor code
+            $adcOrder = $purchaseOrder->adcOrder;
+            if ($adcOrder && $adcOrder->adc) {
+                IncentiveHoldService::createHoldOnPayment($purchaseOrder);
+            }
 
-                if (!$adplInvoice) {
-                    $adplGstin = \App\Models\SystemSetting::getVal('adpl_gstin', 'ADPL999999');
-                    $adplInvoiceDetails = \App\Models\Invoice::generateNextInvoiceNumber($request->input('dispatch_date'), $adplGstin, 'DL');
-
-                    $adcUser = $adcOrder?->adc;
-                    \App\Models\Invoice::create([
-                        'purchase_order_id' => $purchaseOrder->id,
-                        'adc_order_id' => $adcOrder?->id,
-                        'type' => 'adpl_to_adc',
-                        'supplier_gstin' => $adplGstin,
-                        'invoice_number' => $adplInvoiceDetails['invoice_number'],
-                        'financial_year' => $adplInvoiceDetails['financial_year'],
-                        'serial_number' => $adplInvoiceDetails['serial_number'],
-                        'invoice_date' => $adplInvoiceDetails['invoice_date'],
-                        'ddc_invoice_number' => $adplInvoiceDetails['invoice_number'],
-                        'ddc_invoice_date' => $adplInvoiceDetails['invoice_date'],
-                        'ddc_invoice_file' => $invoiceFileUrl,
-                        'transporter_name' => $request->input('transporter_name'),
-                        'vehicle_number' => $request->input('vehicle_number'),
-                        'transporter_gst' => $request->input('transporter_gst'),
-                        'eway_bill_number' => $request->input('eway_bill_number'),
-                        'invoice_file' => $invoiceFileUrl,
-                        'bill_to_name' => $adcUser?->name ?? 'ADC Customer',
-                        'bill_to_address' => $adcOrder?->shipping_address ?? 'Delivery Address',
-                        'bill_to_district' => $adcOrder?->delivery_district,
-                        'bill_to_state' => $adcOrder?->delivery_state,
-                        'bill_to_pincode' => $adcOrder?->delivery_pincode,
-                        'bill_to_phone' => $adcUser?->mobile ?? $adcUser?->phone,
-                        'bill_to_gstin' => $adcUser?->gst_number ?? 'N/A',
-                        'dispatch_from_name' => 'ADPL (Virtual DDC Hub)',
-                        'dispatch_from_address' => 'ADPL Central Fulfillment Hub',
-                        'dispatch_from_gstin' => $adplGstin,
-                    ]);
-                } else {
-                    $adplInvoice->update([
-                        'invoice_file' => $invoiceFileUrl,
-                        'ddc_invoice_file' => $invoiceFileUrl,
-                        'ddc_invoice_number' => $adplInvoice->ddc_invoice_number ?: $adplInvoice->invoice_number,
-                        'ddc_invoice_date' => $adplInvoice->ddc_invoice_date ?: $adplInvoice->invoice_date,
-                        'transporter_name' => $request->input('transporter_name'),
-                        'eway_bill_number' => $request->input('eway_bill_number'),
-                    ]);
-                }
-
-                // Create / Release AMA Incentive Record (SSI & FSI) for advisor code
-                if ($adcOrder && $adcOrder->adc) {
-                    IncentiveHoldService::createHoldOnPayment($purchaseOrder);
-                    foreach ($purchaseOrder->items->where('status', 'Accepted') as $poItem) {
+            foreach ($purchaseOrder->items->where('status', 'Accepted') as $poItem) {
                         $adcItem = \App\Models\AdcOrderItem::where('purchase_order_id', $purchaseOrder->id)
                             ->where('product_id', $poItem->product_id)
                             ->first();
-                        if ($adcItem) {
-                            IncentiveHoldService::releaseHoldOnAdcDelivery($adcItem, $poItem->quantity);
-                        }
-                    }
+                if ($adcItem) {
+                    IncentiveHoldService::releaseHoldOnAdcDelivery($adcItem, $poItem->quantity);
                 }
             }
 

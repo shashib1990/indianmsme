@@ -1223,14 +1223,19 @@ class PurchaseOrderController extends Controller
 
         if (!$invoice) {
             $extractedDetails = \App\Models\Invoice::extractInvoiceDetails($purchaseOrder);
-            $supplierGstin = $extractedDetails['supplier_gstin'] ?? 'N/A';
-            $invoiceDetails = \App\Models\Invoice::generateNextInvoiceNumber(now(), $supplierGstin, 'INV');
+            $adplGstin = \App\Models\Invoice::getAdplGstin();
+            $invoiceDetails = \App\Models\Invoice::generateNextInvoiceNumber(now(), $adplGstin, 'DL');
             $invoice = \App\Models\Invoice::create(array_merge([
                 'purchase_order_id' => $purchaseOrder->id,
-                'invoice_number' => $invoiceDetails['invoice_number'],
-                'financial_year' => $invoiceDetails['financial_year'],
-                'serial_number' => $invoiceDetails['serial_number'],
-                'invoice_date' => $invoiceDetails['invoice_date'],
+                'adc_order_id'      => $purchaseOrder->adc_order_id,
+                'type'              => $purchaseOrder->fulfillment_type === 'virtual' ? 'adpl_to_adc' : 'ddc_po',
+                'supplier_gstin'    => $adplGstin,
+                'invoice_number'    => $invoiceDetails['invoice_number'],
+                'ddc_invoice_number'=> $invoiceDetails['invoice_number'],
+                'ddc_invoice_date'  => $invoiceDetails['invoice_date'],
+                'financial_year'    => $invoiceDetails['financial_year'],
+                'serial_number'     => $invoiceDetails['serial_number'],
+                'invoice_date'      => $invoiceDetails['invoice_date'],
             ], $extractedDetails));
         }
 

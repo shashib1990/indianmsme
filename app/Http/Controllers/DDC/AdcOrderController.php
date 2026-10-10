@@ -273,12 +273,30 @@ class AdcOrderController extends Controller
 
         $invoice = \App\Models\Invoice::where('adc_order_id', $order->id)->latest()->first();
 
+        $extractedDetails = \App\Models\Invoice::extractAdcInvoiceDetails($order);
+
+        if (!$invoice && in_array($order->status, ['Pending', 'Processing', 'Dispatched', 'Partially Dispatched', 'Received', 'Delivered', 'Completed'])) {
+            $ddcProfile = $ddc->profile ?? $ddc->ddcProfile ?? null;
+            $ddcGstin = $extractedDetails['supplier_gstin'] ?? ($ddcProfile?->ddc_gst_number ?: ($ddcProfile?->gst_number ?: 'N/A'));
+            $invoiceDetails = \App\Models\Invoice::generateNextInvoiceNumber(now(), $ddcGstin, 'INV', 'wholesale');
+
+            $invoice = \App\Models\Invoice::create(array_merge([
+                'adc_order_id'       => $order->id,
+                'invoice_number'     => $invoiceDetails['invoice_number'],
+                'financial_year'     => $invoiceDetails['financial_year'],
+                'serial_number'      => $invoiceDetails['serial_number'],
+                'invoice_date'       => $invoiceDetails['invoice_date'],
+                'ddc_invoice_number' => $invoiceDetails['invoice_number'],
+                'ddc_invoice_date'   => now(),
+                'type'               => 'ddc_to_adc',
+            ], $extractedDetails));
+        }
+
         if (!$invoice) {
             return redirect()->back()->with('error', 'Tax Invoice has not been generated for this order yet.');
         }
 
         // Determine intra-state vs inter-state
-        $extractedDetails = \App\Models\Invoice::extractAdcInvoiceDetails($order);
 
         // Always ensure dispatch_from details on the invoice match the correct current pickup store / seller
         if (empty($invoice->dispatch_from_name) 

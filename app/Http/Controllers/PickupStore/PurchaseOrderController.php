@@ -293,26 +293,46 @@ class PurchaseOrderController extends Controller
             );
 
             // Create invoice if not already created, or update it
-            $invoice = \App\Models\Invoice::where('purchase_order_id', $purchaseOrder->id)->first();
+            $invoice = \App\Models\Invoice::where('purchase_order_id', $purchaseOrder->id);
+            if ($purchaseOrder->adc_order_id) {
+                $invoice->orWhere('adc_order_id', $purchaseOrder->adc_order_id);
+            }
+            $invoice = $invoice->first();
+
+            $extractedDetails = \App\Models\Invoice::extractInvoiceDetails($purchaseOrder);
+            $adplGstin = \App\Models\Invoice::getAdplGstin();
+
             if (!$invoice) {
-                $extractedDetails = \App\Models\Invoice::extractInvoiceDetails($purchaseOrder);
-                $supplierGstin = $extractedDetails['supplier_gstin'] ?? 'N/A';
-                $invoiceDetails = \App\Models\Invoice::generateNextInvoiceNumber(now(), $supplierGstin, 'INV');
+                $invoiceDetails = \App\Models\Invoice::generateNextInvoiceNumber(now(), $adplGstin, 'DL');
                 \App\Models\Invoice::create(array_merge([
                     'purchase_order_id' => $purchaseOrder->id,
-                    'invoice_number' => $invoiceDetails['invoice_number'],
-                    'financial_year' => $invoiceDetails['financial_year'],
-                    'serial_number' => $invoiceDetails['serial_number'],
-                    'invoice_date' => $invoiceDetails['invoice_date'],
-                    'transporter_name' => $request->input('transporter_name'),
-                    'vehicle_number' => $request->input('vehicle_number'),
-                    'transporter_gst' => $request->input('transporter_gst'),
-                    'eway_bill_number' => $request->input('eway_bill_number'),
-                    'invoice_file' => $invoiceFileUrl,
+                    'adc_order_id'      => $purchaseOrder->adc_order_id,
+                    'type'              => $purchaseOrder->fulfillment_type === 'virtual' ? 'adpl_to_adc' : 'ddc_po',
+                    'supplier_gstin'    => $adplGstin,
+                    'invoice_number'    => $invoiceDetails['invoice_number'],
+                    'ddc_invoice_number'=> $invoiceDetails['invoice_number'],
+                    'ddc_invoice_date'  => $invoiceDetails['invoice_date'],
+                    'financial_year'    => $invoiceDetails['financial_year'],
+                    'serial_number'     => $invoiceDetails['serial_number'],
+                    'invoice_date'      => $invoiceDetails['invoice_date'],
+                    'transporter_name'  => $request->input('transporter_name'),
+                    'vehicle_number'    => $request->input('vehicle_number'),
+                    'transporter_gst'   => $request->input('transporter_gst'),
+                    'eway_bill_number'  => $request->input('eway_bill_number'),
+                    'invoice_file'      => $invoiceFileUrl,
+                    'ddc_invoice_file'  => $invoiceFileUrl,
                 ], $extractedDetails));
             } else {
                 $invoice->update([
-                    'invoice_file' => $invoiceFileUrl,
+                    'purchase_order_id' => $purchaseOrder->id,
+                    'invoice_file'      => $invoiceFileUrl,
+                    'ddc_invoice_file'  => $invoiceFileUrl,
+                    'ddc_invoice_number'=> $invoice->ddc_invoice_number ?: $invoice->invoice_number,
+                    'ddc_invoice_date'  => $invoice->ddc_invoice_date ?: $invoice->invoice_date,
+                    'transporter_name'  => $request->input('transporter_name'),
+                    'vehicle_number'    => $request->input('vehicle_number'),
+                    'transporter_gst'   => $request->input('transporter_gst'),
+                    'eway_bill_number'  => $request->input('eway_bill_number'),
                 ]);
             }
 

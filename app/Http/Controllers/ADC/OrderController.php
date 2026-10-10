@@ -224,8 +224,18 @@ class OrderController extends Controller
         $extractedDetails = Invoice::extractAdcInvoiceDetails($order);
 
         if (!$invoice && in_array($order->status, ['Pending', 'Processing', 'Dispatched', 'Partially Dispatched', 'Received', 'Delivered', 'Completed'])) {
-            $supplierGstin = $extractedDetails['supplier_gstin'] ?? 'N/A';
-            $invoiceDetails = Invoice::generateNextInvoiceNumber(now(), $supplierGstin, 'DL');
+            $isPhysicalDdcOrder = ($order->fulfillment_type === 'physical') || !empty($order->selected_ddc_id) || !empty($order->assigned_ddc_id);
+
+            if ($isPhysicalDdcOrder) {
+                // Category 2: Physical DDC order -> INV/26-27/XXXX series under DDC's GSTIN
+                $ddc = $order->selectedDdc ?? $order->assignedDdc ?? $order->virtualDdc;
+                $ddcGstin = $extractedDetails['supplier_gstin'] ?? ($ddc?->profile?->ddc_gst_number ?: ($ddc?->profile?->gst_number ?: 'N/A'));
+                $invoiceDetails = Invoice::generateNextInvoiceNumber(now(), $ddcGstin, 'INV', 'wholesale');
+            } else {
+                // Category 1: Virtual Order routed to Seller -> DL/26-27/XXXX series under ADPL Central DL Sequence
+                $invoiceDetails = Invoice::generateNextInvoiceNumber(now(), null, 'DL');
+            }
+
             $invoice = Invoice::create(array_merge([
                 'adc_order_id' => $order->id,
                 'invoice_number' => $invoiceDetails['invoice_number'],

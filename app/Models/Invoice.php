@@ -94,13 +94,26 @@ class Invoice extends Model
         return $this->belongsTo(AdcPosOrder::class, 'pos_order_id');
     }
 
+    public static function getAdplGstin(): string
+    {
+        $val = \App\Models\SystemSetting::getVal('adpl_gstin', '');
+        if (!$val || $val === '19DEFAULTGST123' || $val === 'ADPL999999') {
+            $settingVal = \App\Models\SystemSetting::getVal('adpl_gst_number', '');
+            if ($settingVal && $settingVal !== '19DEFAULTGST123') {
+                $val = $settingVal;
+            } else {
+                $val = \App\Models\DdcProfile::whereNotNull('adpl_gst_number')->value('adpl_gst_number') ?: '07AAZCA4502F1ZM';
+            }
+        }
+        return $val ?: '07AAZCA4502F1ZM';
+    }
+
     /**
      * Generate the next invoice number details for a given date and GST registration.
      * Rules:
-     * - Invoice series maintained GST Registration wise (supplier_gstin) or Prefix.
-     * - Restarts at 0001 every Financial Year (April 1st).
-     * - Retail Format: DDB001/R/26-27/0001
-     * - Wholesale Format: DDB001/26-27/0001
+     * - Category 1 (Central ADPL DL series): DL/26-27/0001 (continuous sequence across all Physical DDC POs and ADC Virtual orders).
+     * - Category 2 (DDC Invoicing): INV/26-27/0001 (shared sequence for Wholesale POS & ADC Physical orders per DDC GSTIN), INV/R/26-27/0001 (Retail POS).
+     * - Category 3 (ADC Canteen Sale): INV/R/26-27/0001 (per ADC GSTIN).
      */
     public static function generateNextInvoiceNumber($date = null, ?string $supplierGstin = null, ?string $prefix = 'INV', string $mode = 'wholesale'): array
     {
@@ -126,28 +139,52 @@ class Invoice extends Model
             $seriesPrefix = $basePrefix . '/' . $fyStr;
         }
 
-        $gstinVal = !empty($supplierGstin) ? $supplierGstin : 'N/A';
+        if ($basePrefix === 'DL') {
+            // Category 1: Central ADPL (DL) series.
+            // Continuous sequence across all orders in this financial year (Physical DDC PO to Seller & ADC Virtual Orders to Seller)!
+            $query = self::where('financial_year', $fyStr)
+                ->where('invoice_number', 'like', 'DL/' . $fyStr . '/%');
 
-        // GST-wise sequence query: Sequence is maintained per Supplier GSTIN per Financial Year
-        $query = self::where('financial_year', $fyStr)
-            ->where('supplier_gstin', $gstinVal)
-            ->where('invoice_number', 'like', $seriesPrefix . '/%');
+            $adplGstinVal = !empty($supplierGstin) && $supplierGstin !== 'N/A' && $supplierGstin !== '19DEFAULTGST123' && $supplierGstin !== 'ADPL999999'
+                ? $supplierGstin 
+                : self::getAdplGstin();
+            $gstinVal = $adplGstinVal;
+        } else {
+            $gstinVal = !empty($supplierGstin) ? $supplierGstin : 'N/A';
 
-        $maxSerial = $query->max('serial_number') ?? 0;
-        if (!$maxSerial) {
-            $lastInv = (clone $query)->orderBy('id', 'desc')->first();
-            if ($lastInv && preg_match('/\/(\d{4})$/', $lastInv->invoice_number, $matches)) {
-                $maxSerial = (int) $matches[1];
+            // Category 2 & 3: Sequence is maintained per Supplier GSTIN per Financial Year
+            $query = self::where('financial_year', $fyStr)
+                ->where('supplier_gstin', $gstinVal)
+                ->where('invoice_number', 'like', $seriesPrefix . '/%');
+        }
+
+        $maxSerial = (int) ($query->max('serial_number') ?? 0);
+
+        // Also check all existing invoices in this series for the highest numerical suffix
+        $allInvoices = (clone $query)->get(['invoice_number']);
+        foreach ($allInvoices as $inv) {
+            if (preg_match('/\/(\d+)$/', $inv->invoice_number, $matches)) {
+                $num = (int) $matches[1];
+                if ($num > $maxSerial) {
+                    $maxSerial = $num;
+                }
             }
         }
 
         $nextSerial = $maxSerial + 1;
         $invoiceNumber = $seriesPrefix . '/' . sprintf('%04d', $nextSerial);
 
-        // Fail-safe collision check loop for this specific GSTIN
-        while (self::where('supplier_gstin', $gstinVal)->where('invoice_number', $invoiceNumber)->exists()) {
-            $nextSerial++;
-            $invoiceNumber = $seriesPrefix . '/' . sprintf('%04d', $nextSerial);
+        // Fail-safe collision check loop
+        if ($basePrefix === 'DL') {
+            while (self::where('invoice_number', $invoiceNumber)->exists()) {
+                $nextSerial++;
+                $invoiceNumber = $seriesPrefix . '/' . sprintf('%04d', $nextSerial);
+            }
+        } else {
+            while (self::where('supplier_gstin', $gstinVal)->where('invoice_number', $invoiceNumber)->exists()) {
+                $nextSerial++;
+                $invoiceNumber = $seriesPrefix . '/' . sprintf('%04d', $nextSerial);
+            }
         }
 
         return [
