@@ -746,27 +746,26 @@
 
             <div class="billing-card">
                 <h3>Dispatch From</h3>
-                <p><strong>{{ (!empty($invoice->dispatch_from_name) && strtolower(trim($invoice->dispatch_from_name)) !== 'pickup store') ? $invoice->dispatch_from_name : ($purchaseOrder->pickupStore?->pickup_store_name ?? ($purchaseOrder->seller?->sellerProfile?->company_name ?? ($purchaseOrder->seller?->name ?? 'N/A'))) }}</strong>
-                </p>
-                <p>{{ $invoice->dispatch_from_address ?? ($purchaseOrder->pickupStore?->address ?? ($purchaseOrder->seller?->sellerProfile?->address ?? 'Address not available')) }}
+                <p><strong>{{ (!empty($invoice->dispatch_from_name) && strtolower(trim($invoice->dispatch_from_name)) !== 'pickup store') ? $invoice->dispatch_from_name : ($purchaseOrder->pickupStore?->pickup_store_name ?? ($purchaseOrder->seller?->sellerProfile?->company_name ?? ($purchaseOrder->seller?->name ?? 'N/A'))) }}</strong></p>
+                <p>{{ ($purchaseOrder->pickupStore?->address ?: $invoice->dispatch_from_address) ?? ($purchaseOrder->seller?->sellerProfile?->address ?? 'Address not available') }}
                 </p>
                 <p>
-                    @if($invoice->dispatch_from_district || $invoice->dispatch_from_state || $invoice->dispatch_from_pincode)
-                        {{ $invoice->dispatch_from_district ?? '' }}{{ $invoice->dispatch_from_district ? ', ' : '' }}{{ $invoice->dispatch_from_state ?? '' }}
-                        - {{ $invoice->dispatch_from_pincode ?? '' }}
-                    @elseif($purchaseOrder->pickupStore)
+                    @if($purchaseOrder->pickupStore)
                         {{ $purchaseOrder->pickupStore->districtRelation?->name ?? ($purchaseOrder->pickupStore->district ?? '') }}{{ $purchaseOrder->pickupStore->district ? ', ' : '' }}{{ $purchaseOrder->pickupStore->stateRelation?->name ?? ($purchaseOrder->pickupStore->state ?? '') }}
                         - {{ $purchaseOrder->pickupStore->pincode ?? '' }}
+                    @elseif($invoice->dispatch_from_district || $invoice->dispatch_from_state || $invoice->dispatch_from_pincode)
+                        {{ $invoice->dispatch_from_district ?? '' }}{{ $invoice->dispatch_from_district ? ', ' : '' }}{{ $invoice->dispatch_from_state ?? '' }}
+                        - {{ $invoice->dispatch_from_pincode ?? '' }}
                     @else
                         {{ $purchaseOrder->seller?->sellerProfile?->district ?? '' }}{{ $purchaseOrder->seller?->sellerProfile?->district ? ', ' : '' }}{{ $purchaseOrder->seller?->sellerProfile?->state ?? '' }}
                         - {{ $purchaseOrder->seller?->sellerProfile?->pincode ?? '' }}
                     @endif
                 </p>
                 <p><strong>Phone:</strong>
-                    {{ $invoice->dispatch_from_phone ?? ($purchaseOrder->pickupStore?->mobile ?? ($purchaseOrder->seller?->sellerProfile?->alternate_mobile ?? ($purchaseOrder->seller?->mobile ?? 'N/A'))) }}
+                    {{ ($purchaseOrder->pickupStore?->mobile ?: $invoice->dispatch_from_phone) ?? ($purchaseOrder->seller?->sellerProfile?->alternate_mobile ?? ($purchaseOrder->seller?->mobile ?? 'N/A')) }}
                 </p>
                 <p><strong>GSTIN:</strong>
-                    {{ $invoice->dispatch_from_gstin ?? ($purchaseOrder->pickupStore?->gst_number ?? ($purchaseOrder->seller?->sellerProfile?->gst_number ?? 'N/A')) }}
+                    {{ ($purchaseOrder->pickupStore?->gst_number ?: $invoice->dispatch_from_gstin) ?? ($purchaseOrder->seller?->sellerProfile?->gst_number ?? 'N/A') }}
                 </p>
             </div>
         </div>

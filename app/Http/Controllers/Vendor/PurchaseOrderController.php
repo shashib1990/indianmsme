@@ -218,11 +218,19 @@ class PurchaseOrderController extends Controller
 
                     foreach ($purchaseOrder->items as $item) {
                         if (in_array($item->id, $rejectedItemIds)) {
-                            $adcItem = \App\Models\AdcOrderItem::where('purchase_order_id', $purchaseOrder->id)
+                            $adcItem = \App\Models\AdcOrderItem::where('adc_order_id', $adcOrder->id)
+                                ->where(function ($q) use ($purchaseOrder, $item) {
+                                    $q->where('purchase_order_id', $purchaseOrder->id)
+                                      ->orWhere('seller_id', $item->seller_id);
+                                })
                                 ->where('product_id', $item->product_id)
+                                ->where('status', '!=', 'Rejected')
                                 ->first();
                             if ($adcItem) {
-                                $adcItem->update(['status' => 'Rejected']);
+                                $adcItem->update([
+                                    'status' => 'Rejected',
+                                    'remarks' => $rejectionReason,
+                                ]);
                                 $refundAmount += $adcItem->total;
 
                                 // Re-add rejected product back to ADC's Cart
@@ -434,19 +442,27 @@ class PurchaseOrderController extends Controller
                 ?: AdcOrderItem::where('purchase_order_id', $purchaseOrder->id)->value('adc_order_id');
 
             if ($adcOrderId) {
-                AdcOrderItem::where('purchase_order_id', $purchaseOrder->id)
-                    ->orWhere(function ($q) use ($adcOrderId, $purchaseOrder) {
-                        $q->where('adc_order_id', $adcOrderId)
-                          ->where('seller_id', $purchaseOrder->seller_id);
-                    })
-                    ->update(['status' => 'Dispatched']);
+                AdcOrderItem::where(function ($q) use ($purchaseOrder, $adcOrderId) {
+                    $q->where('purchase_order_id', $purchaseOrder->id)
+                      ->orWhere(function ($sub) use ($adcOrderId, $purchaseOrder) {
+                          $sub->where('adc_order_id', $adcOrderId)
+                              ->where('seller_id', $purchaseOrder->seller_id);
+                      });
+                })
+                ->whereNotIn('status', ['Cancelled', 'Rejected'])
+                ->update(['status' => 'Dispatched']);
 
                 foreach ($purchaseOrder->items as $poItem) {
+                    if ($poItem->status === 'Rejected') {
+                        continue;
+                    }
                     if ($poItem->mfg_date || $poItem->expire_date) {
                         AdcOrderItem::where(function ($q) use ($purchaseOrder, $poItem) {
                             $q->where('purchase_order_id', $purchaseOrder->id)
                               ->where('product_id', $poItem->product_id);
-                        })->update([
+                        })
+                        ->whereNotIn('status', ['Cancelled', 'Rejected'])
+                        ->update([
                             'mfg_date' => $poItem->mfg_date,
                             'expire_date' => $poItem->expire_date,
                         ]);
@@ -456,7 +472,7 @@ class PurchaseOrderController extends Controller
                 $adcOrder = AdcOrder::find($adcOrderId);
                 if ($adcOrder) {
                     $allDispatched = !AdcOrderItem::where('adc_order_id', $adcOrder->id)
-                        ->whereNotIn('status', ['Dispatched', 'Received', 'Cancelled'])
+                        ->whereNotIn('status', ['Dispatched', 'Received', 'Cancelled', 'Rejected'])
                         ->exists();
 
                     $hasDispatched = AdcOrderItem::where('adc_order_id', $adcOrder->id)

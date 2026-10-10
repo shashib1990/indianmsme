@@ -46,9 +46,10 @@ class InvoiceController extends Controller
         } elseif ($invoice) {
             $isVirtualPo = ($purchaseOrder->fulfillment_type === 'virtual') || !empty($purchaseOrder->adc_order_id);
             $needsPickupStoreUpdate = $purchaseOrder->pickupStore && (
-                $invoice->dispatch_from_name !== $purchaseOrder->pickupStore->pickup_store_name ||
-                $invoice->dispatch_from_address !== $purchaseOrder->pickupStore->address ||
-                $invoice->dispatch_from_pincode !== $purchaseOrder->pickupStore->pincode
+                $invoice->dispatch_from_name !== ($extractedDetails['dispatch_from_name'] ?? null) ||
+                $invoice->dispatch_from_address !== ($extractedDetails['dispatch_from_address'] ?? null) ||
+                $invoice->dispatch_from_pincode !== ($extractedDetails['dispatch_from_pincode'] ?? null) ||
+                $invoice->dispatch_from_gstin !== ($extractedDetails['dispatch_from_gstin'] ?? null)
             );
             if ($isVirtualPo && ($invoice->type !== 'adc_virtual_po' || str_contains(strtolower($invoice->bill_to_name ?? ''), 'asc distributor'))) {
                 $invoice->update($extractedDetails);

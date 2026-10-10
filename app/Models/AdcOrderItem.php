@@ -89,6 +89,11 @@ class AdcOrderItem extends Model
         return $this->belongsTo(AdcOrder::class, 'adc_order_id');
     }
 
+    public function adcOrder()
+    {
+        return $this->belongsTo(AdcOrder::class, 'adc_order_id');
+    }
+
     public function seller()
     {
         return $this->belongsTo(User::class, 'seller_id');

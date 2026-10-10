@@ -279,13 +279,38 @@ class AdcOrderController extends Controller
 
         // Determine intra-state vs inter-state
         $extractedDetails = \App\Models\Invoice::extractAdcInvoiceDetails($order);
-        $ddcProfile = $ddc?->ddcProfile ?? $ddc?->profile ?? null;
-        $ddcState = $ddcProfile?->state ?? ($ddc?->state ?? 'Delhi');
+
+        // Always ensure dispatch_from details on the invoice match the correct current pickup store / seller
+        if (empty($invoice->dispatch_from_name) 
+            || $invoice->dispatch_from_name === 'ADPL (Virtual DDC Hub)' 
+            || empty($invoice->dispatch_from_state) 
+            || empty($invoice->dispatch_from_address)
+            || (!empty($extractedDetails['dispatch_from_name']) && $invoice->dispatch_from_name !== $extractedDetails['dispatch_from_name'])
+            || (!empty($extractedDetails['dispatch_from_address']) && $invoice->dispatch_from_address !== $extractedDetails['dispatch_from_address'])
+            || (!empty($extractedDetails['dispatch_from_pincode']) && $invoice->dispatch_from_pincode !== $extractedDetails['dispatch_from_pincode'])
+            || (!empty($extractedDetails['dispatch_from_gstin']) && $invoice->dispatch_from_gstin !== $extractedDetails['dispatch_from_gstin'])) {
+            $invoice->update([
+                'dispatch_from_name'     => $extractedDetails['dispatch_from_name'] ?? $invoice->dispatch_from_name,
+                'dispatch_from_address'  => $extractedDetails['dispatch_from_address'] ?? $invoice->dispatch_from_address,
+                'dispatch_from_district' => $extractedDetails['dispatch_from_district'] ?? $invoice->dispatch_from_district,
+                'dispatch_from_state'    => $extractedDetails['dispatch_from_state'] ?? $invoice->dispatch_from_state,
+                'dispatch_from_pincode'  => $extractedDetails['dispatch_from_pincode'] ?? $invoice->dispatch_from_pincode,
+                'dispatch_from_phone'    => $extractedDetails['dispatch_from_phone'] ?? $invoice->dispatch_from_phone,
+                'dispatch_from_gstin'    => $extractedDetails['dispatch_from_gstin'] ?? $invoice->dispatch_from_gstin,
+            ]);
+            $invoice->refresh();
+        }
+
+        $dispatchFromState = $invoice->dispatch_from_state ?: ($extractedDetails['dispatch_from_state'] ?? null);
+        if (!$dispatchFromState) {
+            $ddcProfile = $ddc?->ddcProfile ?? $ddc?->profile ?? null;
+            $dispatchFromState = $ddcProfile?->state ?? ($ddc?->state ?? 'Delhi');
+        }
         $billToState = $invoice->bill_to_state ?: ($extractedDetails['bill_to_state'] ?? ($order->delivery_state ?? null));
 
         $isIntraState = false;
-        if ($ddcState && $billToState) {
-            $isIntraState = (strtolower(trim($ddcState)) === strtolower(trim($billToState)));
+        if ($dispatchFromState && $billToState) {
+            $isIntraState = (strtolower(trim($dispatchFromState)) === strtolower(trim($billToState)));
         }
 
         $processedItems = [];
@@ -296,6 +321,18 @@ class AdcOrderController extends Controller
         $grandTotal = 0.0;
 
         foreach ($order->items as $item) {
+            if (in_array($item->status, ['Cancelled', 'Rejected'])) {
+                continue;
+            }
+            if ($item->purchaseOrder && in_array($item->purchaseOrder->status, ['Cancelled', 'Rejected'])) {
+                continue;
+            }
+            if ($item->purchaseOrder) {
+                $poItem = $item->purchaseOrder->items->firstWhere('product_id', $item->product_id);
+                if ($poItem && in_array($poItem->status, ['Cancelled', 'Rejected'])) {
+                    continue;
+                }
+            }
             $product = $item->product;
             $qty = (int) $item->quantity;
             $totalQty += $qty;

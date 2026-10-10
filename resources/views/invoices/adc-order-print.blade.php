@@ -406,6 +406,8 @@
                 $physicalDdc = $order->selectedDdc ?? $order->assignedDdc ?? $order->virtualDdc ?? $ddc;
                 $physicalDdcProfile = $physicalDdc?->ddcProfile ?? $physicalDdc?->profile ?? null;
                 $dispatchName = $physicalDdcProfile?->company_name ?? ($physicalDdcProfile?->trade_name ?? ($physicalDdc?->name ?? 'Physical DDC'));
+                $dispatchCode = null;
+                $dispatchType = 'DDC Warehouse';
                 $dispatchAddress = $physicalDdcProfile?->address ?? ($physicalDdcProfile?->ddc_address ?? 'Address not available');
                 $dispatchDistrict = $physicalDdcProfile?->district ?? ($physicalDdc?->district ?? '');
                 $dispatchState = $physicalDdcProfile?->state ?? ($physicalDdc?->state ?? '');
@@ -413,25 +415,43 @@
                 $dispatchPhone = $physicalDdcProfile?->official_phone ?? ($physicalDdcProfile?->phone ?? ($physicalDdc?->mobile ?? 'N/A'));
                 $dispatchGstin = $physicalDdcProfile?->ddc_gst_number ?? ($physicalDdcProfile?->adpl_gst_number ?? ($physicalDdcProfile?->gst_number ?? 'N/A'));
             } else {
-                // Virtual DDC Order -> Dispatch From is the Seller / Vendor or Pickup Store
-                $poId = $order->items->pluck('purchase_order_id')->filter()->first();
-                $po = $poId ? \App\Models\PurchaseOrder::with(['seller.sellerProfile', 'pickupStore.districtRelation', 'pickupStore.stateRelation', 'ddc.profile', 'ddc.ddcProfile'])->find($poId) : null;
+                // Virtual DDC Order -> Dispatch From:
+                // 1. PRIMARY: Assigned Pickup Store
+                // 2. SECONDARY: Main Seller Fallback
+                $pos = $order->purchaseOrders()->with(['seller.sellerProfile', 'pickupStore.districtRelation', 'pickupStore.stateRelation', 'ddc.profile', 'ddc.ddcProfile'])->get();
+                if ($pos->isEmpty()) {
+                    $poIds = $order->items->pluck('purchase_order_id')->filter()->unique();
+                    if ($poIds->isNotEmpty()) {
+                        $pos = \App\Models\PurchaseOrder::with(['seller.sellerProfile', 'pickupStore.districtRelation', 'pickupStore.stateRelation', 'ddc.profile', 'ddc.ddcProfile'])->whereIn('id', $poIds)->get();
+                    }
+                }
+                $po = $pos->first(fn($p) => !empty($p->pickupStore)) ?? $pos->first();
+
+                $dispatchCode = null;
+                $dispatchType = null;
 
                 if ($po) {
                     if ($po->pickupStore) {
+                        // PRIMARY: Pickup Store
                         $ps = $po->pickupStore;
+                        $selProfile = $po->seller?->sellerProfile ?? null;
                         $dispatchName = $ps->pickup_store_name ?? ($ps->contact_person ?? 'Store Outlet');
-                        $dispatchAddress = $ps->address ?? 'Address not available';
-                        $dispatchDistrict = $ps->districtRelation?->name ?? ($ps->district ?? '');
-                        $dispatchState = $ps->stateRelation?->name ?? ($ps->state ?? '');
-                        $dispatchPincode = $ps->pincode ?? '';
-                        $dispatchPhone = $ps->mobile ?? ($ps->contact_person ?? 'N/A');
-                        $dispatchGstin = $ps->gst_number ?? 'N/A';
+                        $dispatchCode = $ps->pickup_store_code;
+                        $dispatchType = 'Pickup Store';
+                        $dispatchAddress = $ps->address ?: ($selProfile?->address ?? ($po->seller?->address ?? 'Address not available'));
+                        $dispatchDistrict = $ps->districtRelation?->name ?? ($ps->district ?: ($selProfile?->district ?? ''));
+                        $dispatchState = $ps->stateRelation?->name ?? ($ps->state ?: ($selProfile?->state ?? ''));
+                        $dispatchPincode = $ps->pincode ?: ($selProfile?->pincode ?? '');
+                        $dispatchPhone = $ps->mobile ?: ($ps->contact_person ?: ($selProfile?->alternate_mobile ?? ($po->seller?->mobile ?? 'N/A')));
+                        $dispatchGstin = $ps->gst_number ?: ($selProfile?->gst_number ?? 'N/A');
                     } elseif ($po->seller) {
+                        // SECONDARY: Main Seller
                         $sel = $po->seller;
                         $selProfile = $sel->sellerProfile ?? null;
                         $dispatchName = $selProfile?->company_name ?? ($sel->name ?? 'Seller');
-                        $dispatchAddress = $selProfile?->address ?? 'Address not available';
+                        $dispatchCode = null;
+                        $dispatchType = 'Main Seller';
+                        $dispatchAddress = $selProfile?->address ?? ($sel->address ?? 'Address not available');
                         $dispatchDistrict = $selProfile?->district ?? ($sel->district ?? '');
                         $dispatchState = $selProfile?->state ?? ($sel->state ?? '');
                         $dispatchPincode = $selProfile?->pincode ?? ($sel->pincode ?? '');
@@ -446,6 +466,8 @@
                         $sel = \App\Models\User::with('sellerProfile')->find($sellerId);
                         $selProfile = $sel?->sellerProfile;
                         $dispatchName = $selProfile?->company_name ?? ($sel?->name ?? 'Seller');
+                        $dispatchCode = null;
+                        $dispatchType = 'Main Seller';
                         $dispatchAddress = $selProfile?->address ?? 'Address not available';
                         $dispatchDistrict = $selProfile?->district ?? '';
                         $dispatchState = $selProfile?->state ?? '';
@@ -455,7 +477,7 @@
                     }
                 }
 
-                if (!$dispatchName) {
+                if (!$dispatchName && (!empty($invoice->dispatch_from_name) && $invoice->dispatch_from_name !== 'ADPL (Virtual DDC Hub)')) {
                     $dispatchName = $invoice->dispatch_from_name;
                     $dispatchAddress = $invoice->dispatch_from_address;
                     $dispatchDistrict = $invoice->dispatch_from_district;
@@ -463,11 +485,17 @@
                     $dispatchPincode = $invoice->dispatch_from_pincode;
                     $dispatchPhone = $invoice->dispatch_from_phone;
                     $dispatchGstin = $invoice->dispatch_from_gstin;
+                    if ($po?->pickupStore) {
+                        $dispatchCode = $po->pickupStore->pickup_store_code;
+                        $dispatchType = 'Pickup Store';
+                    }
                 }
 
                 if (!$dispatchName) {
                     $ddcProfile = $ddc?->profile ?? $ddc?->ddcProfile ?? null;
                     $dispatchName = $ddcProfile?->company_name ?? ($ddc?->name ?? 'DDC Hub');
+                    $dispatchCode = null;
+                    $dispatchType = 'DDC Hub';
                     $dispatchAddress = $ddcProfile?->address ?? 'Address not available';
                     $dispatchDistrict = $ddcProfile?->district ?? '';
                     $dispatchState = $ddcProfile?->state ?? '';

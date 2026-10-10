@@ -279,31 +279,40 @@ class Invoice extends Model
             $dispatchPhone = $ddcProfile?->official_phone ?? ($ddcProfile?->phone ?? ($ddc?->mobile ?? null));
             $dispatchGstin = $ddcProfile?->ddc_gst_number ?? ($ddcProfile?->adpl_gst_number ?? ($ddcProfile?->gst_number ?? 'N/A'));
         } else {
-            // Virtual DDC Order -> Dispatch From is the Seller / Vendor or Pickup Store
-            $poId = $adcOrder->items()->pluck('purchase_order_id')->filter()->first();
-            $po = $poId ? PurchaseOrder::with(['seller.sellerProfile', 'pickupStore.districtRelation', 'pickupStore.stateRelation', 'ddc.profile', 'ddc.ddcProfile'])->find($poId) : null;
-
-            if ($po) {
-                if ($po->pickupStore) {
-                    $store = $po->pickupStore;
-                    $dispatchName = $store->pickup_store_name ?? ($store->contact_person ?? 'Store Outlet');
-                    $dispatchAddress = $store->address ?? 'Address not available';
-                    $dispatchDistrict = $store->districtRelation?->name ?? ($store->district ?? null);
-                    $dispatchState = $store->stateRelation?->name ?? ($store->state ?? null);
-                    $dispatchPincode = $store->pincode ?? null;
-                    $dispatchPhone = $store->mobile ?? ($store->contact_person ?? null);
-                    $dispatchGstin = $store->gst_number ?? 'N/A';
-                } elseif ($po->seller) {
-                    $seller = $po->seller;
-                    $sellerProfile = $seller->sellerProfile ?? null;
-                    $dispatchName = $sellerProfile?->company_name ?? ($seller->name ?? 'Seller');
-                    $dispatchAddress = $sellerProfile?->address ?? ($seller->address ?? 'Address not available');
-                    $dispatchDistrict = $sellerProfile?->district ?? ($seller->district ?? null);
-                    $dispatchState = $sellerProfile?->state ?? ($seller->state ?? null);
-                    $dispatchPincode = $sellerProfile?->pincode ?? ($seller->pincode ?? null);
-                    $dispatchPhone = $sellerProfile?->alternate_mobile ?? ($seller->mobile ?? ($seller->phone ?? null));
-                    $dispatchGstin = $sellerProfile?->gst_number ?? 'N/A';
+            // Virtual DDC Order -> Dispatch From:
+            // 1. PRIMARY: Assigned Pickup Store from linked Purchase Order
+            // 2. SECONDARY: Main Seller from linked Purchase Order or item
+            $pos = $adcOrder->purchaseOrders()->with(['pickupStore.districtRelation', 'pickupStore.stateRelation', 'seller.sellerProfile'])->get();
+            if ($pos->isEmpty()) {
+                $poIds = $adcOrder->items()->pluck('purchase_order_id')->filter()->unique();
+                if ($poIds->isNotEmpty()) {
+                    $pos = PurchaseOrder::with(['pickupStore.districtRelation', 'pickupStore.stateRelation', 'seller.sellerProfile'])->whereIn('id', $poIds)->get();
                 }
+            }
+            $po = $pos->first(fn($p) => !empty($p->pickupStore)) ?? $pos->first();
+
+            if ($po && $po->pickupStore) {
+                // PRIMARY: Assigned Pickup Store details
+                $store = $po->pickupStore;
+                $sellerProfile = $po->seller?->sellerProfile ?? null;
+                $dispatchName = $store->pickup_store_name ?? ($store->contact_person ?? 'Store Outlet');
+                $dispatchAddress = $store->address ?: ($sellerProfile?->address ?? ($po->seller?->address ?? 'Address not available'));
+                $dispatchDistrict = $store->districtRelation?->name ?? ($store->district ?: ($sellerProfile?->district ?? null));
+                $dispatchState = $store->stateRelation?->name ?? ($store->state ?: ($sellerProfile?->state ?? null));
+                $dispatchPincode = $store->pincode ?: ($sellerProfile?->pincode ?? null);
+                $dispatchPhone = $store->mobile ?: ($store->contact_person ?: ($sellerProfile?->alternate_mobile ?? ($po->seller?->mobile ?? null)));
+                $dispatchGstin = $store->gst_number ?: ($sellerProfile?->gst_number ?? 'N/A');
+            } elseif ($po && $po->seller) {
+                // SECONDARY: Main Seller Fallback
+                $seller = $po->seller;
+                $sellerProfile = $seller->sellerProfile ?? null;
+                $dispatchName = $sellerProfile?->company_name ?? ($seller->name ?? 'Seller');
+                $dispatchAddress = $sellerProfile?->address ?? ($seller->address ?? 'Address not available');
+                $dispatchDistrict = $sellerProfile?->district ?? ($seller->district ?? null);
+                $dispatchState = $sellerProfile?->state ?? ($seller->state ?? null);
+                $dispatchPincode = $sellerProfile?->pincode ?? ($seller->pincode ?? null);
+                $dispatchPhone = $sellerProfile?->alternate_mobile ?? ($seller->mobile ?? ($seller->phone ?? null));
+                $dispatchGstin = $sellerProfile?->gst_number ?? 'N/A';
             }
 
             if (!$dispatchName) {

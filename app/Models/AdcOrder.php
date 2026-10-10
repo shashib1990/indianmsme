@@ -98,6 +98,56 @@ class AdcOrder extends Model
     }
 
     /**
+     * Get unique seller company/business names for this ADC order.
+     */
+    public function getSellerNamesAttribute(): array
+    {
+        $sellers = collect();
+        if ($this->relationLoaded('purchaseOrders')) {
+            foreach ($this->purchaseOrders as $po) {
+                if ($po->seller) {
+                    $sellers->push($po->seller->company_name ?: ($po->seller->sellerProfile?->company_name ?: $po->seller->name));
+                }
+            }
+        } else {
+            $pos = $this->purchaseOrders()->with(['seller.sellerProfile'])->get();
+            foreach ($pos as $po) {
+                if ($po->seller) {
+                    $sellers->push($po->seller->company_name ?: ($po->seller->sellerProfile?->company_name ?: $po->seller->name));
+                }
+            }
+        }
+
+        if ($sellers->isEmpty()) {
+            if ($this->relationLoaded('items')) {
+                foreach ($this->items as $item) {
+                    if ($item->seller) {
+                        $sellers->push($item->seller->company_name ?: ($item->seller->sellerProfile?->company_name ?: $item->seller->name));
+                    }
+                }
+            } else {
+                $items = $this->items()->with(['seller.sellerProfile'])->get();
+                foreach ($items as $item) {
+                    if ($item->seller) {
+                        $sellers->push($item->seller->company_name ?: ($item->seller->sellerProfile?->company_name ?: $item->seller->name));
+                    }
+                }
+            }
+        }
+
+        return $sellers->filter()->unique()->values()->all();
+    }
+
+    /**
+     * Get formatted display string of seller names.
+     */
+    public function getSellerNameDisplayAttribute(): string
+    {
+        $names = $this->seller_names;
+        return !empty($names) ? implode(', ', $names) : '—';
+    }
+
+    /**
      * Generate a unique Order number in ORD/26-27/000001 format using global OrderNumberService.
      */
     public static function generateOrderNumber($date = null): string

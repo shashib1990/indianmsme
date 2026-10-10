@@ -58,6 +58,7 @@
                             <tr>
                                 <th>Order #</th>
                                 <th>Date</th>
+                                <th>Seller</th>
                                 <th>Items</th>
                                 <th>Total Amount</th>
                                 <th>Payment</th>
@@ -74,6 +75,20 @@
                                     </a>
                                 </td>
                                 <td>{{ $order->created_at->format('d M Y, h:i A') }}</td>
+                                <td>
+                                    @php
+                                        $sellerNames = $order->seller_names;
+                                    @endphp
+                                    @if(!empty($sellerNames))
+                                        @foreach($sellerNames as $sName)
+                                            <div class="fw-semibold text-slate-800" style="font-size: 12.5px;">
+                                                <iconify-icon icon="solar:shop-bold-duotone" class="align-middle me-1 text-primary"></iconify-icon>{{ $sName }}
+                                            </div>
+                                        @endforeach
+                                    @else
+                                        <span class="text-muted small">—</span>
+                                    @endif
+                                </td>
                                 <td>
                                     <span class="badge bg-secondary-subtle text-secondary rounded-pill">
                                         {{ $order->items->count() }} {{ Str::plural('item', $order->items->count()) }}
@@ -148,7 +163,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="7" class="text-center py-5 text-muted">
+                                <td colspan="8" class="text-center py-5 text-muted">
                                     <iconify-icon icon="solar:bag-smile-broken" class="fs-36 text-muted mb-2"></iconify-icon><br>
                                     No orders found.
                                 </td>

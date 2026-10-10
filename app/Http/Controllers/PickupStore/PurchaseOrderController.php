@@ -222,19 +222,27 @@ class PurchaseOrderController extends Controller
                 ?: AdcOrderItem::where('purchase_order_id', $purchaseOrder->id)->value('adc_order_id');
 
             if ($adcOrderId) {
-                AdcOrderItem::where('purchase_order_id', $purchaseOrder->id)
-                    ->orWhere(function ($q) use ($adcOrderId, $purchaseOrder) {
-                        $q->where('adc_order_id', $adcOrderId)
-                          ->where('seller_id', $purchaseOrder->seller_id);
-                    })
-                    ->update(['status' => 'Dispatched']);
+                AdcOrderItem::where(function ($q) use ($purchaseOrder, $adcOrderId) {
+                    $q->where('purchase_order_id', $purchaseOrder->id)
+                      ->orWhere(function ($sub) use ($adcOrderId, $purchaseOrder) {
+                          $sub->where('adc_order_id', $adcOrderId)
+                              ->where('seller_id', $purchaseOrder->seller_id);
+                      });
+                })
+                ->whereNotIn('status', ['Cancelled', 'Rejected'])
+                ->update(['status' => 'Dispatched']);
 
                 foreach ($purchaseOrder->items as $poItem) {
+                    if ($poItem->status === 'Rejected') {
+                        continue;
+                    }
                     if ($poItem->mfg_date || $poItem->expire_date) {
                         AdcOrderItem::where(function ($q) use ($purchaseOrder, $poItem) {
                             $q->where('purchase_order_id', $purchaseOrder->id)
                               ->where('product_id', $poItem->product_id);
-                        })->update([
+                        })
+                        ->whereNotIn('status', ['Cancelled', 'Rejected'])
+                        ->update([
                             'mfg_date' => $poItem->mfg_date,
                             'expire_date' => $poItem->expire_date,
                         ]);
@@ -244,7 +252,7 @@ class PurchaseOrderController extends Controller
                 $adcOrder = AdcOrder::find($adcOrderId);
                 if ($adcOrder) {
                     $allDispatched = !AdcOrderItem::where('adc_order_id', $adcOrder->id)
-                        ->whereNotIn('status', ['Dispatched', 'Received', 'Cancelled'])
+                        ->whereNotIn('status', ['Dispatched', 'Received', 'Cancelled', 'Rejected'])
                         ->exists();
 
                     $hasDispatched = AdcOrderItem::where('adc_order_id', $adcOrder->id)

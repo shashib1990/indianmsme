@@ -126,10 +126,20 @@ class AdcOrderController extends Controller
     {
         $order = AdcOrder::with([
             'items.product', 
-            'items.seller', 
+            'items.seller.sellerProfile', 
+            'items.purchaseOrder.invoice',
+            'items.purchaseOrder.pickupStore.districtRelation',
+            'items.purchaseOrder.pickupStore.stateRelation',
+            'items.purchaseOrder.seller.sellerProfile',
+            'purchaseOrders.seller.sellerProfile',
+            'purchaseOrders.pickupStore.districtRelation',
+            'purchaseOrders.pickupStore.stateRelation',
             'virtualDdc.profile', 
+            'virtualDdc.ddcProfile', 
             'selectedDdc.profile', 
+            'selectedDdc.ddcProfile', 
             'assignedDdc.profile', 
+            'assignedDdc.ddcProfile', 
             'adc.profile', 
             'adc.adcProfile'
         ])->findOrFail($id);
@@ -143,8 +153,9 @@ class AdcOrderController extends Controller
             }
         }
 
+        $extractedDetails = \App\Models\Invoice::extractAdcInvoiceDetails($order);
+
         if (!$invoice && in_array($order->status, ['Pending', 'Processing', 'Dispatched', 'Partially Dispatched', 'Received', 'Delivered', 'Completed'])) {
-            $extractedDetails = \App\Models\Invoice::extractAdcInvoiceDetails($order);
             $supplierGstin = $extractedDetails['supplier_gstin'] ?? 'N/A';
             $invoiceDetails = \App\Models\Invoice::generateNextInvoiceNumber(now(), $supplierGstin, 'DL');
             $invoice = \App\Models\Invoice::create(array_merge([
@@ -160,22 +171,45 @@ class AdcOrderController extends Controller
             return redirect()->back()->with('error', 'Tax Invoice has not been generated for this order yet.');
         }
 
+        // Always ensure dispatch_from details on the invoice match the correct current pickup store / seller
+        if (empty($invoice->dispatch_from_name) 
+            || $invoice->dispatch_from_name === 'ADPL (Virtual DDC Hub)' 
+            || empty($invoice->dispatch_from_state) 
+            || empty($invoice->dispatch_from_address)
+            || (!empty($extractedDetails['dispatch_from_name']) && $invoice->dispatch_from_name !== $extractedDetails['dispatch_from_name'])
+            || (!empty($extractedDetails['dispatch_from_address']) && $invoice->dispatch_from_address !== $extractedDetails['dispatch_from_address'])
+            || (!empty($extractedDetails['dispatch_from_pincode']) && $invoice->dispatch_from_pincode !== $extractedDetails['dispatch_from_pincode'])
+            || (!empty($extractedDetails['dispatch_from_gstin']) && $invoice->dispatch_from_gstin !== $extractedDetails['dispatch_from_gstin'])) {
+            $invoice->update([
+                'dispatch_from_name'     => $extractedDetails['dispatch_from_name'] ?? $invoice->dispatch_from_name,
+                'dispatch_from_address'  => $extractedDetails['dispatch_from_address'] ?? $invoice->dispatch_from_address,
+                'dispatch_from_district' => $extractedDetails['dispatch_from_district'] ?? $invoice->dispatch_from_district,
+                'dispatch_from_state'    => $extractedDetails['dispatch_from_state'] ?? $invoice->dispatch_from_state,
+                'dispatch_from_pincode'  => $extractedDetails['dispatch_from_pincode'] ?? $invoice->dispatch_from_pincode,
+                'dispatch_from_phone'    => $extractedDetails['dispatch_from_phone'] ?? $invoice->dispatch_from_phone,
+                'dispatch_from_gstin'    => $extractedDetails['dispatch_from_gstin'] ?? $invoice->dispatch_from_gstin,
+            ]);
+            $invoice->refresh();
+        }
+
         $ddc = $order->virtualDdc ?? $order->selectedDdc ?? $order->assignedDdc;
         if (!$ddc) {
             $firstDdcId = $order->items()->pluck('virtual_ddc_id')->filter()->first() ?? $order->items()->pluck('ddc_id')->filter()->first();
             if ($firstDdcId) {
-                $ddc = \App\Models\User::with('profile')->find($firstDdcId);
+                $ddc = \App\Models\User::with(['profile', 'ddcProfile'])->find($firstDdcId);
             }
         }
 
-        $extractedDetails = \App\Models\Invoice::extractAdcInvoiceDetails($order);
-        $ddcProfile = $ddc?->ddcProfile ?? $ddc?->profile ?? null;
-        $ddcState = $ddcProfile?->state ?? ($ddc?->state ?? 'Delhi');
+        $dispatchFromState = $invoice->dispatch_from_state ?: ($extractedDetails['dispatch_from_state'] ?? null);
+        if (!$dispatchFromState) {
+            $ddcProfile = $ddc?->ddcProfile ?? $ddc?->profile ?? null;
+            $dispatchFromState = $ddcProfile?->state ?? ($ddc?->state ?? 'Delhi');
+        }
         $billToState = $invoice->bill_to_state ?: ($extractedDetails['bill_to_state'] ?? ($order->delivery_state ?? null));
 
         $isIntraState = false;
-        if ($ddcState && $billToState) {
-            $isIntraState = (strtolower(trim($ddcState)) === strtolower(trim($billToState)));
+        if ($dispatchFromState && $billToState) {
+            $isIntraState = (strtolower(trim($dispatchFromState)) === strtolower(trim($billToState)));
         }
 
         $processedItems = [];
@@ -188,6 +222,15 @@ class AdcOrderController extends Controller
         foreach ($order->items as $item) {
             if (in_array($item->status, ['Cancelled', 'Rejected'])) {
                 continue;
+            }
+            if ($item->purchaseOrder && in_array($item->purchaseOrder->status, ['Cancelled', 'Rejected'])) {
+                continue;
+            }
+            if ($item->purchaseOrder) {
+                $poItem = $item->purchaseOrder->items->firstWhere('product_id', $item->product_id);
+                if ($poItem && in_array($poItem->status, ['Cancelled', 'Rejected'])) {
+                    continue;
+                }
             }
             $product = $item->product;
             $qty = (int) $item->quantity;

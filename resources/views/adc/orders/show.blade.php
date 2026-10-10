@@ -45,11 +45,17 @@
             </div>
             <div class="card-body">
                 <div class="row g-3">
-                    <div class="col-sm-6">
+                    <div class="col-sm-4">
+                        <span class="text-muted small d-block">Seller</span>
+                        <strong class="text-dark">
+                            <i class="bx bx-store me-1 text-primary"></i>{{ $order->seller_name_display }}
+                        </strong>
+                    </div>
+                    <div class="col-sm-4">
                         <span class="text-muted small d-block">Payment Method</span>
                         <strong class="text-dark">{{ $order->payment_method ?? 'Wallet' }}</strong>
                     </div>
-                    <div class="col-sm-6">
+                    <div class="col-sm-4">
                         <span class="text-muted small d-block">Total Packages</span>
                         <strong class="text-dark">
                             {{ ($order->items->where('fulfillment_type', 'physical')->count() > 0 ? 1 : 0) + $order->items->where('fulfillment_type', 'virtual')->groupBy('purchase_order_id')->count() }} Package(s)
@@ -171,6 +177,18 @@
         @php
             $physicalItems = $order->items->where('fulfillment_type', 'physical');
             $virtualGrouped = $order->items->where('fulfillment_type', 'virtual')->groupBy('purchase_order_id');
+
+            $rejectedOrderItems = $order->items->filter(function($item) {
+                if (in_array($item->status, ['Rejected', 'Cancelled'])) return true;
+                if ($item->purchaseOrder && in_array($item->purchaseOrder->status, ['Cancelled', 'Rejected'])) return true;
+                if ($item->purchaseOrder) {
+                    $poItem = $item->purchaseOrder->items->firstWhere('product_id', $item->product_id);
+                    if ($poItem && in_array($poItem->status, ['Cancelled', 'Rejected'])) return true;
+                }
+                return false;
+            });
+            $rejectedTotal = $rejectedOrderItems->sum('total');
+            $activeOrderTotal = max(0, (float)$order->total_amount - (float)$rejectedTotal);
         @endphp
 
         <!-- Physical DDC Package -->
@@ -204,6 +222,33 @@
                     @endif
                 </div>
             </div>
+            @php
+                $physDdc = $order->selectedDdc ?? $order->assignedDdc ?? $order->virtualDdc;
+                $physDdcProfile = $physDdc?->ddcProfile ?? $physDdc?->profile ?? null;
+                $physDdcName = $physDdcProfile?->company_name ?? ($physDdcProfile?->trade_name ?? ($physDdc?->name ?? 'DDC Warehouse'));
+                $physDdcAddress = $physDdcProfile?->address ?? ($physDdcProfile?->ddc_address ?? null);
+                $physDdcDistrict = $physDdcProfile?->district ?? ($physDdc?->district ?? null);
+                $physDdcState = $physDdcProfile?->state ?? ($physDdc?->state ?? null);
+                $physDdcPincode = $physDdcProfile?->pincode ?? ($physDdc?->pincode ?? null);
+                $physDdcPhone = $physDdcProfile?->official_phone ?? ($physDdcProfile?->phone ?? ($physDdc?->mobile ?? null));
+            @endphp
+            <div class="card-body bg-light-subtle border-bottom py-2.5 px-3">
+                <div class="d-flex align-items-start small">
+                    <i class="bx bx-map-pin text-primary fs-16 me-2 mt-0.5"></i>
+                    <div>
+                        <span class="text-muted small fw-semibold text-uppercase">Dispatch From:</span>
+                        <span class="fw-bold text-dark fs-13 ms-1">{{ $physDdcName }} (DDC Warehouse)</span>
+                        @if($physDdcAddress)
+                            <div class="text-muted small mt-0.5">
+                                {{ $physDdcAddress }}@if($physDdcDistrict || $physDdcState || $physDdcPincode), {{ $physDdcDistrict }}{{ ($physDdcDistrict && $physDdcState) ? ', ' : '' }}{{ $physDdcState }}{{ $physDdcPincode ? ' - ' . $physDdcPincode : '' }}@endif
+                                @if($physDdcPhone)
+                                    <span class="ms-2 text-dark"><i class="bx bx-phone me-0.5 text-muted"></i>{{ $physDdcPhone }}</span>
+                                @endif
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
@@ -217,17 +262,35 @@
                         </thead>
                         <tbody>
                             @foreach($physicalItems as $item)
-                            <tr>
+                            @php
+                                $isPhysRejected = in_array($item->status, ['Rejected', 'Cancelled']);
+                            @endphp
+                            <tr class="{{ $isPhysRejected ? 'table-danger bg-danger bg-opacity-10' : '' }}">
                                 <td>
-                                    <h6 class="mb-0 fs-14 fw-semibold text-dark">{{ $item->product_name ?? 'Product' }}</h6>
+                                    <h6 class="mb-0 fs-14 fw-semibold {{ $isPhysRejected ? 'text-decoration-line-through text-muted' : 'text-dark' }}">{{ $item->product_name ?? 'Product' }}</h6>
                                     <span class="text-muted small">Code: {{ $item->product_code }}</span>
-                                    @if($item->is_stocked_in)
+                                    @if($isPhysRejected)
+                                        <br>
+                                        <span class="badge bg-danger text-white fs-11 mt-1">
+                                            <i class="bx bx-x-circle me-0.5"></i> Cancelled / Rejected (Refunded)
+                                        </span>
+                                        @if($item->remarks)
+                                            <span class="text-danger small ms-1 fst-italic">Reason: {{ $item->remarks }}</span>
+                                        @endif
+                                    @elseif($item->is_stocked_in)
                                         <br><span class="badge bg-success-subtle text-success fs-11">Stocked In (Received MRP: ₹{{ number_format($item->received_mrp, 2) }})</span>
                                     @endif
                                 </td>
-                                <td class="text-center fw-bold">{{ $item->quantity }}</td>
-                                <td class="text-end">₹{{ number_format($item->price, 2) }}</td>
-                                <td class="text-end fw-bold text-primary">₹{{ number_format($item->total, 2) }}</td>
+                                <td class="text-center fw-bold {{ $isPhysRejected ? 'text-danger' : '' }}">{{ $item->quantity }}</td>
+                                <td class="text-end {{ $isPhysRejected ? 'text-muted' : '' }}">₹{{ number_format($item->price, 2) }}</td>
+                                <td class="text-end fw-bold {{ $isPhysRejected ? 'text-danger' : 'text-primary' }}">
+                                    @if($isPhysRejected)
+                                        <span class="text-decoration-line-through me-1 text-muted">₹{{ number_format($item->total, 2) }}</span>
+                                        <span class="badge bg-danger-subtle text-danger">Refunded</span>
+                                    @else
+                                        ₹{{ number_format($item->total, 2) }}
+                                    @endif
+                                </td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -252,6 +315,25 @@
                 'Received'   => 'bg-success text-white',
                 'Rejected'   => 'bg-danger text-white',
             ];
+            $pickupStore = $po?->pickupStore;
+            $dispatchName = $pickupStore?->pickup_store_name ?? ($seller?->sellerProfile?->company_name ?? ($seller?->name ?? 'N/A'));
+            $dispatchCode = $pickupStore?->pickup_store_code;
+            $dispatchAddress = $pickupStore?->address ?? ($seller?->sellerProfile?->address ?? null);
+            $dispatchDistrict = $pickupStore?->districtRelation?->name ?? ($pickupStore?->district ?? ($seller?->sellerProfile?->district ?? null));
+            $dispatchState = $pickupStore?->stateRelation?->name ?? ($pickupStore?->state ?? ($seller?->sellerProfile?->state ?? null));
+            $dispatchPincode = $pickupStore?->pincode ?? ($seller?->sellerProfile?->pincode ?? null);
+            $dispatchPhone = $pickupStore?->mobile ?? ($seller?->sellerProfile?->alternate_mobile ?? ($seller?->mobile ?? null));
+
+            $activeItemsInPkg = $itemsList->reject(function($i) {
+                return in_array($i->status, ['Rejected', 'Cancelled'])
+                    || ($i->purchaseOrder && in_array($i->purchaseOrder->status, ['Cancelled', 'Rejected']))
+                    || ($i->purchaseOrder && $i->purchaseOrder->items->firstWhere('product_id', $i->product_id)?->status === 'Rejected');
+            });
+            $rejectedItemsInPkg = $itemsList->filter(function($i) {
+                return in_array($i->status, ['Rejected', 'Cancelled'])
+                    || ($i->purchaseOrder && in_array($i->purchaseOrder->status, ['Cancelled', 'Rejected']))
+                    || ($i->purchaseOrder && $i->purchaseOrder->items->firstWhere('product_id', $i->product_id)?->status === 'Rejected');
+            });
         @endphp
         <div class="card mb-4 border-start border-4 border-info">
             <div class="card-header bg-light d-flex align-items-center justify-content-between">
@@ -259,42 +341,71 @@
                     <h6 class="card-title mb-0 text-info">
                         <i class="bx bx-package me-1"></i> Package {{ $pkgNum }}: Direct Delivery
                     </h6>
-                    <span class="text-muted small">Seller: {{ $seller?->company_name ?: $seller?->name }}</span>
+                    <span class="text-muted small">Seller: <strong>{{ $seller?->company_name ?: $seller?->name }}</strong></span>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <span class="badge {{ $poBadgeMap[$itemStatus] ?? 'bg-secondary' }}">
-                        {{ $itemStatus === 'Received' ? 'Stocked In & Received' : $itemStatus }}
-                    </span>
-                    @if(($itemStatus === 'Dispatched' || $po?->status === 'Dispatched') && $itemStatus !== 'Received')
+                    @if($activeItemsInPkg->isEmpty())
+                        <span class="badge bg-danger text-white">All Items Rejected</span>
+                    @else
+                        <span class="badge {{ $poBadgeMap[$itemStatus] ?? 'bg-secondary' }}">
+                            {{ $itemStatus === 'Received' ? 'Stocked In & Received' : $itemStatus }}
+                        </span>
+                        @if($rejectedItemsInPkg->isNotEmpty())
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle fs-11">
+                                {{ $rejectedItemsInPkg->count() }} Item(s) Rejected &amp; Refunded
+                            </span>
+                        @endif
+                    @endif
+                    @if(($itemStatus === 'Dispatched' || $po?->status === 'Dispatched') && $itemStatus !== 'Received' && $activeItemsInPkg->isNotEmpty())
                         <a href="{{ route('adc.orders.receive.show', $order->id) }}" class="btn btn-xs btn-success fw-semibold px-2.5 py-1">
                             <i class="bx bx-import me-1"></i> Stock In / Receive Items
                         </a>
                     @endif
                 </div>
             </div>
-            @if($po && $po->dispatch_status === 'Dispatched')
-            <div class="card-body bg-light-subtle border-bottom py-2 px-3">
-                <div class="row g-2 small text-muted">
-                    <div class="col-sm-4">
-                        <strong>Courier:</strong> {{ $po->invoice?->transporter_name ?? 'N/A' }}
+            <div class="card-body bg-light-subtle border-bottom py-2.5 px-3">
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-7">
+                        <div class="d-flex align-items-start">
+                            <i class="bx bx-map-pin text-primary fs-16 me-2 mt-0.5"></i>
+                            <div>
+                                <span class="text-muted small fw-semibold text-uppercase">Dispatch From:</span>
+                                <span class="fw-bold text-dark fs-13 ms-1">{{ $dispatchName }}</span>
+                                @if($dispatchCode)
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace ms-1 fs-11">{{ $dispatchCode }}</span>
+                                @endif
+                                @if($dispatchAddress)
+                                    <div class="text-muted small mt-0.5">
+                                        {{ $dispatchAddress }}@if($dispatchDistrict || $dispatchState || $dispatchPincode), {{ $dispatchDistrict }}{{ ($dispatchDistrict && $dispatchState) ? ', ' : '' }}{{ $dispatchState }}{{ $dispatchPincode ? ' - ' . $dispatchPincode : '' }}@endif
+                                        @if($dispatchPhone)
+                                            <span class="ms-2 text-dark"><i class="bx bx-phone me-0.5 text-muted"></i>{{ $dispatchPhone }}</span>
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-sm-4">
-                        <strong>Tracking #:</strong> {{ $po->invoice?->eway_bill_number ?? 'N/A' }}
-                    </div>
-                    <div class="col-sm-4 text-end">
-                        @if($po->invoice?->ddc_invoice_file)
-                            <a href="{{ \Illuminate\Support\Str::startsWith($po->invoice->ddc_invoice_file, ['http://', 'https://']) ? $po->invoice->ddc_invoice_file : asset('storage/' . $po->invoice->ddc_invoice_file) }}" target="_blank" class="btn btn-xs btn-outline-primary">
-                                <i class="bx bx-download me-1"></i> Download DDC Invoice
-                            </a>
-                        @else
-                            <a href="{{ route('adc.orders.invoice', $order->id) }}" target="_blank" class="btn btn-xs btn-outline-primary">
-                                <i class="bx bx-file me-1"></i> Download Tax Invoice
-                            </a>
+                    <div class="col-md-5 text-md-end">
+                        @if($po && $po->dispatch_status === 'Dispatched')
+                            <div class="small text-muted mb-1">
+                                <span><strong>Courier:</strong> {{ $po->invoice?->transporter_name ?? 'N/A' }}</span>
+                                <span class="ms-2"><strong>Tracking:</strong> {{ $po->invoice?->eway_bill_number ?? 'N/A' }}</span>
+                            </div>
                         @endif
+                        <div class="mt-1">
+                            @if($po?->invoice?->ddc_invoice_file)
+                                <a href="{{ \Illuminate\Support\Str::startsWith($po->invoice->ddc_invoice_file, ['http://', 'https://']) ? $po->invoice->ddc_invoice_file : asset('storage/' . $po->invoice->ddc_invoice_file) }}" target="_blank" class="btn btn-xs btn-outline-primary">
+                                    <i class="bx bx-download me-1"></i> Download DDC Invoice
+                                </a>
+                            @else
+                                <a href="{{ route('adc.orders.invoice', $order->id) }}" target="_blank" class="btn btn-xs btn-outline-primary">
+                                    <i class="bx bx-file me-1"></i> Download Tax Invoice
+                                </a>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>
-            @endif
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
@@ -308,17 +419,39 @@
                         </thead>
                         <tbody>
                             @foreach($itemsList as $item)
-                            <tr>
+                            @php
+                                $isItemRejected = in_array($item->status, ['Rejected', 'Cancelled'])
+                                    || ($item->purchaseOrder && in_array($item->purchaseOrder->status, ['Cancelled', 'Rejected']))
+                                    || ($item->purchaseOrder && $item->purchaseOrder->items->firstWhere('product_id', $item->product_id)?->status === 'Rejected');
+                                $poItem = $item->purchaseOrder?->items->firstWhere('product_id', $item->product_id);
+                                $itemRemarks = $item->remarks ?: ($poItem?->remarks ?: null);
+                            @endphp
+                            <tr class="{{ $isItemRejected ? 'table-danger bg-danger bg-opacity-10' : '' }}">
                                 <td>
-                                    <h6 class="mb-0 fs-14 fw-semibold text-dark">{{ $item->product_name ?? 'Product' }}</h6>
+                                    <h6 class="mb-0 fs-14 fw-semibold {{ $isItemRejected ? 'text-decoration-line-through text-muted' : 'text-dark' }}">{{ $item->product_name ?? 'Product' }}</h6>
                                     <span class="text-muted small">Code: {{ $item->product_code }}</span>
-                                    @if($item->status === 'Rejected')
-                                        <br><span class="badge bg-danger-subtle text-danger fs-11">Declined & Refunded</span>
+                                    @if($isItemRejected)
+                                        <br>
+                                        <span class="badge bg-danger text-white fs-11 mt-1">
+                                            <i class="bx bx-x-circle me-0.5"></i> Rejected by Seller (Refunded to Wallet)
+                                        </span>
+                                        @if($itemRemarks)
+                                            <span class="text-danger small ms-1 fst-italic">Reason: {{ $itemRemarks }}</span>
+                                        @endif
+                                    @elseif($item->is_stocked_in)
+                                        <br><span class="badge bg-success-subtle text-success fs-11">Stocked In (Received MRP: ₹{{ number_format($item->received_mrp, 2) }})</span>
                                     @endif
                                 </td>
-                                <td class="text-center fw-bold">{{ $item->quantity }}</td>
-                                <td class="text-end">₹{{ number_format($item->price, 2) }}</td>
-                                <td class="text-end fw-bold text-primary">₹{{ number_format($item->total, 2) }}</td>
+                                <td class="text-center fw-bold {{ $isItemRejected ? 'text-danger' : '' }}">{{ $item->quantity }}</td>
+                                <td class="text-end {{ $isItemRejected ? 'text-muted' : '' }}">₹{{ number_format($item->price, 2) }}</td>
+                                <td class="text-end fw-bold {{ $isItemRejected ? 'text-danger' : 'text-primary' }}">
+                                    @if($isItemRejected)
+                                        <span class="text-decoration-line-through me-1 text-muted">₹{{ number_format($item->total, 2) }}</span>
+                                        <span class="badge bg-danger-subtle text-danger">Refunded</span>
+                                    @else
+                                        ₹{{ number_format($item->total, 2) }}
+                                    @endif
+                                </td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -339,6 +472,38 @@
             </div>
             <div class="card-body">
                 <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Seller:</span>
+                    <strong class="text-dark">{{ $order->seller_name_display }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Total Ordered Items:</span>
+                    <strong>{{ $order->items->count() }} items</strong>
+                </div>
+                @if($rejectedOrderItems->isNotEmpty())
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Accepted Active Items:</span>
+                    <strong class="text-success">{{ $order->items->count() - $rejectedOrderItems->count() }} items</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Original Total:</span>
+                    <span class="text-muted text-decoration-line-through">₹{{ number_format($order->total_amount, 2) }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2 text-danger">
+                    <span>Less: Refunded to Wallet:</span>
+                    <span class="fw-bold">-₹{{ number_format($rejectedTotal, 2) }}</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between fs-16 fw-bold">
+                    <span>Net Active Total:</span>
+                    <span class="text-success">₹{{ number_format($activeOrderTotal, 2) }}</span>
+                </div>
+                <div class="mt-2 text-center">
+                    <span class="badge bg-danger-subtle text-danger small px-2 py-1">
+                        ₹{{ number_format($rejectedTotal, 2) }} refunded to wallet ({{ $rejectedOrderItems->count() }} rejected)
+                    </span>
+                </div>
+                @else
+                <div class="d-flex justify-content-between mb-2">
                     <span class="text-muted">Subtotal (Excl. GST):</span>
                     <strong>₹{{ number_format($order->subtotal_excl_gst, 2) }}</strong>
                 </div>
@@ -351,6 +516,7 @@
                     <span>Grand Total:</span>
                     <span class="text-primary">₹{{ number_format($order->total_amount, 2) }}</span>
                 </div>
+                @endif
             </div>
         </div>
 
@@ -360,12 +526,33 @@
                 <h5 class="card-title mb-0">Shipping & Delivery</h5>
             </div>
             <div class="card-body">
-                <p class="text-muted small mb-1"><i class="bx bx-map me-1 text-primary"></i> Delivery Address:</p>
+                <p class="text-muted small mb-1"><i class="bx bx-map me-1 text-primary"></i> Delivery Address (Ship To):</p>
                 <p class="fw-medium text-dark mb-3">{{ $order->shipping_address }}</p>
 
                 @if($order->delivery_pincode)
                 <p class="text-muted small mb-1">Pincode / Location:</p>
                 <p class="fw-medium text-dark mb-0">{{ $order->delivery_pincode }} ({{ $order->delivery_district ?? '' }}, {{ $order->delivery_state ?? '' }})</p>
+                @endif
+
+                @php
+                    $firstStore = $order->purchaseOrders->first()?->pickupStore;
+                    $firstStoreSeller = $order->purchaseOrders->first()?->seller;
+                @endphp
+                @if($firstStore || $firstStoreSeller)
+                <hr>
+                <p class="text-muted small mb-1"><i class="bx bx-paper-plane me-1 text-success"></i> Dispatch From (Origin):</p>
+                <p class="fw-semibold text-dark mb-0">
+                    {{ $firstStore?->pickup_store_name ?? ($firstStoreSeller?->sellerProfile?->company_name ?? ($firstStoreSeller?->name ?? 'N/A')) }}
+                    @if($firstStore?->pickup_store_code)
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace ms-1 fs-11">{{ $firstStore->pickup_store_code }}</span>
+                    @endif
+                </p>
+                <p class="text-muted small mb-0">
+                    {{ $firstStore?->address ?? ($firstStoreSeller?->sellerProfile?->address ?? '') }}
+                    @if($firstStore?->district || $firstStore?->state || $firstStore?->pincode)
+                        <br>{{ $firstStore->districtRelation?->name ?? $firstStore->district }}, {{ $firstStore->stateRelation?->name ?? $firstStore->state }} - {{ $firstStore->pincode }}
+                    @endif
+                </p>
                 @endif
 
                 @if($order->notes)

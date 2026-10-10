@@ -142,6 +142,69 @@
         $hasUploadedInvoice = !empty($order->received_invoice_number) && !empty($order->received_invoice_file);
     @endphp
 
+    @if(isset($rejectedItems) && $rejectedItems->isNotEmpty())
+    <div class="card border-0 shadow-sm mb-4 border-start border-4 border-danger">
+        <div class="card-body p-3">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                <div class="d-flex align-items-center gap-2">
+                    <iconify-icon icon="solar:shield-warning-bold" class="text-danger fs-3"></iconify-icon>
+                    <h6 class="fw-bold text-slate-800 mb-0">
+                        {{ $rejectedItems->count() }} Product(s) Rejected by Seller &amp; Refunded to Wallet
+                    </h6>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-danger-subtle text-danger px-2.5 py-1.5 fs-12 fw-semibold">
+                        Total Refund: ₹{{ number_format($rejectedItems->sum('total'), 2) }}
+                    </span>
+                    <button class="btn btn-xs btn-outline-secondary py-1 px-2.5" type="button" data-bs-toggle="collapse" data-bs-target="#rejectedProductsCollapse" aria-expanded="false">
+                        <iconify-icon icon="solar:alt-arrow-down-bold" class="align-middle me-0.5"></iconify-icon> View Rejected Items
+                    </button>
+                </div>
+            </div>
+            <p class="text-muted small mb-0">
+                The seller could not fulfill {{ $rejectedItems->count() }} item(s) from this order. The entire amount has been credited back to your ADC wallet. These items are <strong>excluded from this Stock-In list</strong> and from your official <strong>Tax Invoice</strong>.
+            </p>
+
+            <div class="collapse mt-3" id="rejectedProductsCollapse">
+                <div class="table-responsive rounded border bg-light-subtle">
+                    <table class="table table-sm table-hover align-middle mb-0">
+                        <thead class="bg-light text-muted small">
+                            <tr>
+                                <th class="ps-3 py-2">Product Name</th>
+                                <th class="py-2">Code</th>
+                                <th class="text-center py-2">Quantity</th>
+                                <th class="text-end py-2">Price</th>
+                                <th class="text-end py-2">Refunded Amount</th>
+                                <th class="py-2 pe-3">Seller Remarks / Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($rejectedItems as $rej)
+                            <tr>
+                                <td class="ps-3">
+                                    <span class="text-decoration-line-through text-muted fw-semibold">{{ $rej->product_name ?? $rej->product?->product_name ?? 'Product' }}</span>
+                                </td>
+                                <td>
+                                    <span class="font-monospace text-muted small">{{ $rej->product_code ?? $rej->product?->barcode ?? 'N/A' }}</span>
+                                </td>
+                                <td class="text-center fw-bold text-danger">{{ $rej->quantity }}</td>
+                                <td class="text-end text-muted">₹{{ number_format($rej->price, 2) }}</td>
+                                <td class="text-end fw-bold text-danger">₹{{ number_format($rej->total, 2) }}</td>
+                                <td class="pe-3">
+                                    <span class="badge bg-danger-subtle text-danger">
+                                        {{ $rej->remarks ?: ($rej->purchaseOrder?->items->firstWhere('product_id', $rej->product_id)?->remarks ?: 'Rejected by Seller') }}
+                                    </span>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- Form Definitions (Hidden) -->
     @foreach($items as $item)
         @if(!$item->is_stocked_in)
