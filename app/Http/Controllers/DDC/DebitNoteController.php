@@ -29,7 +29,9 @@ class DebitNoteController extends Controller
                   })
                   ->orWhereHas('seller', function ($sQ) use ($search) {
                       $sQ->where('name', 'like', "%{$search}%")
-                         ->orWhere('company_name', 'like', "%{$search}%");
+                         ->orWhereHas('sellerProfile', function ($spq) use ($search) {
+                             $spq->where('company_name', 'like', "%{$search}%");
+                         });
                   });
             });
         }

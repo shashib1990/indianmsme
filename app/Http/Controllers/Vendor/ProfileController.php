@@ -423,7 +423,9 @@ class ProfileController extends Controller
                 $q->where('po_number', 'like', "%{$search}%")
                   ->orWhereHas('ddc', function ($dq) use ($search) {
                       $dq->where('name', 'like', "%{$search}%")
-                        ->orWhere('company_name', 'like', "%{$search}%");
+                        ->orWhereHas('profile', function ($dpq) use ($search) {
+                            $dpq->where('company_name', 'like', "%{$search}%");
+                        });
                   })
                   ->orWhereHas('items.product', function ($pq) use ($search) {
                       $pq->where('product_name', 'like', "%{$search}%")

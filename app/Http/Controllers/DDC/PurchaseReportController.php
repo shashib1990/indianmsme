@@ -284,7 +284,10 @@ class PurchaseReportController extends Controller
             }
             if ($supplier) {
                 $excessInvQuery->whereHas('purchaseOrder.seller', function($q) use ($supplier) {
-                    $q->where('name', 'like', "%{$supplier}%")->orWhere('company_name', 'like', "%{$supplier}%");
+                    $q->where('name', 'like', "%{$supplier}%")
+                      ->orWhereHas('sellerProfile', function($spq) use ($supplier) {
+                          $spq->where('company_name', 'like', "%{$supplier}%");
+                      });
                 });
             }
             if ($search) {

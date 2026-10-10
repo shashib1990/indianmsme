@@ -71,8 +71,19 @@
                     </div>
                     <div class="col-md-3">
                         <span class="text-muted small d-block">Canteen / ADC Name</span>
-                        <span class="fw-semibold text-slate-800 d-block">{{ $purchaseOrder->adcOrder->adc?->profile?->company_name ?: ($purchaseOrder->adcOrder->adc?->name ?? 'N/A') }}</span>
-                        <span class="small text-muted">{{ $purchaseOrder->adcOrder->adc?->name }} ({{ $purchaseOrder->adcOrder->adc?->mobile }})</span>
+                        @php
+                            $adcUser = $purchaseOrder->adcOrder->adc;
+                            $adcProf = $adcUser?->profile ?? $adcUser?->adcProfile;
+                            $adcIdVal = $adcProf?->adc_code ?: ($adcUser?->adc_code ?: ($adcProf?->code ?: ($adcUser ? ('ADC' . str_pad($adcUser->id, 3, '0', STR_PAD_LEFT)) : null)));
+                            $canteenName = $adcProf?->company_name ?: ($adcProf?->trade_name ?: ($adcUser?->name ?? 'N/A'));
+                        @endphp
+                        <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                            @if($adcIdVal)
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-1.5 py-0.5 fs-11 font-monospace" title="ADC ID">{{ $adcIdVal }}</span>
+                            @endif
+                            <span class="fw-semibold text-slate-800">{{ $canteenName }}</span>
+                        </div>
+                        <span class="small text-muted d-block mt-0.5">{{ $adcUser?->name }} ({{ $adcUser?->mobile }})</span>
                     </div>
                     <div class="col-md-3">
                         <span class="text-muted small d-block">Delivery Destination</span>

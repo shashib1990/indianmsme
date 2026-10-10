@@ -13,7 +13,7 @@ class PurchaseOrderController extends Controller
 {
     public function index(Request $request)
     {
-        $query = PurchaseOrder::with(['ddc.profile', 'seller', 'pickupStore', 'invoice', 'adcOrder.adc.profile']);
+        $query = PurchaseOrder::with(['ddc.profile', 'seller.sellerProfile', 'pickupStore', 'invoice', 'adcOrder.adc.profile']);
 
         // Search & Filters
         if ($request->has('search') && $request->search != '') {
@@ -21,16 +21,32 @@ class PurchaseOrderController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('po_number', 'like', "%{$search}%")
                     ->orWhereHas('ddc', function ($sq) use ($search) {
-                        $sq->where('name', 'like', "%{$search}%");
+                        $sq->where('name', 'like', "%{$search}%")
+                            ->orWhereHas('profile', function ($dpq) use ($search) {
+                                $dpq->where('company_name', 'like', "%{$search}%")
+                                    ->orWhere('adpl_company_name', 'like', "%{$search}%");
+                            });
                     })
                     ->orWhereHas('seller', function ($sq) use ($search) {
                         $sq->where('name', 'like', "%{$search}%")
-                            ->orWhere('company_name', 'like', "%{$search}%");
+                            ->orWhereHas('sellerProfile', function ($spq) use ($search) {
+                                $spq->where('company_name', 'like', "%{$search}%")
+                                    ->orWhere('brand_name', 'like', "%{$search}%");
+                            });
+                    })
+                    ->orWhereHas('pickupStore', function ($psq) use ($search) {
+                        $psq->where('pickup_store_name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('invoice', function ($iq) use ($search) {
+                        $iq->where('invoice_number', 'like', "%{$search}%");
                     })
                     ->orWhereHas('adcOrder', function ($sq) use ($search) {
                         $sq->where('order_number', 'like', "%{$search}%")
                             ->orWhereHas('adc', function ($ssq) use ($search) {
-                                $ssq->where('name', 'like', "%{$search}%");
+                                $ssq->where('name', 'like', "%{$search}%")
+                                    ->orWhereHas('profile', function ($apq) use ($search) {
+                                        $apq->where('company_name', 'like', "%{$search}%");
+                                    });
                             });
                     });
             });
@@ -73,7 +89,7 @@ class PurchaseOrderController extends Controller
 
     public function show($id)
     {
-        $purchaseOrder = PurchaseOrder::with(['ddc.profile', 'seller', 'pickupStore', 'items.product', 'adcOrder.adc'])->findOrFail($id);
+        $purchaseOrder = PurchaseOrder::with(['ddc.profile', 'seller.sellerProfile', 'pickupStore', 'items.product', 'adcOrder.adc.profile'])->findOrFail($id);
 
         return view('admin.purchase-orders.show', compact('purchaseOrder'));
     }
@@ -142,11 +158,21 @@ class PurchaseOrderController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('po_number', 'like', "%{$search}%")
                     ->orWhereHas('ddc', function ($sq) use ($search) {
-                        $sq->where('name', 'like', "%{$search}%");
+                        $sq->where('name', 'like', "%{$search}%")
+                            ->orWhereHas('profile', function ($dpq) use ($search) {
+                                $dpq->where('company_name', 'like', "%{$search}%")
+                                    ->orWhere('adpl_company_name', 'like', "%{$search}%");
+                            });
                     })
                     ->orWhereHas('seller', function ($sq) use ($search) {
                         $sq->where('name', 'like', "%{$search}%")
-                            ->orWhere('company_name', 'like', "%{$search}%");
+                            ->orWhereHas('sellerProfile', function ($spq) use ($search) {
+                                $spq->where('company_name', 'like', "%{$search}%")
+                                    ->orWhere('brand_name', 'like', "%{$search}%");
+                            });
+                    })
+                    ->orWhereHas('pickupStore', function ($psq) use ($search) {
+                        $psq->where('pickup_store_name', 'like', "%{$search}%");
                     });
             });
         }

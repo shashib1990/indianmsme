@@ -81,7 +81,9 @@ class PurchaseOrderController extends Controller
                     ->orWhere('ama_code', 'like', "%{$search}%")
                     ->orWhereHas('seller', function ($sq) use ($search) {
                         $sq->where('name', 'like', "%{$search}%")
-                            ->orWhere('company_name', 'like', "%{$search}%");
+                            ->orWhereHas('sellerProfile', function ($spq) use ($search) {
+                                $spq->where('company_name', 'like', "%{$search}%");
+                            });
                     });
             });
         } else {

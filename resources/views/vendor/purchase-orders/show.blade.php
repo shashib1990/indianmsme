@@ -548,10 +548,17 @@
                             $vAdcCode = $vAdcProfile?->adc_code ?? $vAdcUser?->adc_code ?? ($vAdcUser ? ('ADC' . str_pad($vAdcUser->id, 3, '0', STR_PAD_LEFT)) : null);
                             $vAscCode = $vAdcProfile?->code ?? $vAdcUser?->code ?? ($vAdcUser ? ('ASC' . str_pad($vAdcUser->id, 3, '0', STR_PAD_LEFT)) : null);
                             $vCodes = array_filter(array_unique([$vAdcCode, $vAscCode]));
+                            $vCanteenName = $vAdcProfile?->company_name ?: ($vAdcProfile?->trade_name ?: ($vAdcUser?->name ?? null));
                         @endphp
+                        @if($vCanteenName)
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Canteen</span>
+                                <span class="text-slate-700 fw-semibold">{{ $vCanteenName }}</span>
+                            </div>
+                        @endif
                         @if(!empty($vCodes))
                             <div class="d-flex justify-content-between mb-2">
-                                <span class="text-muted">Code</span>
+                                <span class="text-muted">ADC ID / Code</span>
                                 <span class="badge font-monospace px-2 py-1" style="background-color: #e6fffa; color: #0d9488; border: 1px solid #99f6e4;">{{ implode(' / ', $vCodes) }}</span>
                             </div>
                         @endif

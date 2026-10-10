@@ -166,7 +166,10 @@ class ProductPurchaseReportController extends Controller
 
             if ($supplier) {
                 $poQuery->whereHas('purchaseOrder.seller', function($sq) use ($supplier) {
-                    $sq->where('name', $supplier)->orWhere('company_name', $supplier);
+                    $sq->where('name', $supplier)
+                       ->orWhereHas('sellerProfile', function($spq) use ($supplier) {
+                           $spq->where('company_name', $supplier);
+                       });
                 });
             }
 

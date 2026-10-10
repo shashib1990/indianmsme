@@ -104,12 +104,16 @@
                                                         @if($po->adcOrder->adc)
                                                             @php
                                                                 $adcUser = $po->adcOrder->adc;
-                                                                $adcProf = $adcUser->profile;
+                                                                $adcProf = $adcUser->profile ?? $adcUser->adcProfile;
+                                                                $adcIdVal = $adcProf?->adc_code ?: ($adcUser->adc_code ?: ($adcProf?->code ?: ('ADC' . str_pad($adcUser->id, 3, '0', STR_PAD_LEFT))));
                                                                 $canteenName = $adcProf?->company_name ?: ($adcProf?->trade_name ?: $adcUser->name);
                                                                 $locParts = array_filter([$adcProf?->district ?: $po->adcOrder->delivery_district, $adcProf?->state ?: $po->adcOrder->delivery_state]);
                                                                 $canteenLoc = implode(', ', $locParts);
                                                             @endphp
                                                             <div class="text-muted small fs-10 mt-0.5 fw-normal">
+                                                                @if($adcIdVal)
+                                                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-1 py-0 fs-10 font-monospace me-1" title="ADC ID">{{ $adcIdVal }}</span>
+                                                                @endif
                                                                 <span class="fw-semibold text-slate-700">{{ $canteenName }}</span>
                                                                 @if($canteenLoc)
                                                                     <span class="text-muted">({{ $canteenLoc }})</span>

@@ -31,7 +31,12 @@ class RackBookingController extends Controller
                   ->orWhere('payment_utr', 'like', "%{$search}%")
                   ->orWhereHas('owner', function($oq) use ($search) {
                       $oq->where('name', 'like', "%{$search}%")
-                         ->orWhere('company_name', 'like', "%{$search}%");
+                         ->orWhereHas('ddcProfile', function ($dpq) use ($search) {
+                             $dpq->where('company_name', 'like', "%{$search}%");
+                         })
+                         ->orWhereHas('adcProfile', function ($apq) use ($search) {
+                             $apq->where('company_name', 'like', "%{$search}%");
+                         });
                   });
             });
         }
@@ -68,9 +73,16 @@ class RackBookingController extends Controller
                 $q->where('depot_code', 'like', "%{$search}%")
                   ->orWhereHas('owner', function($oq) use ($search) {
                       $oq->where('name', 'like', "%{$search}%")
-                         ->orWhere('company_name', 'like', "%{$search}%")
-                         ->orWhere('district', 'like', "%{$search}%")
-                         ->orWhere('state', 'like', "%{$search}%");
+                         ->orWhereHas('ddcProfile', function ($dpq) use ($search) {
+                             $dpq->where('company_name', 'like', "%{$search}%")
+                                 ->orWhere('district', 'like', "%{$search}%")
+                                 ->orWhere('state', 'like', "%{$search}%");
+                         })
+                         ->orWhereHas('adcProfile', function ($apq) use ($search) {
+                             $apq->where('company_name', 'like', "%{$search}%")
+                                 ->orWhere('district', 'like', "%{$search}%")
+                                 ->orWhere('state', 'like', "%{$search}%");
+                         });
                   });
             });
         }
