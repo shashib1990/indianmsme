@@ -45,7 +45,11 @@ class InvoiceController extends Controller
             $purchaseOrder->setRelation('invoice', $invoice);
         } elseif ($invoice) {
             $isVirtualPo = ($purchaseOrder->fulfillment_type === 'virtual') || !empty($purchaseOrder->adc_order_id);
-            $needsPickupStoreUpdate = $purchaseOrder->pickupStore && ($invoice->dispatch_from_name !== $purchaseOrder->pickupStore->pickup_store_name);
+            $needsPickupStoreUpdate = $purchaseOrder->pickupStore && (
+                $invoice->dispatch_from_name !== $purchaseOrder->pickupStore->pickup_store_name ||
+                $invoice->dispatch_from_address !== $purchaseOrder->pickupStore->address ||
+                $invoice->dispatch_from_pincode !== $purchaseOrder->pickupStore->pincode
+            );
             if ($isVirtualPo && ($invoice->type !== 'adc_virtual_po' || str_contains(strtolower($invoice->bill_to_name ?? ''), 'asc distributor'))) {
                 $invoice->update($extractedDetails);
             } elseif ($needsPickupStoreUpdate) {

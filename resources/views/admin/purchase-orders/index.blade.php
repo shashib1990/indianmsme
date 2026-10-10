@@ -149,7 +149,10 @@
                                         <td>
                                             @if($po->pickupStore)
                                                 <div class="fw-semibold text-slate-800">{{ $po->pickupStore->pickup_store_name }}</div>
-                                                <div class="small">
+                                                <div class="small d-flex align-items-center gap-1 mt-0.5 flex-wrap">
+                                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-1.5 py-0.5 fs-10 font-monospace" title="Pickup Store Code">
+                                                        <iconify-icon icon="solar:shop-bold-duotone" class="align-middle me-0.5"></iconify-icon>{{ $po->pickupStore->pickup_store_code }}
+                                                    </span>
                                                     @if($po->pickupStore->can_receive_payment_and_dispatch)
                                                         <span class="badge bg-info-subtle text-info px-1 py-0 fs-10">Authorized</span>
                                                     @else

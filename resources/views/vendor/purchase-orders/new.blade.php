@@ -102,8 +102,15 @@
                                 </td>
                                 <td>
                                     @if($po->pickupStore)
-                                        <div class="fw-semibold text-slate-800">{{ $po->pickupStore->pickup_store_name }}</div>
-                                        <div class="small">
+                                        <div class="fw-semibold text-slate-800">
+                                            <a href="{{ route('vendor.pickup-stores.show', $po->pickupStore->id) }}" class="text-slate-800 text-decoration-none hover-primary" title="View Pickup Store">
+                                                {{ $po->pickupStore->pickup_store_name }}
+                                            </a>
+                                        </div>
+                                        <div class="small d-flex align-items-center gap-1 mt-0.5 flex-wrap">
+                                            <a href="{{ route('vendor.pickup-stores.show', $po->pickupStore->id) }}" class="badge bg-primary-subtle text-primary border border-primary-subtle px-1.5 py-0.5 fs-10 font-monospace text-decoration-none" title="Pickup Store Code">
+                                                <iconify-icon icon="solar:shop-bold-duotone" class="align-middle me-0.5"></iconify-icon>{{ $po->pickupStore->pickup_store_code }}
+                                            </a>
                                             @if($po->pickupStore->can_receive_payment_and_dispatch)
                                                 <span class="badge bg-info-subtle text-info px-1 py-0 fs-10">Authorized</span>
                                             @else

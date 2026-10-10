@@ -175,9 +175,12 @@
                                 </td>
                                 <td>
                                     @if($payToStore && $store)
-                                        <div class="d-flex align-items-center gap-1.5 mb-1.5">
+                                        <div class="d-flex align-items-center gap-1.5 mb-1.5 flex-wrap">
                                             <span class="badge bg-success text-white px-1.5 py-0.5 fs-10" style="font-size: 9.5px; border-radius: 4px;">Store</span>
                                             <span class="fw-bold text-slate-800 fs-12">{{ $store->pickup_store_name }}</span>
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-1 py-0 fs-10 font-monospace" title="Store Code">
+                                                {{ $store->pickup_store_code }}
+                                            </span>
                                         </div>
                                     @else
                                         <div class="d-flex align-items-center gap-1.5 mb-1.5">

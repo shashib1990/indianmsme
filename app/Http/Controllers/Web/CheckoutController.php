@@ -273,7 +273,9 @@ class CheckoutController extends Controller
                     $pickupStore = OrderRoutingService::resolvePickupStoreForSeller(
                         $sellerId,
                         $ddcRouting['delivery_pincode'] ?? $pincode,
-                        $virtualDdc ?: $physicalDdc
+                        $virtualDdc ?: $physicalDdc,
+                        $ddcRouting['delivery_state'] ?? null,
+                        $ddcRouting['delivery_district'] ?? null
                     );
 
                     // Generate Purchase Order for Seller

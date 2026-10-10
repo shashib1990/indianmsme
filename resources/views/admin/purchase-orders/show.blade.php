@@ -205,7 +205,11 @@
                                     </tr>
                                     <tr>
                                         <td class="text-muted">Store Code:</td>
-                                        <td><span class="badge bg-primary-subtle text-primary">{{ $purchaseOrder->pickupStore->pickup_store_code }}</span></td>
+                                        <td>
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace px-2 py-1">
+                                                <iconify-icon icon="solar:shop-bold-duotone" class="align-middle me-0.5"></iconify-icon>{{ $purchaseOrder->pickupStore->pickup_store_code }}
+                                            </span>
+                                        </td>
                                     </tr>
                                     <tr>
                                         <td class="text-muted">Authorization:</td>

@@ -286,7 +286,11 @@
                                                      <iconify-icon icon="solar:info-circle-bold-duotone" class="fs-18 mt-0.5"></iconify-icon>
                                                      <div>
                                                          Payout verification is managed directly by your assigned Authorized Pickup Store:
-                                                         <strong class="d-block mt-1">{{ $store->pickup_store_name }}</strong>
+                                                         <strong class="d-block mt-1">
+                                                             <a href="{{ route('vendor.pickup-stores.show', $store->id) }}" class="text-info text-decoration-none hover-primary" title="View Pickup Store">
+                                                                 {{ $store->pickup_store_name }} ({{ $store->pickup_store_code }})
+                                                             </a>
+                                                         </strong>
                                                      </div>
                                                  </div>
                                              @elseif($purchaseOrder->payment_verification_status === 'Verified')
@@ -377,8 +381,11 @@
                                             Authorized Pickup Store Assigned
                                         </h6>
                                         <p class="mb-0 small">This Purchase Order is assigned to your Authorized Pickup Store:
-                                            <strong>{{ $purchaseOrder->pickupStore->pickup_store_name }}
-                                                ({{ $purchaseOrder->pickupStore->pickup_store_code }})</strong>.
+                                            <strong>
+                                                <a href="{{ route('vendor.pickup-stores.show', $purchaseOrder->pickupStore->id) }}" class="text-primary text-decoration-none hover-primary" title="View Pickup Store">
+                                                    {{ $purchaseOrder->pickupStore->pickup_store_name }} ({{ $purchaseOrder->pickupStore->pickup_store_code }})
+                                                </a>
+                                            </strong>.
                                         </p>
                                         <p class="mb-0 mt-2 small text-muted">All remaining operations (Payment Verification,
                                             Package Dispatch) are fully managed by the store dashboard.</p>
@@ -458,7 +465,7 @@
                                     @if($purchaseOrder->pickupStore)
                                         <div class="mt-3 p-2 bg-light rounded text-muted small">
                                             Note: This is an Unauthorized Store order. Either you or the store
-                                            (<strong>{{ $purchaseOrder->pickupStore->pickup_store_name }}</strong>) can dispatch the
+                                            (<strong><a href="{{ route('vendor.pickup-stores.show', $purchaseOrder->pickupStore->id) }}" class="text-decoration-none fw-bold text-slate-800 hover-primary" title="View Pickup Store">{{ $purchaseOrder->pickupStore->pickup_store_name }} ({{ $purchaseOrder->pickupStore->pickup_store_code }})</a></strong>) can dispatch the
                                             products.
                                         </div>
                                     @endif
@@ -562,6 +569,26 @@
                                 <span class="badge font-monospace px-2 py-1" style="background-color: #e6fffa; color: #0d9488; border: 1px solid #99f6e4;">{{ implode(' / ', $vCodes) }}</span>
                             </div>
                         @endif
+                    @endif
+                    @if($purchaseOrder->pickupStore)
+                        <div class="d-flex justify-content-between mb-2 align-items-start">
+                            <span class="text-muted">Pickup Store</span>
+                            <div class="text-end">
+                                <a href="{{ route('vendor.pickup-stores.show', $purchaseOrder->pickupStore->id) }}" class="fw-semibold text-slate-800 text-decoration-none hover-primary d-block" title="View Pickup Store">
+                                    {{ $purchaseOrder->pickupStore->pickup_store_name }}
+                                </a>
+                                <div class="small d-flex align-items-center gap-1 mt-0.5 justify-content-end flex-wrap">
+                                    <a href="{{ route('vendor.pickup-stores.show', $purchaseOrder->pickupStore->id) }}" class="badge bg-primary-subtle text-primary border border-primary-subtle px-1.5 py-0.5 fs-10 font-monospace text-decoration-none" title="Pickup Store Code">
+                                        <iconify-icon icon="solar:shop-bold-duotone" class="align-middle me-0.5"></iconify-icon>{{ $purchaseOrder->pickupStore->pickup_store_code }}
+                                    </a>
+                                    @if($purchaseOrder->pickupStore->can_receive_payment_and_dispatch)
+                                        <span class="badge bg-info-subtle text-info px-1 py-0 fs-10">Authorized</span>
+                                    @else
+                                        <span class="badge bg-light text-muted px-1 py-0 fs-10">Unauthorized</span>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
                     @endif
                     <hr class="text-muted opacity-20">
                     <div class="d-flex justify-content-between mb-2">
