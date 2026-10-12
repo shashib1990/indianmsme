@@ -38,7 +38,7 @@
                 <div class="fs-12 text-muted">ADC Canteen Retail Credit Ledger Account</div>
             </div>
             <div class="text-end">
-                <h6 class="fw-bold mb-0">DDC India Mall</h6>
+                <h6 class="fw-bold mb-0">Ardh Sainik Mall</h6>
                 <div class="small text-muted">Statement Date: {{ now()->format('d M Y, h:i A') }}</div>
             </div>
         </div>

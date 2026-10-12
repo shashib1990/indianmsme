@@ -172,6 +172,44 @@ class ShopController extends Controller
             ? SubCategory::where('category_id', $categoryId)->get()
             : collect();
 
+        $categoryCountsCacheKey = 'shop_category_counts_' . ($pincode ?: 'all');
+        $categoryCounts = \Illuminate\Support\Facades\Cache::remember($categoryCountsCacheKey, 300, function () use ($pincode) {
+            return Product::where('status', 'Approved')
+                ->whereHas('seller', fn($q) => $q->where('status', '1'))
+                ->whereHas('seller.sellerProfile', fn($q) => $q->where('kyc_status', 'APPROVED'))
+                ->serviceableByPincode($pincode)
+                ->selectRaw('category_id, count(*) as total')
+                ->groupBy('category_id')
+                ->pluck('total', 'category_id')
+                ->toArray();
+        });
+
+        $subCategoryCounts = [];
+        if ($categoryId) {
+            $subCategoryCounts = Product::where('status', 'Approved')
+                ->where('category_id', $categoryId)
+                ->whereHas('seller', fn($q) => $q->where('status', '1'))
+                ->whereHas('seller.sellerProfile', fn($q) => $q->where('kyc_status', 'APPROVED'))
+                ->serviceableByPincode($pincode)
+                ->selectRaw('sub_category_id, count(*) as total')
+                ->groupBy('sub_category_id')
+                ->pluck('total', 'sub_category_id')
+                ->toArray();
+        }
+
+        $childCategoryCounts = [];
+        if ($subCatId) {
+            $childCategoryCounts = Product::where('status', 'Approved')
+                ->where('sub_category_id', $subCatId)
+                ->whereHas('seller', fn($q) => $q->where('status', '1'))
+                ->whereHas('seller.sellerProfile', fn($q) => $q->where('kyc_status', 'APPROVED'))
+                ->serviceableByPincode($pincode)
+                ->selectRaw('child_category_id, count(*) as total')
+                ->groupBy('child_category_id')
+                ->pluck('total', 'child_category_id')
+                ->toArray();
+        }
+
         // Compute discount counts with 5-minute cache for blazing-fast page load
         $cacheKey = 'shop_disc_counts_' . ($pincode ?: 'all');
         $discountCounts = \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () use ($pincode) {
@@ -256,7 +294,10 @@ class ShopController extends Controller
             'sort',
             'sellerId',
             'seller',
-            'discountCounts'
+            'discountCounts',
+            'categoryCounts',
+            'subCategoryCounts',
+            'childCategoryCounts'
         ));
     }
 

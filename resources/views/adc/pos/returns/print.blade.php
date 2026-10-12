@@ -10,13 +10,15 @@
             margin: 0;
         }
         body {
-            font-family: 'Courier New', Courier, monospace, monospace;
-            font-size: 11px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, Helvetica, sans-serif;
+            font-size: 10pt;
             color: #000;
             background: #f8f9fa;
             margin: 0;
             padding: 0;
             -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            -webkit-font-smoothing: antialiased;
         }
         .receipt-container {
             width: 80mm;
@@ -26,22 +28,55 @@
             padding: 10px 8px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             box-sizing: border-box;
+            color: #000;
         }
         .text-center { text-align: center; }
         .text-end { text-align: right; }
         .text-start { text-align: left; }
-        .fw-bold { font-weight: bold; }
-        .fs-8 { font-size: 8px; }
-        .fs-9 { font-size: 9px; }
-        .fs-10 { font-size: 10px; }
-        .fs-11 { font-size: 11px; }
-        .fs-12 { font-size: 12px; }
-        .fs-13 { font-size: 13px; }
-        .fs-14 { font-size: 14px; }
-        .fs-16 { font-size: 16px; }
+        .fw-bold { font-weight: 700; }
+        .fs-8 { font-size: 8.5pt; }
+        .fs-9 { font-size: 9pt; }
+        .fs-10 { font-size: 10pt; }
+        .fs-11 { font-size: 11pt; }
+        .fs-12 { font-size: 12pt; }
+        .fs-13 { font-size: 13pt; }
+        .fs-14 { font-size: 14pt; }
+        .fs-16 { font-size: 16pt; }
+
+        .shop-title {
+            font-size: 15pt;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            line-height: 1.2;
+            color: #000;
+        }
+        .depot-title {
+            font-size: 11pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-top: 3px;
+            color: #000;
+        }
+        .depot-address {
+            font-size: 9pt;
+            line-height: 1.35;
+            color: #000;
+            margin-top: 2px;
+        }
+        .doc-title {
+            font-size: 13pt;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: #000;
+        }
+        .meta-section {
+            font-size: 10pt;
+            color: #000;
+            line-height: 1.4;
+        }
 
         .dashed-line {
-            border-top: 1px dashed #000;
+            border-top: 1.5px dashed #000;
             margin: 6px 0;
         }
         .double-line {
@@ -52,20 +87,64 @@
         table.items-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 10px;
+            font-size: 9.5pt;
             margin: 4px 0;
             table-layout: fixed;
+            color: #000;
         }
         table.items-table th, table.items-table td {
             padding: 3px 1px;
             vertical-align: top;
             box-sizing: border-box;
+            font-size: 9.5pt;
+            color: #000;
         }
         table.items-table th {
-            border-bottom: 1px dashed #000;
-            border-top: 1px dashed #000;
-            font-weight: bold;
-            font-size: 9.5px;
+            border-bottom: 1.5px dashed #000;
+            font-weight: 700;
+            font-size: 9.5pt;
+            color: #000;
+        }
+        table.items-table .item-name {
+            font-size: 9.5pt;
+            font-weight: 700;
+            line-height: 1.2;
+            color: #000;
+        }
+        table.items-table .item-meta {
+            font-size: 8pt;
+            color: #000;
+            line-height: 1.15;
+            font-weight: 500;
+        }
+        table.items-table .item-price {
+            font-size: 9.5pt;
+            font-weight: 600;
+            white-space: nowrap;
+            color: #000;
+        }
+        .totals-section {
+            font-size: 10pt;
+            color: #000;
+            line-height: 1.4;
+        }
+        .grand-total-row {
+            font-size: 13pt;
+            font-weight: 800;
+            color: #000;
+            margin: 3px 0;
+        }
+        .footer-section {
+            font-size: 9pt;
+            color: #000;
+            line-height: 1.35;
+            margin-top: 8px;
+        }
+        .footer-headoffice {
+            font-size: 8.5pt;
+            color: #000;
+            margin-bottom: 6px;
+            line-height: 1.3;
         }
 
         .summary-row {
@@ -168,39 +247,34 @@
         <div class="text-center">
             @php
                 $siteHeaderLogo = \App\Models\SystemSetting::getVal('website_header_logo', \App\Models\SystemSetting::getVal('panel_logo', asset('ecommerce-assets/images/logo.png')));
+                $depotName = $adcProfile?->company_name ?: ($adcProfile?->trade_name ?: ($adcUser?->name ?: 'ADC Canteen'));
             @endphp
             <img src="{{ $siteHeaderLogo }}" style="max-height: 52px; max-width: 180px; object-fit: contain; margin-bottom: 3px;" alt="Logo" onerror="this.style.display='none'">
             
-            <div class="fw-bold fs-16" style="letter-spacing: 0.5px;">DDC India Mall</div>
-            <div class="fs-9" style="line-height: 1.3; color: #111;">
-                Office: No. B2, Block -C, Pocket -7,<br>
-                Sector 8, Rohini, New Delhi - 110085<br>
-                Call: 8800001240/50/60 & Owner No. 9450668010<br>
-                Gstin No: 09AXFPT1807Q1Z5<br>
-                Email: home@ardhsainik.com
-            </div>
-        </div>
-
-        <div class="dashed-line"></div>
-
-        <!-- Sales Return Receipt Title & ADC Canteen Details -->
-        <div class="text-center">
-            <div class="fw-bold fs-13" style="letter-spacing: 0.5px;">SALES RETURN RECEIPT</div>
-            <div class="fs-10" style="margin-top: 2px;">
+            <div class="shop-title">Ardh Sainik Mall</div>
+            <div class="depot-title">{{ $depotName }}</div>
+            <div class="depot-address">
                 {{ $adcAddress }}
                 @if($adcDistrict || $adcState)
                     <br>{{ $adcDistrict }}{{ $adcDistrict && $adcState ? ', ' : '' }}{{ $adcState }} - {{ $adcPincode }}
                 @endif
                 @if($adcGstin && $adcGstin !== 'N/A')
-                    <br>ADC GSTIN: <strong>{{ $adcGstin }}</strong>
+                    <br>GSTIN: <strong>{{ $adcGstin }}</strong>
                 @endif
             </div>
         </div>
 
         <div class="dashed-line"></div>
 
+        <!-- Sales Return Receipt Title Only -->
+        <div class="text-center">
+            <div class="doc-title">SALES RETURN RECEIPT</div>
+        </div>
+
+        <div class="dashed-line"></div>
+
         <!-- Return Meta Details -->
-        <div class="fs-10">
+        <div class="meta-section">
             <div class="summary-row">
                 <span><strong>Return No:</strong> {{ $salesReturn->return_number }}</span>
                 <span><strong>Date:</strong> {{ $salesReturn->created_at->format('d/m/Y H:i') }}</span>
@@ -236,16 +310,16 @@
             <tbody>
                 @foreach($salesReturn->items as $idx => $item)
                     <tr>
-                        <td>{{ $idx + 1 }}</td>
-                        <td>
-                            <div class="fw-bold" style="word-break: break-word;">{{ $item->product_name }}</div>
-                            <div class="fs-8" style="color: #444;">
+                        <td class="text-center" style="padding: 3px 1px;">{{ $idx + 1 }}</td>
+                        <td style="word-break: break-word; padding: 3px 1px;">
+                            <div class="item-name">{{ $item->product_name }}</div>
+                            <div class="item-meta">
                                 Code: {{ $item->product_code ?: '—' }} | GST: {{ number_format($item->gst_rate, 0) }}%
                             </div>
                         </td>
-                        <td class="text-center">{{ (float)$item->returned_quantity }} <br><span class="fs-8 text-muted">{{ $item->unit_of_measure }}</span></td>
-                        <td class="text-end">₹{{ number_format($item->unit_price, 2) }}</td>
-                        <td class="text-end fw-bold">₹{{ number_format($item->total_amount, 2) }}</td>
+                        <td class="text-center" style="padding: 3px 1px;"><span class="fw-bold">{{ (float)$item->returned_quantity }}</span> <br><span class="item-meta">{{ $item->unit_of_measure }}</span></td>
+                        <td class="text-end item-price" style="padding: 3px 1px;">₹{{ number_format($item->unit_price, 2) }}</td>
+                        <td class="text-end fw-bold item-price" style="padding: 3px 1px;">₹{{ number_format($item->total_amount, 2) }}</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -254,7 +328,7 @@
         <div class="dashed-line"></div>
 
         <!-- Totals Summary -->
-        <div class="fs-10">
+        <div class="totals-section">
             <div class="summary-row">
                 <span>Returned Qty:</span>
                 <span class="fw-bold">{{ (float)$salesReturn->total_qty }}</span>
@@ -271,65 +345,29 @@
 
         <div class="double-line"></div>
 
-        <div class="summary-row fw-bold fs-13">
+        <div class="summary-row grand-total-row">
             <span>TOTAL REFUND AMOUNT:</span>
             <span>₹{{ number_format($salesReturn->total_return_amount, 2) }}</span>
         </div>
 
         <div class="double-line"></div>
 
-        {{-- GST Summary Breakdown --}}
-        @php
-            $gstSummary = [];
-            foreach($salesReturn->items as $item) {
-                $r = (float)$item->gst_rate;
-                if(!isset($gstSummary[$r])) {
-                    $gstSummary[$r] = ['taxable' => 0, 'tax' => 0];
-                }
-                $gstSummary[$r]['taxable'] += (float)$item->taxable_amount;
-                $gstSummary[$r]['tax'] += (float)$item->tax_amount;
-            }
-            ksort($gstSummary);
-        @endphp
-
-        @if(count($gstSummary) > 0)
-            <div class="text-center fw-bold fs-9" style="margin-top: 4px;">GST SUMMARY BREAKDOWN</div>
-            <table class="gst-table">
-                <thead>
-                    <tr style="border-bottom: 1px dashed #000; border-top: 1px dashed #000;">
-                        <th>GST %</th>
-                        <th>Taxable</th>
-                        <th>CGST</th>
-                        <th>SGST</th>
-                        <th>Total Tax</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($gstSummary as $rate => $vals)
-                        @php
-                            $halfTax = round($vals['tax'] / 2, 2);
-                        @endphp
-                        <tr>
-                            <td>{{ $rate }}%</td>
-                            <td>₹{{ number_format($vals['taxable'], 2) }}</td>
-                            <td>₹{{ number_format($halfTax, 2) }}</td>
-                            <td>₹{{ number_format($halfTax, 2) }}</td>
-                            <td>₹{{ number_format($vals['tax'], 2) }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-            <div class="dashed-line"></div>
-        @endif
-
         <!-- Permanent Footer -->
-        <div class="text-center fs-9" style="margin-top: 8px; line-height: 1.4;">
+        <div class="text-center footer-section">
+            <div class="footer-headoffice">
+                <strong>Head Office:</strong> No. B2, Block -C, Pocket -7,<br>
+                Sector 8, Rohini, New Delhi - 110085<br>
+                Call: 8800001240/50/60 & Owner No: 9450668010<br>
+                GSTIN: 09AXFPT1807Q1Z5<br>
+                Email: home@ardhsainik.com
+            </div>
+            <div class="dashed-line" style="margin-bottom: 6px;"></div>
             <div class="fw-bold">*** REFUND / SALES RETURN RECEIPT ***</div>
             <div class="fw-bold" style="margin-top: 2px;">Thank you for your business!</div>
-            <div style="color: #444; font-size: 8.5px;">Initiative of Ardh Sainik Welfare Trust (Regd)</div>
-            <div style="font-size: 8.5px; text-decoration: underline;">www.ArdhsainikCanteen.in</div>
-            <div style="font-size: 9px; font-weight: bold; margin-top: 2px;">|| जय हिन्द || वन्दे मातरम ||</div>
-            <div style="font-size: 8px; color: #666; margin-top: 2px;">This is computer generated sales return receipt</div>
+            <div>Initiative of Ardh Sainik Welfare Trust (Regd)</div>
+            <div>www.ArdhsainikCanteen.in</div>
+            <div class="fw-bold" style="margin-top: 2px;">|| जय हिन्द || वन्दे मातरम ||</div>
+            <div style="font-size: 8pt; color: #000; margin-top: 2px;">This is computer generated sales return receipt</div>
         </div>
 
     </div>

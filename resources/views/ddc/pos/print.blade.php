@@ -10,13 +10,15 @@
             margin: 0;
         }
         body {
-            font-family: 'Courier New', Courier, monospace, monospace;
-            font-size: 11px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, Helvetica, sans-serif;
+            font-size: 10pt;
             color: #000;
             background: #f8f9fa;
             margin: 0;
             padding: 0;
             -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            -webkit-font-smoothing: antialiased;
         }
         .receipt-container {
             width: 80mm;
@@ -26,22 +28,55 @@
             padding: 10px 8px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             box-sizing: border-box;
+            color: #000;
         }
         .text-center { text-align: center; }
         .text-end { text-align: right; }
         .text-start { text-align: left; }
-        .fw-bold { font-weight: bold; }
-        .fs-8 { font-size: 8px; }
-        .fs-9 { font-size: 9px; }
-        .fs-10 { font-size: 10px; }
-        .fs-11 { font-size: 11px; }
-        .fs-12 { font-size: 12px; }
-        .fs-13 { font-size: 13px; }
-        .fs-14 { font-size: 14px; }
-        .fs-16 { font-size: 16px; }
+        .fw-bold { font-weight: 700; }
+        .fs-8 { font-size: 8.5pt; }
+        .fs-9 { font-size: 9pt; }
+        .fs-10 { font-size: 10pt; }
+        .fs-11 { font-size: 11pt; }
+        .fs-12 { font-size: 12pt; }
+        .fs-13 { font-size: 13pt; }
+        .fs-14 { font-size: 14pt; }
+        .fs-16 { font-size: 16pt; }
+
+        .shop-title {
+            font-size: 15pt;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            line-height: 1.2;
+            color: #000;
+        }
+        .depot-title {
+            font-size: 11pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-top: 3px;
+            color: #000;
+        }
+        .depot-address {
+            font-size: 9pt;
+            line-height: 1.35;
+            color: #000;
+            margin-top: 2px;
+        }
+        .doc-title {
+            font-size: 13pt;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: #000;
+        }
+        .meta-section {
+            font-size: 10pt;
+            color: #000;
+            line-height: 1.4;
+        }
 
         .dashed-line {
-            border-top: 1px dashed #000;
+            border-top: 1.5px dashed #000;
             margin: 6px 0;
         }
         .double-line {
@@ -52,20 +87,69 @@
         table.items-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 10px;
+            font-size: 9.5pt;
             margin: 4px 0;
             table-layout: fixed;
+            color: #000;
         }
         table.items-table th, table.items-table td {
             padding: 3px 1px;
             vertical-align: top;
             box-sizing: border-box;
+            font-size: 9.5pt;
+            color: #000;
         }
         table.items-table th {
-            border-bottom: 1px dashed #000;
-            border-top: 1px dashed #000;
-            font-weight: bold;
-            font-size: 9.5px;
+            border-bottom: 1.5px dashed #000;
+            font-weight: 700;
+            font-size: 9.5pt;
+            color: #000;
+        }
+        table.items-table .item-name {
+            font-size: 9.5pt;
+            font-weight: 700;
+            line-height: 1.2;
+            color: #000;
+        }
+        table.items-table .item-meta {
+            font-size: 8pt;
+            color: #000;
+            line-height: 1.15;
+            font-weight: 500;
+        }
+        table.items-table .item-price {
+            font-size: 9.5pt;
+            font-weight: 600;
+            white-space: nowrap;
+            color: #000;
+        }
+        .totals-section {
+            font-size: 10pt;
+            color: #000;
+            line-height: 1.4;
+        }
+        .grand-total-row {
+            font-size: 14pt;
+            font-weight: 800;
+            color: #000;
+            margin: 3px 0;
+        }
+        .payment-mode-row {
+            font-size: 11pt;
+            font-weight: 700;
+            color: #000;
+        }
+        .footer-section {
+            font-size: 9pt;
+            color: #000;
+            line-height: 1.35;
+            margin-top: 8px;
+        }
+        .footer-headoffice {
+            font-size: 8.5pt;
+            color: #000;
+            margin-bottom: 6px;
+            line-height: 1.3;
         }
 
         .summary-row {
@@ -135,48 +219,41 @@
             <!-- Top Logo -->
             @php
                 $siteHeaderLogo = \App\Models\SystemSetting::getVal('website_header_logo', \App\Models\SystemSetting::getVal('panel_logo', asset('ecommerce-assets/images/logo.png')));
-            @endphp
-            <img src="{{ $siteHeaderLogo }}" style="max-height: 52px; max-width: 180px; object-fit: contain; margin-bottom: 3px;" alt="Logo" onerror="this.style.display='none'">
-            
-            <div class="fw-bold fs-16" style="letter-spacing: 0.5px;">DDC India Mall</div>
-            <div class="fs-9" style="line-height: 1.3; color: #111;">
-                Office: No. B2, Block -C, Pocket -7,<br>
-                Sector 8, Rohini, New Delhi - 110085<br>
-                Call: 8800001240/50/60 & Owner No. 9450668010<br>
-                Gstin No: 09AXFPT1807Q1Z5<br>
-                Email: home@ardhsainik.com
-            </div>
-        </div>
-
-        <div class="dashed-line"></div>
-
-        <!-- Tax Invoice Title & DDC / Depot Details -->
-        <div class="text-center">
-            <div class="fw-bold fs-13">TAX INVOICE</div>
-            @php
                 $ddcProf = $order->ddc?->ddcProfile ?: $order->ddc?->profile;
-                $ddcAddress = $ddcProf?->address ?: ($ddcProf?->ddc_address ?: ($order->ddc?->name ?: 'DDC Store'));
+                $depotName = $ddcProf?->company_name ?: ($ddcProf?->adpl_company_name ?: ($order->ddc?->name ?: 'DDC Depot'));
+                $ddcAddress = $ddcProf?->address ?: ($ddcProf?->ddc_address ?: ($ddcProf?->adpl_address ?: ''));
                 $ddcDistrict = $ddcProf?->district ?: ($ddcProf?->ddc_district ?: '');
                 $ddcState = $ddcProf?->state ?: ($ddcProf?->ddc_state ?: '');
                 $ddcPincode = $ddcProf?->pincode ?: ($ddcProf?->ddc_pincode ?: '');
-                $ddcGstin = $order->invoice?->supplier_gstin ?: ($ddcProf?->ddc_gst_number ?: ($ddcProf?->adpl_gst_number ?: 'N/A'));
+                $ddcGstin = $order->invoice?->supplier_gstin ?: ($ddcProf?->ddc_gst_number ?: ($ddcProf?->adpl_gst_number ?: ''));
                 $ddcCode = $ddcProf?->ddc_code ?: 'DDB001';
             @endphp
-            <div class="fs-10" style="margin-top: 2px;">
+            <img src="{{ $siteHeaderLogo }}" style="max-height: 52px; max-width: 180px; object-fit: contain; margin-bottom: 3px;" alt="Logo" onerror="this.style.display='none'">
+            
+            <div class="shop-title">Ardh Sainik Mall</div>
+            <div class="depot-title">{{ $depotName }}</div>
+            <div class="depot-address">
                 {{ $ddcAddress }}
                 @if($ddcDistrict || $ddcState)
                     <br>{{ $ddcDistrict }}{{ $ddcDistrict && $ddcState ? ', ' : '' }}{{ $ddcState }} - {{ $ddcPincode }}
                 @endif
                 @if($ddcGstin && $ddcGstin !== 'N/A')
-                    <br>Depot GSTIN: <strong>{{ $ddcGstin }}</strong>
+                    <br>GSTIN: <strong>{{ $ddcGstin }}</strong>
                 @endif
             </div>
         </div>
 
         <div class="dashed-line"></div>
 
+        <!-- Tax Invoice Title Only -->
+        <div class="text-center">
+            <div class="doc-title">TAX INVOICE</div>
+        </div>
+
+        <div class="dashed-line"></div>
+
         <!-- Invoice Meta Section -->
-        <div class="fs-10">
+        <div class="meta-section">
             <div class="summary-row">
                 <span>Invoice No:</span>
                 <span class="fw-bold">{{ $order->invoice ? $order->invoice->invoice_number : $order->order_no }}</span>
@@ -220,9 +297,9 @@
         <table class="items-table">
             <thead>
                 <tr>
-                    <th style="width: 4%;" class="text-center">#</th>
+                    <th style="width: 5%;" class="text-center">#</th>
                     <th style="width: 33%;" class="text-start">Item</th>
-                    <th style="width: 10%;" class="text-center">Qty</th>
+                    <th style="width: 9%;" class="text-center">Qty</th>
                     <th style="width: 13%;" class="text-end">MRP</th>
                     <th style="width: 12%;" class="text-end">Disc</th>
                     <th style="width: 13%;" class="text-end">Rate</th>
@@ -296,29 +373,29 @@
                         $gstSummary[$rateKey]['total'] += $itemTotal;
                     @endphp
                     <tr>
-                        <td class="text-center fs-9" style="padding: 2px 1px;">{{ $idx + 1 }}</td>
-                        <td class="text-start" style="padding: 2px 1px; word-break: break-word;">
-                            <div class="fw-bold fs-9" style="line-height: 1.15;">{{ $item->product_name }}</div>
-                            <div class="fs-8 text-muted" style="font-size: 8px; color: #555;">
+                        <td class="text-center" style="padding: 3px 1px;">{{ $idx + 1 }}</td>
+                        <td class="text-start" style="padding: 3px 1px; word-break: break-word;">
+                            <div class="item-name">{{ $item->product_name }}</div>
+                            <div class="item-meta">
                                 @if($item->product_code)Code: {{ $item->product_code }} | @endif GST: {{ number_format($gstRate, 0) }}%
                             </div>
                         </td>
-                        <td class="text-center fs-9" style="padding: 2px 1px; line-height: 1.15;">
+                        <td class="text-center" style="padding: 3px 1px; line-height: 1.15;">
                             <span class="fw-bold">{{ $itemQty }}</span>
                             @if($item->unit_of_measure)
-                                <br><span style="font-size: 8px; color: #444;">{{ $item->unit_of_measure }}</span>
+                                <br><span class="item-meta">{{ $item->unit_of_measure }}</span>
                             @endif
                         </td>
-                        <td class="text-end fs-9" style="padding: 2px 1px; white-space: nowrap;">
+                        <td class="text-end item-price" style="padding: 3px 1px;">
                             {{ $fmtMrp }}
                         </td>
-                        <td class="text-end fs-9" style="padding: 2px 1px; white-space: nowrap;">
+                        <td class="text-end item-price" style="padding: 3px 1px;">
                             {{ $lineDisc > 0 ? $fmtDisc : '0' }}
                         </td>
-                        <td class="text-end fs-9" style="padding: 2px 1px; white-space: nowrap;">
+                        <td class="text-end item-price" style="padding: 3px 1px;">
                             {{ $fmtRate }}
                         </td>
-                        <td class="text-end fw-bold fs-9" style="padding: 2px 1px; white-space: nowrap;">
+                        <td class="text-end fw-bold item-price" style="padding: 3px 1px;">
                             {{ $fmtAmt }}
                         </td>
                     </tr>
@@ -335,7 +412,7 @@
         @endphp
 
         <!-- Summary & Totals -->
-        <div class="fs-10">
+        <div class="totals-section">
             <div class="summary-row">
                 <span>Total Quantity:</span>
                 <span class="fw-bold">{{ $totalQtySum }}</span>
@@ -407,62 +484,34 @@
 
             <div class="double-line"></div>
 
-            <div class="summary-row fw-bold fs-14">
+            <div class="summary-row grand-total-row">
                 <span>Grand Total:</span>
                 <span>₹{{ number_format($order->total_amount, 2) }}</span>
             </div>
 
-            <div class="summary-row fw-bold fs-11">
+            <div class="summary-row payment-mode-row">
                 <span>Payment Mode:</span>
-                <span class="text-uppercase" style="text-transform: uppercase;">{{ $order->payment_mode ?: 'CASH' }}</span>
+                <span class="text-uppercase">{{ $order->payment_mode ?: 'CASH' }}</span>
             </div>
 
             <div class="double-line"></div>
         </div>
 
-        <!-- GST Summary Table -->
-        @if(count($gstSummary) > 0)
-            <div class="text-center fw-bold fs-9" style="margin-top: 4px; margin-bottom: 2px;">GST SUMMARY BREAKDOWN</div>
-            <table class="items-table" style="font-size: 8.5px;">
-                <thead>
-                    <tr>
-                        <th style="width: 18%;" class="text-center">GST %</th>
-                        <th style="width: 27%;" class="text-end">Taxable</th>
-                        @if($isInterState)
-                            <th style="width: 27%;" class="text-end">IGST</th>
-                        @else
-                            <th style="width: 27%;" class="text-end">CGST</th>
-                            <th style="width: 27%;" class="text-end">SGST</th>
-                        @endif
-                        <th style="width: 28%;" class="text-end">Total Tax</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($gstSummary as $gData)
-                        <tr>
-                            <td class="text-center fs-8 fw-bold">{{ number_format($gData['rate'], 0) }}%</td>
-                            <td class="text-end fs-8">₹{{ number_format($gData['taxable'], 2) }}</td>
-                            @if($isInterState)
-                                <td class="text-end fs-8">₹{{ number_format($gData['tax'], 2) }}</td>
-                            @else
-                                <td class="text-end fs-8">₹{{ number_format($gData['tax'] / 2, 2) }}</td>
-                                <td class="text-end fs-8">₹{{ number_format($gData['tax'] / 2, 2) }}</td>
-                            @endif
-                            <td class="text-end fs-8 fw-bold">₹{{ number_format($gData['tax'], 2) }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-            <div class="dashed-line"></div>
-        @endif
-
-        <!-- Footer Branding & Taglines -->
-        <div class="text-center fs-9" style="margin-top: 10px; line-height: 1.4;">
+        <!-- Footer Branding & Head Office Details -->
+        <div class="text-center footer-section">
+            <div class="footer-headoffice">
+                <strong>Head Office:</strong> No. B2, Block -C, Pocket -7,<br>
+                Sector 8, Rohini, New Delhi - 110085<br>
+                Call: 8800001240/50/60 & Owner No: 9450668010<br>
+                GSTIN: 09AXFPT1807Q1Z5<br>
+                Email: home@ardhsainik.com
+            </div>
+            <div class="dashed-line" style="margin-bottom: 6px;"></div>
             <div class="fw-bold">Thank you for your business!</div>
             <div>Initiative of Ardh Sainik Welfare Trust (Regd)</div>
             <div>www.ArdhsainikCanteen.in</div>
             <div class="fw-bold" style="margin-top: 2px;">|| जय हिन्द || वन्दे मातरम् ||</div>
-            <div class="text-muted fs-8" style="margin-top: 2px;">This is computer generated invoice</div>
+            <div style="font-size: 8pt; margin-top: 2px; color: #000;">This is computer generated invoice</div>
         </div>
 
     </div>

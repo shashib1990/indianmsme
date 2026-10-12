@@ -309,20 +309,11 @@
                                     {{ $cat->name }}
                                   </span>
                                 </span>
-                                <span
-                                  class="group-hover:text-primary transition-colors duration-300 ease-in-out"
-                                >
-                                  @php
-                                    $pincode = session('user_pincode');
-                                    $catProductCount = $cat->products()
-                                        ->where('status', 'Approved')
-                                        ->whereHas('seller', fn($q) => $q->where('status', '1'))
-                                        ->whereHas('seller.sellerProfile', fn($q) => $q->where('kyc_status', 'APPROVED'))
-                                        ->serviceableByPincode($pincode)
-                                        ->count();
-                                  @endphp
-                                  ({{ $catProductCount }})
-                                </span>
+                                  <span
+                                    class="group-hover:text-primary transition-colors duration-300 ease-in-out"
+                                  >
+                                    ({{ $categoryCounts[$cat->id] ?? 0 }})
+                                  </span>
                               </label>
                             </li>
                             @endforeach
@@ -364,16 +355,7 @@
                                   <span class="text-light-primary-text group-hover:text-primary transition-colors duration-300 ease-in-out">{{ $subCat->name }}</span>
                                 </span>
                                 <span class="group-hover:text-primary transition-colors duration-300 ease-in-out">
-                                  @php
-                                    $pincode = session('user_pincode');
-                                    $subCatProductCount = $subCat->products()
-                                        ->where('status', 'Approved')
-                                        ->whereHas('seller', fn($q) => $q->where('status', '1'))
-                                        ->whereHas('seller.sellerProfile', fn($q) => $q->where('kyc_status', 'APPROVED'))
-                                        ->serviceableByPincode($pincode)
-                                        ->count();
-                                  @endphp
-                                  ({{ $subCatProductCount }})
+                                  ({{ $subCategoryCounts[$subCat->id] ?? 0 }})
                                 </span>
                               </label>
                             </li>
@@ -418,16 +400,7 @@
                                   <span class="text-light-primary-text group-hover:text-primary transition-colors duration-300 ease-in-out">{{ $childCat->name }}</span>
                                 </span>
                                 <span class="group-hover:text-primary transition-colors duration-300 ease-in-out">
-                                  @php
-                                    $pincode = session('user_pincode');
-                                    $childCatProductCount = $childCat->products()
-                                        ->where('status', 'Approved')
-                                        ->whereHas('seller', fn($q) => $q->where('status', '1'))
-                                        ->whereHas('seller.sellerProfile', fn($q) => $q->where('kyc_status', 'APPROVED'))
-                                        ->serviceableByPincode($pincode)
-                                        ->count();
-                                  @endphp
-                                  ({{ $childCatProductCount }})
+                                  ({{ $childCategoryCounts[$childCat->id] ?? 0 }})
                                 </span>
                               </label>
                             </li>
