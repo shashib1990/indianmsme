@@ -11,6 +11,8 @@ use App\Models\AdcPosOrderItem;
 use App\Models\AdcPosSalesReturn;
 use App\Models\AdcPosSalesReturnItem;
 use App\Models\User;
+use App\Services\TheekHaiService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -197,6 +199,9 @@ class PosController extends Controller
 
         // Register customer on external Abhhyam API
         \App\Services\AbhhyamService::registerCustomer($customer, 'ADC');
+        
+        // Register customer on TheekHai API
+        TheekHaiService::registerUser($customer->name, $customer->mobile);
 
         return response()->json([
             'status' => true,
@@ -801,6 +806,342 @@ class PosController extends Controller
             }
 
             DB::commit();
+            
+                        // Added by Sanjeet Theek hai API
+            
+           // ── TheekHai WhatsApp Invoice & Notification ──
+if (!empty($custMobile)) {
+    try {
+
+        $custDisplayName = $custName ?: 'Customer';
+
+        $receiverPhone = preg_replace('/[^0-9]/', '', $custMobile);
+
+        if (strlen($receiverPhone) > 10) {
+            $receiverPhone = substr($receiverPhone, -10);
+        }
+
+        // 1. Register Customer on TheekHai
+        TheekHaiService::registerUser(
+            $custDisplayName,
+            $receiverPhone
+        );
+
+        // 2. Prepare Store Details
+        $senderPhone = config(
+            'theekhai.sender_number',
+            '8800001259'
+        );
+
+        $canteenCode = $adcUser?->adcProfile?->adc_code
+            ?: ($adcUser?->adc_code
+                ?: ('ADC' . str_pad(
+                    $adcUser->id,
+                    3,
+                    '0',
+                    STR_PAD_LEFT
+                )));
+
+        $canteenAddress = $adcUser?->adcProfile?->address
+            ?? ($adcUser?->profile?->address ?? 'ADC Store');
+
+        $canteenEmail = $adcUser?->email
+            ?? ($adcUser?->adcProfile?->email ?? 'N/A');
+
+        $billAmount = number_format(
+            (float) $grandTotal,
+            2
+        );
+
+        $discountAmount = number_format(
+            (float) ($mrpDiscount + $specialDiscount),
+            2
+        );
+
+        $numberInvoice = $invoice->invoice_number;
+
+        $paymentMode = ucfirst(
+            strtolower($payModeRaw)
+        );
+
+        // 3. Build WhatsApp Text Message
+        $itemsSummary = "";
+
+        foreach ($orderItems as $it) {
+
+            $pName = $it['product_name'] ?? 'Product';
+
+            $pQty = (float) (
+                $it['quantity'] ?? 1
+            );
+
+            $pTotal = number_format(
+                (float) ($it['total_price'] ?? 0),
+                2
+            );
+
+            $itemsSummary .=
+                "• {$pName} (x{$pQty}) - ₹{$pTotal}\n";
+        }
+
+        // Prepare PDF URL early so it can be included in textMsg
+        $pdfFileName = str_replace(
+            ['/', '\\'],
+            '_',
+            $invoice->invoice_number
+        ) . '.pdf';
+
+        $pdfUrl = asset('invoices/' . $pdfFileName);
+
+        $textMsg = "🛍️ *Thank You for Shopping!*\n"
+        . "Dear {$custDisplayName},\n"
+        . "Thank you for shopping with Abhhyam India Ecosystem.\n"
+        . "🏪 ADC Store: {$canteenCode}\n"
+        . "🧾 Invoice: {$numberInvoice}\n"
+        . "💰 Shopping Amount: ₹{$billAmount}\n"
+        . "📅 Date: " . now()->format('d/m/Y h:i A') . "\n"
+        // . "💳 Yellow Card Account: [AVI Account ID]\n"
+        // . "🪙 YDC Earned: [Coins]\n"
+        . "📎 Your Tax Invoice is attached.\n"
+        . "Abhhyam Business Community (ABC)\n"
+        . "Your Shopping • Your Savings • Your Future\n"
+        . "करोगे तो होगा! 🇮🇳";
+
+        // 4. Send WhatsApp / TheekHai Message
+        $messageSent = TheekHaiService::sendMessage(
+            $receiverPhone,
+            $textMsg,
+            $senderPhone
+        );
+
+        \Log::info('TheekHai POS Message Result', [
+            'order_id' => $posOrder->id,
+            'customer_mobile' => $receiverPhone,
+            'message_sent' => $messageSent,
+            // 'pdf_url' => $pdfUrl,
+        ]);
+
+
+        // =========================================================
+        // 5. GENERATE PDF + SEND PDF
+        // =========================================================
+
+        try {
+
+            \Log::info('POS PDF STEP 1: Starting', [
+                'order_id' => $posOrder->id,
+                'invoice_number' => $invoice->invoice_number,
+            ]);
+
+
+            // PDF file name
+            $pdfFileName = str_replace(
+                ['/', '\\'],
+                '_',
+                $invoice->invoice_number
+            ) . '.pdf';
+
+
+            // PDF directory
+            $pdfDirectory = public_path('invoices');
+
+
+            \Log::info('POS PDF STEP 2: Directory', [
+                'directory' => $pdfDirectory,
+                'exists' => file_exists($pdfDirectory),
+                'public_writable' => is_writable(public_path()),
+            ]);
+
+
+            // Create invoices directory
+            if (!file_exists($pdfDirectory)) {
+
+                mkdir(
+                    $pdfDirectory,
+                    0755,
+                    true
+                );
+            }
+
+
+            // Check directory creation
+            if (!file_exists($pdfDirectory)) {
+
+                throw new \Exception(
+                    'Unable to create invoices directory: '
+                    . $pdfDirectory
+                );
+            }
+
+
+            $pdfPath =
+                $pdfDirectory
+                . DIRECTORY_SEPARATOR
+                . $pdfFileName;
+
+
+            // =====================================================
+            // Load Fresh Order
+            // =====================================================
+
+            \Log::info(
+                'POS PDF STEP 3: Loading order relations'
+            );
+
+
+            $pdfOrder = $posOrder->fresh([
+                'items.product',
+                'items.localProduct',
+                'items.inventory.product',
+                'items.inventory.localProduct',
+                'customer',
+                'adc.adcProfile',
+                'adc.profile',
+                'invoice',
+            ]);
+
+
+            if (!$pdfOrder) {
+
+                throw new \Exception(
+                    'Unable to refresh POS order for PDF.'
+                );
+            }
+
+
+            \Log::info(
+                'POS PDF STEP 4: Order loaded'
+            );
+
+
+            // =====================================================
+            // Generate PDF
+            // =====================================================
+
+            $pdf = Pdf::loadView(
+                'adc.pos.invoice-pdf',
+                [
+                    'order' => $pdfOrder,
+                ]
+            );
+
+
+            \Log::info(
+                'POS PDF STEP 5: Blade loaded successfully'
+            );
+
+
+            // 80mm receipt paper
+            $pdf->setPaper(
+                [0, 0, 226.77, 600],
+                'portrait'
+            );
+
+
+            // =====================================================
+            // Save PDF
+            // =====================================================
+
+            $pdf->save($pdfPath);
+
+
+            // Verify file
+            if (
+                !file_exists($pdfPath)
+                || filesize($pdfPath) <= 0
+            ) {
+
+                throw new \Exception(
+                    'PDF file was not created properly: '
+                    . $pdfPath
+                );
+            }
+
+
+            \Log::info(
+                'POS PDF STEP 6: PDF saved successfully',
+                [
+                    'pdf_path' => $pdfPath,
+                    'pdf_size' => filesize($pdfPath),
+                ]
+            );
+
+
+            // =====================================================
+            // Public PDF URL
+            // =====================================================
+
+            $pdfUrl = asset(
+                'invoices/' . $pdfFileName
+            );
+
+
+            \Log::info(
+                'POS PDF STEP 7: Public URL created',
+                [
+                    'pdf_url' => $pdfUrl,
+                ]
+            );
+
+
+            // =====================================================
+            // Send PDF through TheekHai
+            // =====================================================
+
+            $pdfSent = TheekHaiService::sendPdf(
+                $receiverPhone,
+                $pdfUrl,
+                $pdfFileName,
+                $senderPhone,
+                $textMsg
+            );
+
+
+            \Log::info(
+                'POS PDF STEP 8: TheekHai PDF result',
+                [
+                    'order_id' => $posOrder->id,
+                    'invoice_number' => $invoice->invoice_number,
+                    'pdf_url' => $pdfUrl,
+                    'pdf_file_name' => $pdfFileName,
+                    'pdf_sent' => $pdfSent,
+                ]
+            );
+
+
+        } catch (\Throwable $pdfEx) {
+
+            // PDF error should NOT stop checkout
+            \Log::error(
+                'POS INVOICE PDF ERROR',
+                [
+                    'message' => $pdfEx->getMessage(),
+                    'file' => $pdfEx->getFile(),
+                    'line' => $pdfEx->getLine(),
+                    'order_id' => $posOrder->id ?? null,
+                    'invoice_number' => $invoice->invoice_number ?? null,
+                    'trace' => $pdfEx->getTraceAsString(),
+                ]
+            );
+        }
+
+
+    } catch (\Throwable $thEx) {
+
+        \Log::error(
+            'TheekHai POS Notification Error',
+            [
+                'message' => $thEx->getMessage(),
+                'file' => $thEx->getFile(),
+                'line' => $thEx->getLine(),
+                'order_id' => $posOrder->id ?? null,
+                'customer_mobile' => $custMobile,
+            ]
+        );
+    }
+}
+
+// End Here
 
             return response()->json([
                 'status' => true,
@@ -1327,6 +1668,198 @@ class PosController extends Controller
 
         $adcUser = $payment->adc;
         return view('adc.pos.payments.print', compact('payment', 'adcUser'));
+    }
+    
+     /**
+     * Send Custom SMS to POS Customer via TheekHai API
+     */
+    public function sendCustomerMessage(Request $request)
+    {
+        $adcId = Auth::guard('adc')->id();
+
+        $request->validate([
+            'customer_id' => 'nullable',
+            'customer_name' => 'nullable|string|max:150',
+            'customer_mobile' => 'required|string',
+            'message' => 'required|string|max:2000',
+        ]);
+
+        $rawMobile = preg_replace('/[^0-9]/', '', $request->customer_mobile);
+        if (strlen($rawMobile) > 10) {
+            $rawMobile = substr($rawMobile, -10);
+        }
+
+        if (strlen($rawMobile) !== 10) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Please provide a valid 10-digit mobile number.',
+            ], 422);
+        }
+
+        $custName = !empty($request->customer_name) ? trim($request->customer_name) : 'Customer';
+        $messageText = trim($request->message);
+
+        if (empty($messageText)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Message content cannot be empty.',
+            ], 422);
+        }
+
+        try {
+            $adcUser = User::with(['adcProfile', 'profile'])->find($adcId);
+            $senderPhone = $adcUser?->mobile
+                ?: ($adcUser?->adcProfile?->phone
+                    ?: ($adcUser?->adcProfile?->official_phone
+                        ?: config('theekhai.sender_number', '8800001259')));
+
+            // Best effort register on TheekHai
+            try {
+                 if ($adcUser && !empty($adcUser->mobile)) {
+                    TheekHaiService::registerUser($adcUser->name ?: 'ADC Store', $adcUser->mobile);
+                }
+                TheekHaiService::registerUser($custName, $rawMobile);
+            } catch (\Throwable $regEx) {
+                \Log::warning('TheekHai registerUser in sendCustomerMessage failed: ' . $regEx->getMessage());
+            }
+
+            // Send message via TheekHai
+            $sent = TheekHaiService::sendMessage($rawMobile, $messageText, $senderPhone);
+
+            if ($sent) {
+                return response()->json([
+                    'status' => true,
+                    'message' => "Message sent successfully to {$custName} ({$rawMobile})!",
+                ]);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Failed to deliver message via SMS/WhatsApp gateway. Please try again.',
+                ], 500);
+            }
+        } catch (\Exception $e) {
+            \Log::error('POS Customer Send Message Error: ' . $e->getMessage(), ['exception' => $e]);
+            return response()->json([
+                'status' => false,
+                'message' => 'An error occurred while sending message: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+    
+    
+    /**
+     * Send Broadcast Message in Batches to all POS Customers of this ADC
+     */
+    public function broadcastCustomerMessage(Request $request)
+    {
+        $adcId = Auth::guard('adc')->id();
+
+        $request->validate([
+            'message' => 'required|string|max:2000',
+            'last_id' => 'nullable|integer',
+        ]);
+
+        $messageText = trim($request->message);
+        if (empty($messageText)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Broadcast message content cannot be empty.',
+            ], 422);
+        }
+
+        $adcUser = User::with(['adcProfile', 'profile'])->find($adcId);
+        $senderPhone = $adcUser?->mobile
+            ?: ($adcUser?->adcProfile?->phone
+                ?: ($adcUser?->adcProfile?->official_phone
+                    ?: config('theekhai.sender_number', '8800001259')));
+
+        // Register ADC sender if mobile is available
+        if ($adcUser && !empty($adcUser->mobile)) {
+            try {
+                TheekHaiService::registerUser($adcUser->name ?: 'ADC Store', $adcUser->mobile);
+            } catch (\Throwable $t) {}
+        }
+
+        $lastId = (int) $request->input('last_id', 0);
+        $batchSize = 1; // Process 1 customer per request for live real-time 1-by-1 progress bar feedback
+
+        $totalCustomers = AdcPosCustomer::where('adc_id', $adcId)
+            ->whereNotNull('mobile')
+            ->where('mobile', '!=', '')
+            ->count();
+
+        $customersBatch = AdcPosCustomer::where('adc_id', $adcId)
+            ->whereNotNull('mobile')
+            ->where('mobile', '!=', '')
+            ->where('id', '>', $lastId)
+            ->orderBy('id', 'asc')
+            ->limit($batchSize)
+            ->get();
+
+        $batchSent = 0;
+        $batchFailed = 0;
+        $nextLastId = $lastId;
+        $currentCustName = '';
+        $currentCustMobile = '';
+        $itemStatus = 'failed';
+
+        foreach ($customersBatch as $cust) {
+            $nextLastId = $cust->id;
+            $currentCustName = $cust->name ?: 'Customer';
+            $cleanMobile = preg_replace('/[^0-9]/', '', $cust->mobile);
+            if (strlen($cleanMobile) > 10) {
+                $cleanMobile = substr($cleanMobile, -10);
+            }
+            $currentCustMobile = $cleanMobile;
+
+            if (strlen($cleanMobile) !== 10) {
+                $batchFailed++;
+                $itemStatus = 'invalid_mobile';
+                continue;
+            }
+
+            try {
+                // Register customer on TheekHai (best effort)
+                TheekHaiService::registerUser($currentCustName, $cleanMobile);
+
+                // Send Message
+                $sent = TheekHaiService::sendMessage($cleanMobile, $messageText, $senderPhone);
+
+                if ($sent) {
+                    $batchSent++;
+                    $itemStatus = 'sent';
+                } else {
+                    $batchFailed++;
+                    $itemStatus = 'failed';
+                }
+            } catch (\Throwable $e) {
+                \Log::error("Broadcast failed for customer {$cust->id}: " . $e->getMessage());
+                $batchFailed++;
+                $itemStatus = 'error';
+            }
+        }
+
+        $batchProcessed = $customersBatch->count();
+        $remainingCount = AdcPosCustomer::where('adc_id', $adcId)
+            ->whereNotNull('mobile')
+            ->where('mobile', '!=', '')
+            ->where('id', '>', $nextLastId)
+            ->count();
+
+        $hasMore = $remainingCount > 0;
+
+        return response()->json([
+            'status' => true,
+            'total' => $totalCustomers,
+            'batch_sent' => $batchSent,
+            'batch_failed' => $batchFailed,
+            'batch_processed' => $batchProcessed,
+            'customer_name' => $currentCustName,
+            'customer_mobile' => $currentCustMobile,
+            'item_status' => $itemStatus,
+            'next_last_id' => $nextLastId,
+            'has_more' => $hasMore,
+        ]);
     }
 
     /**

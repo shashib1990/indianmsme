@@ -149,6 +149,8 @@ Route::name('adc.')->group(function () {
         Route::get('/pos/returns/{id}/print', [\App\Http\Controllers\ADC\PosController::class, 'printReturnReceipt'])->name('pos.returns.print');
 
         // ── POS Customer Credit / Udhaar Management ──
+        Route::post('/pos/customers/send-message', [\App\Http\Controllers\ADC\PosController::class, 'sendCustomerMessage'])->name('pos.customers.send-message');
+        Route::post('/pos/customers/broadcast-message', [\App\Http\Controllers\ADC\PosController::class, 'broadcastCustomerMessage'])->name('pos.customers.broadcast-message');
         Route::post('/pos/customers/receive-payment', [\App\Http\Controllers\ADC\PosController::class, 'receiveCustomerPayment'])->name('pos.customers.receive-payment');
         Route::get('/pos/customers/{id}/ledger', [\App\Http\Controllers\ADC\PosController::class, 'getCustomerLedger'])->name('pos.customers.ledger');
         Route::get('/pos/customers/{id}/ledger/print', [\App\Http\Controllers\ADC\PosController::class, 'printCustomerLedger'])->name('pos.customers.ledger.print');

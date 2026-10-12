@@ -57,8 +57,8 @@ class AppServiceProvider extends ServiceProvider
         }
 
         // ── ADC Cart View Composer ─────────────────────────────────────────
-        // Shares $cartCount and $cartSubtotal with every web layout view
-        \Illuminate\Support\Facades\View::composer(['web.*', 'welcome'], function ($view) {
+        // Shares $cartCount and $cartSubtotal with web layout view
+        \Illuminate\Support\Facades\View::composer(['web.layouts.app', 'welcome'], function ($view) {
             $cartCount      = 0;
             $cartSubtotal   = 0;
             $cartProductIds = [];
@@ -86,12 +86,14 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // Dynamically configure session domain based on environment
-        // This allows the same session to work across subdomains
+        // This allows the same session to work across subdomains in production.
+        // In local environment or on 127.0.0.1 / localhost, keep it null so browser stores cookies.
         $domain = config('app.domain', 'localhost');
         
-        if ($domain !== 'localhost') {
-            // For production: .indianmsme.org allows sharing across subdomains
+        if (!app()->environment('local') && $domain !== 'localhost' && !str_contains(request()->getHost(), '127.0.0.1') && !str_contains(request()->getHost(), 'localhost')) {
             config(['session.domain' => '.' . $domain]);
+        } else {
+            config(['session.domain' => null]);
         }
     }
 }
