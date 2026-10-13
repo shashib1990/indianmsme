@@ -349,13 +349,13 @@
             <div class="card shadow-sm border-0">
                 <div class="card-body py-3 px-4">
                     <div class="row align-items-center g-3">
-                        <div class="col-md-6">
+                        <div class="col-md-5">
                             <h4 class="fw-bold text-slate-800 mb-1" style="font-family: 'Outfit', sans-serif;">
                                 My Inventory Management
                             </h4>
                             <p class="text-muted small mb-0">Active stock in hand. Expired products have been moved to Expired Products quarantine list.</p>
                         </div>
-                        <div class="col-md-6 text-md-end d-flex align-items-center justify-content-md-end gap-2 flex-wrap">
+                        <div class="col-md-7 text-md-end d-flex align-items-center justify-content-md-end gap-2 flex-wrap">
                             <a href="{{ route('ddc.inventory.expired-products') }}" class="btn btn-danger btn-sm fw-semibold">
                                 <iconify-icon icon="solar:danger-triangle-bold-duotone" class="align-middle me-1 fs-16"></iconify-icon> Expired Products List
                             </a>
@@ -365,6 +365,9 @@
                             <span class="badge bg-primary-subtle text-primary fs-12 px-3 py-2 rounded-pill">
                                 <iconify-icon icon="solar:layers-bold-duotone" class="align-middle me-1 fs-14"></iconify-icon> {{ $inventories->total() }} Batch{{ $inventories->total() !== 1 ? 'es' : '' }} in Stock
                             </span>
+                            <a href="{{ route('ddc.inventory.export', request()->query()) }}" class="btn btn-sm btn-success px-3 py-2 rounded-pill fw-semibold shadow-sm d-inline-flex align-items-center gap-1" id="exportInventoryBtn" title="Export Inventory to CSV">
+                                <iconify-icon icon="solar:file-download-bold-duotone" class="fs-16"></iconify-icon> Export CSV
+                            </a>
                         </div>
                     </div>
                 </div>

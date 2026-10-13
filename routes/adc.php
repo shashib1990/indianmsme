@@ -67,6 +67,7 @@ Route::name('adc.')->group(function () {
 
         // ── Inventory Routes ──
         Route::get('/inventory', [\App\Http\Controllers\ADC\InventoryController::class, 'index'])->name('inventory.index');
+        Route::get('/inventory/export', [\App\Http\Controllers\ADC\InventoryController::class, 'export'])->name('inventory.export');
         Route::put('/inventory/{id}', [\App\Http\Controllers\ADC\InventoryController::class, 'update'])->name('inventory.update');
         Route::post('/inventory/{id}/toggle-pos', [\App\Http\Controllers\ADC\InventoryController::class, 'togglePosStatus'])->name('inventory.toggle-pos');
 

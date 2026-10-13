@@ -42,10 +42,6 @@ class AuthController extends Controller
         })->first();
 
         if ($vendor && Hash::check($request->password, $vendor->password)) {
-            if (!$vendor->status || $vendor->status === '0') {
-                return back()->withErrors(['login_id' => 'Your account has been deactivated. Please contact admin.'])->onlyInput('login_id');
-            }
-
             Auth::guard('vendor')->login($vendor, $request->boolean('remember'));
             $request->session()->regenerate();
 

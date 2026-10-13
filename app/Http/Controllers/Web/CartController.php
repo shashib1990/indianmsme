@@ -38,13 +38,13 @@ class CartController extends Controller
                 ->with('error', 'Please log in to view your cart.');
         }
 
-        $items          = $this->buildCartArray($adc->id);
+        $items = $this->buildCartArray($adc->id);
         $availableItems = collect($items)->where('available', true);
-        $rawSubtotal    = $availableItems->sum(fn($i) => ($i['raw_item_total'] ?? ($i['price'] * $i['quantity'])));
-        $rawTotalGst    = $availableItems->sum(fn($i) => ($i['raw_total_gst'] ?? $i['total_gst']));
+        $rawSubtotal = $availableItems->sum(fn($i) => ($i['raw_item_total'] ?? ($i['price'] * $i['quantity'])));
+        $rawTotalGst = $availableItems->sum(fn($i) => ($i['raw_total_gst'] ?? $i['total_gst']));
 
-        $subtotal       = round($rawSubtotal, 2);
-        $totalGst       = round($rawTotalGst, 2);
+        $subtotal = round($rawSubtotal, 2);
+        $totalGst = round($rawTotalGst, 2);
 
         return view('web.cart', compact('items', 'subtotal', 'totalGst'));
     }
@@ -74,17 +74,17 @@ class CartController extends Controller
 
         $request->validate([
             'product_id' => 'required|exists:products,id',
-            'quantity'   => 'required|integer|min:1',
+            'quantity' => 'required|integer|min:1',
         ]);
 
-        $adc     = $this->adc();
+        $adc = $this->adc();
         $product = Product::where('status', 'Approved')->findOrFail($request->product_id);
 
         // Verify product serviceability for user's pincode
         $isServiceable = Product::where('id', $product->id)
             ->serviceableByPincode($pincode)
             ->exists();
-        
+
         if (!$isServiceable) {
             if ($request->ajax()) {
                 return response()->json(['error' => 'This product is not deliverable to your selected pincode.'], 400);
@@ -138,13 +138,13 @@ class CartController extends Controller
 
         // Upsert cart item with pincode
         $cartItem = AdcCartItem::firstOrNew([
-            'adc_id'     => $adc->id,
+            'adc_id' => $adc->id,
             'product_id' => $product->id,
-            'pincode'    => $pincode,
+            'pincode' => $pincode,
         ]);
         $cartItem->seller_id = $resolvedSellerId;
-        $cartItem->quantity  = $qty;
-        $cartItem->pincode   = $pincode;
+        $cartItem->quantity = $qty;
+        $cartItem->pincode = $pincode;
         $cartItem->save();
 
         if ($request->ajax()) {
@@ -187,17 +187,17 @@ class CartController extends Controller
 
         $request->validate([
             'cart_item_id' => 'required|integer',
-            'quantity'     => 'required|integer|min:1',
+            'quantity' => 'required|integer|min:1',
         ]);
 
-        $adc  = $this->adc();
+        $adc = $this->adc();
         $item = AdcCartItem::where('id', $request->cart_item_id)
             ->where('adc_id', $adc->id)
             ->firstOrFail();
 
-        $product  = Product::find($item->product_id);
-        $pincode  = session('user_pincode');
-        $qty      = (int) $request->quantity;
+        $product = Product::find($item->product_id);
+        $pincode = session('user_pincode');
+        $qty = (int) $request->quantity;
         $ddcCheck = ($product && $pincode) ? \App\Services\DdcInventoryService::resolveProductDetails($product, $pincode) : ['is_ddc_inventory' => false];
 
         // Case-pack quantity validation (Only applied if NOT DDC Inventory)
@@ -231,13 +231,13 @@ class CartController extends Controller
         $item->save();
 
         if ($request->ajax()) {
-            $items          = $this->buildCartArray($adc->id);
+            $items = $this->buildCartArray($adc->id);
             $availableItems = collect($items)->where('available', true);
-            $subtotal       = $availableItems->sum(fn($i) => $i['price'] * $i['quantity']);
-            $totalQty       = $availableItems->sum('quantity');
-            $cartCount      = count($items);
-            $totalMbpCoins  = $availableItems->sum('total_mbp_coins');
-            
+            $subtotal = $availableItems->sum(fn($i) => $i['price'] * $i['quantity']);
+            $totalQty = $availableItems->sum('quantity');
+            $cartCount = count($items);
+            $totalMbpCoins = $availableItems->sum('total_mbp_coins');
+
             $itemInCart = $availableItems->firstWhere('id', $item->id) ?: collect($items)->firstWhere('id', $item->id);
             $itemTotal = $itemInCart ? $itemInCart['total'] : (($itemInCart['price'] ?? 0) * $qty);
 
@@ -252,15 +252,15 @@ class CartController extends Controller
             }
 
             return response()->json([
-                'success'         => 'Cart updated.',
-                'item_total'      => number_format($itemTotal, 2),
-                'subtotal'        => number_format($subtotal, 2),
-                'total_qty'       => $totalQty,
-                'cart_count'      => $cartCount,
+                'success' => 'Cart updated.',
+                'item_total' => number_format($itemTotal, 2),
+                'subtotal' => number_format($subtotal, 2),
+                'total_qty' => $totalQty,
+                'cart_count' => $cartCount,
                 'total_mbp_coins' => number_format($totalMbpCoins, 2),
-                'seller_id'       => $targetSellerId,
+                'seller_id' => $targetSellerId,
                 'group_mbp_coins' => number_format($groupMbpCoins, 2),
-                'group_savings'   => number_format($groupSavings, 2),
+                'group_savings' => number_format($groupSavings, 2),
             ]);
         }
 
@@ -286,18 +286,18 @@ class CartController extends Controller
             ->delete();
 
         if ($request->ajax()) {
-            $items          = $this->buildCartArray($adc->id);
+            $items = $this->buildCartArray($adc->id);
             $availableItems = collect($items)->where('available', true);
-            $subtotal       = $availableItems->sum(fn($i) => $i['price'] * $i['quantity']);
-            $totalQty       = $availableItems->sum('quantity');
-            $cartCount      = count($items);
-            $totalMbpCoins  = $availableItems->sum('total_mbp_coins');
+            $subtotal = $availableItems->sum(fn($i) => $i['price'] * $i['quantity']);
+            $totalQty = $availableItems->sum('quantity');
+            $cartCount = count($items);
+            $totalMbpCoins = $availableItems->sum('total_mbp_coins');
 
             return response()->json([
-                'success'         => 'Item removed from cart.',
-                'subtotal'        => number_format($subtotal, 2),
-                'total_qty'       => $totalQty,
-                'cart_count'      => $cartCount,
+                'success' => 'Item removed from cart.',
+                'subtotal' => number_format($subtotal, 2),
+                'total_qty' => $totalQty,
+                'cart_count' => $cartCount,
                 'total_mbp_coins' => number_format($totalMbpCoins, 2),
             ]);
         }
@@ -322,14 +322,14 @@ class CartController extends Controller
         $cart = [];
         foreach ($dbItems as $item) {
             $product = $item->product;
-            $seller  = $item->seller;
+            $seller = $item->seller;
 
             $price = 0;
             $mbpCoins = 0;
             $isSubSeller = $seller && $seller->parent_id !== null;
 
             $isDdcInventory = false;
-            $casePackQty    = 1;
+            $casePackQty = 1;
 
             if ($product) {
                 $pincode = session('user_pincode');
@@ -395,39 +395,39 @@ class CartController extends Controller
                 }
             }
 
-            $gstRate        = (float) ($product?->gst_rate ?? 0);
-            $rawGstAmount   = $gstRate > 0 ? ($price - ($price / (1.0 + ($gstRate / 100.0)))) : 0.0;
+            $gstRate = (float) ($product?->gst_rate ?? 0);
+            $rawGstAmount = $gstRate > 0 ? ($price - ($price / (1.0 + ($gstRate / 100.0)))) : 0.0;
             $rawPriceExclGst = $price - $rawGstAmount;
 
             $cart[] = [
-                'id'                 => $item->id,
-                'product_id'         => $item->product_id,
-                'seller_id'          => $item->seller_id,
-                'imv_code'           => $seller?->sellerProfile?->seller_id ?? '—',
-                'product_name'       => $product?->product_name ?? '—',
-                'seller_name'        => $seller ? ($seller->company_name ?: $seller->name) : '—',
-                'image'              => $product?->featured_image,
-                'price'              => round($price, 2),
-                'price_excl_gst'     => round($rawPriceExclGst, 2),
+                'id' => $item->id,
+                'product_id' => $item->product_id,
+                'seller_id' => $item->seller_id,
+                'imv_code' => $seller?->sellerProfile?->seller_id ?? '—',
+                'product_name' => $product?->product_name ?? '—',
+                'seller_name' => $seller ? ($seller->company_name ?: $seller->name) : '—',
+                'image' => $product?->featured_image,
+                'price' => round($price, 2),
+                'price_excl_gst' => round($rawPriceExclGst, 2),
                 'raw_price_excl_gst' => $rawPriceExclGst,
-                'mbp_coins'          => round($mbpCoins, 2),
-                'gst_rate'           => $gstRate,
-                'gst_amount'         => round($rawGstAmount, 2),
-                'raw_gst_amount'     => $rawGstAmount,
-                'quantity'           => $item->quantity,
-                'item_total'         => round($price * $item->quantity, 2),
-                'raw_item_total'     => $price * $item->quantity,
-                'total'              => round($price * $item->quantity, 2),
-                'total_excl_gst'     => round($rawPriceExclGst * $item->quantity, 2),
-                'total_gst'          => round($rawGstAmount * $item->quantity, 2),
-                'raw_total_gst'      => $rawGstAmount * $item->quantity,
-                'total_mbp_coins'    => $mbpCoins * $item->quantity,
-                'unit'               => $product?->unit_of_measure,
-                'brand'              => $product?->brand?->name,
-                'available'          => $available,
-                'is_ddc_inventory'   => $isDdcInventory,
+                'mbp_coins' => round($mbpCoins, 2),
+                'gst_rate' => $gstRate,
+                'gst_amount' => round($rawGstAmount, 2),
+                'raw_gst_amount' => $rawGstAmount,
+                'quantity' => $item->quantity,
+                'item_total' => round($price * $item->quantity, 2),
+                'raw_item_total' => $price * $item->quantity,
+                'total' => round($price * $item->quantity, 2),
+                'total_excl_gst' => round($rawPriceExclGst * $item->quantity, 2),
+                'total_gst' => round($rawGstAmount * $item->quantity, 2),
+                'raw_total_gst' => $rawGstAmount * $item->quantity,
+                'total_mbp_coins' => $mbpCoins * $item->quantity,
+                'unit' => $product?->unit_of_measure,
+                'brand' => $product?->brand?->name,
+                'available' => $available,
+                'is_ddc_inventory' => $isDdcInventory,
                 'case_pack_quantity' => $casePackQty,
-                'step_quantity'      => $stepQuantity,
+                'step_quantity' => $stepQuantity,
             ];
         }
 

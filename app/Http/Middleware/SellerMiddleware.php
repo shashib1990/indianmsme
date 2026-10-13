@@ -22,13 +22,6 @@ class SellerMiddleware
             return redirect()->route('vendor.login')->with('error', 'Unauthorized access.');
         }
 
-        if ((string)$user->status !== '1' && strtolower((string)$user->status) !== 'active') {
-            Auth::guard('vendor')->logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-            return redirect()->route('vendor.login')->with('error', 'Your account has been deactivated.');
-        }
-
         return $next($request);
     }
 }

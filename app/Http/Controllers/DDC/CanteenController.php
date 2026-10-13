@@ -19,34 +19,14 @@ class CanteenController extends Controller
         $typeFilter = $request->get('type', 'all');
         $statusFilter = $request->get('status', 'all');
 
-        // 1. Explicit ADCs assigned to this DDC
-        $explicitAdcUserIds = DB::table('adc_profiles')
-            ->where('assigned_ddc_id', $ddcId)
-            ->pluck('user_id')
-            ->toArray();
-
-        // 2. Pincode-mapped ADCs
+        // Pincode-mapped ADCs only (strictly from ddc_pincodes table)
         $pincodeIds = DB::table('ddc_pincodes')->where('ddc_id', $ddcId)->pluck('pincode_id')->toArray();
         $mappedPincodes = DB::table('pincodes')->whereIn('id', $pincodeIds)->pluck('pincode')->toArray();
-
-        $ddcProfile = DB::table('ddc_profiles')->where('user_id', $ddcId)->first();
-        if ($ddcProfile) {
-            if (!empty($ddcProfile->pincode)) $mappedPincodes[] = $ddcProfile->pincode;
-            if (!empty($ddcProfile->ddc_pincode)) $mappedPincodes[] = $ddcProfile->ddc_pincode;
-            if (!empty($ddcProfile->adpl_pincode)) $mappedPincodes[] = $ddcProfile->adpl_pincode;
-        }
         $mappedPincodes = array_unique(array_filter($mappedPincodes));
 
         $query = User::where('role', 'adc')
-            ->where(function ($q) use ($explicitAdcUserIds, $mappedPincodes) {
-                if (!empty($explicitAdcUserIds)) {
-                    $q->whereIn('id', $explicitAdcUserIds);
-                }
-                if (!empty($mappedPincodes)) {
-                    $q->orWhereHas('adcProfile', function ($apq) use ($mappedPincodes) {
-                        $apq->whereIn('pincode', $mappedPincodes);
-                    });
-                }
+            ->whereHas('adcProfile', function ($apq) use ($mappedPincodes) {
+                $apq->whereIn('pincode', $mappedPincodes);
             })
             ->with(['adcProfile']);
 
@@ -81,15 +61,8 @@ class CanteenController extends Controller
 
         // Calculate summary stats for all mapped ADCs
         $allAdcUserIds = User::where('role', 'adc')
-            ->where(function ($q) use ($explicitAdcUserIds, $mappedPincodes) {
-                if (!empty($explicitAdcUserIds)) {
-                    $q->whereIn('id', $explicitAdcUserIds);
-                }
-                if (!empty($mappedPincodes)) {
-                    $q->orWhereHas('adcProfile', function ($apq) use ($mappedPincodes) {
-                        $apq->whereIn('pincode', $mappedPincodes);
-                    });
-                }
+            ->whereHas('adcProfile', function ($apq) use ($mappedPincodes) {
+                $apq->whereIn('pincode', $mappedPincodes);
             })
             ->pluck('id');
 
@@ -116,34 +89,15 @@ class CanteenController extends Controller
     {
         $ddcId = Auth::guard('ddc')->id();
 
-        // Verify ADC belongs to this DDC
-        $explicitAdcUserIds = DB::table('adc_profiles')
-            ->where('assigned_ddc_id', $ddcId)
-            ->pluck('user_id')
-            ->toArray();
-
+        // Verify ADC belongs to this DDC via pincode mapping only (strictly from ddc_pincodes table)
         $pincodeIds = DB::table('ddc_pincodes')->where('ddc_id', $ddcId)->pluck('pincode_id')->toArray();
         $mappedPincodes = DB::table('pincodes')->whereIn('id', $pincodeIds)->pluck('pincode')->toArray();
-
-        $ddcProfile = DB::table('ddc_profiles')->where('user_id', $ddcId)->first();
-        if ($ddcProfile) {
-            if (!empty($ddcProfile->pincode)) $mappedPincodes[] = $ddcProfile->pincode;
-            if (!empty($ddcProfile->ddc_pincode)) $mappedPincodes[] = $ddcProfile->ddc_pincode;
-            if (!empty($ddcProfile->adpl_pincode)) $mappedPincodes[] = $ddcProfile->adpl_pincode;
-        }
         $mappedPincodes = array_unique(array_filter($mappedPincodes));
 
         $canteen = User::where('role', 'adc')
             ->where('id', $id)
-            ->where(function ($q) use ($explicitAdcUserIds, $mappedPincodes) {
-                if (!empty($explicitAdcUserIds)) {
-                    $q->whereIn('id', $explicitAdcUserIds);
-                }
-                if (!empty($mappedPincodes)) {
-                    $q->orWhereHas('adcProfile', function ($apq) use ($mappedPincodes) {
-                        $apq->whereIn('pincode', $mappedPincodes);
-                    });
-                }
+            ->whereHas('adcProfile', function ($apq) use ($mappedPincodes) {
+                $apq->whereIn('pincode', $mappedPincodes);
             })
             ->with(['adcProfile'])
             ->firstOrFail();

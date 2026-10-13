@@ -117,6 +117,7 @@ Route::name('ddc.')->group(function () {
         Route::get('/adc-excess-invoices/{id}', [\App\Http\Controllers\DDC\ExcessInvoiceController::class, 'showAdcExcessInvoice'])->name('adc-excess-invoices.show');
         Route::get('/adc-credit-notes/{id}', [\App\Http\Controllers\DDC\CreditNoteController::class, 'showAdcCreditNote'])->name('adc-credit-notes.show');
         Route::get('/inventory', [\App\Http\Controllers\DDC\InventoryController::class, 'index'])->name('inventory.index');
+        Route::get('/inventory/export', [\App\Http\Controllers\DDC\InventoryController::class, 'export'])->name('inventory.export');
         Route::get('/inventory/expired-products', [\App\Http\Controllers\DDC\InventoryController::class, 'expiredProducts'])->name('inventory.expired-products');
         Route::get('/inventory/missing-barcodes', [\App\Http\Controllers\DDC\InventoryController::class, 'missingBarcodes'])->name('inventory.missing-barcodes');
         Route::post('/inventory/{id}/update-barcode', [\App\Http\Controllers\DDC\InventoryController::class, 'updateBarcode'])->name('inventory.update-barcode');

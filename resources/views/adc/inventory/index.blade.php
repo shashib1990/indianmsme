@@ -355,10 +355,13 @@
                             </h4>
                             <p class="text-muted small mb-0">Stock received, sold, returned &amp; balance — all items in stock. Edit Margins, Mfg &amp; Expiry dates inline.</p>
                         </div>
-                        <div class="col-md-4 text-md-end">
+                        <div class="col-md-4 text-md-end d-flex align-items-center justify-content-md-end gap-2 flex-wrap">
                             <span class="badge bg-primary-subtle text-primary fs-12 px-3 py-2 rounded-pill">
                                 <iconify-icon icon="solar:layers-bold-duotone" class="align-middle me-1 fs-14"></iconify-icon> {{ $inventories->total() }} Batch{{ $inventories->total() !== 1 ? 'es' : '' }} in Stock
                             </span>
+                            <a href="{{ route('adc.inventory.export', request()->query()) }}" class="btn btn-sm btn-success px-3 py-2 rounded-pill fw-semibold shadow-sm d-inline-flex align-items-center gap-1" id="exportInventoryBtn" title="Export Inventory to CSV">
+                                <iconify-icon icon="solar:file-download-bold-duotone" class="fs-16"></iconify-icon> Export CSV
+                            </a>
                         </div>
                     </div>
                 </div>

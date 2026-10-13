@@ -302,12 +302,6 @@
                 }
             });
 
-            // Auto-select first assigned Canteen (ADC) if available
-            const adcSel = document.getElementById('adcSelect');
-            if (adcSel && adcSel.options.length > 1 && !adcSel.value) {
-                adcSel.selectedIndex = 1;
-                onAdcSelected(adcSel, false);
-            }
         });
 
         function getShortUom(uom) {

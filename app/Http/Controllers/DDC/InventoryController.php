@@ -10,7 +10,10 @@ use Illuminate\Support\Facades\Auth;
 
 class InventoryController extends Controller
 {
-    public function index(Request $request)
+    /**
+     * Build shared inventory query based on search and filters
+     */
+    private function buildInventoryQuery(Request $request)
     {
         $ddc = Auth::guard('ddc')->user();
         $source = strtoupper($request->get('source', 'ALL'));
@@ -59,9 +62,165 @@ class InventoryController extends Controller
                 ->where('expire_date', '<=', now()->addDays(180)->toDateString());
         }
 
+        return $query;
+    }
+
+    public function index(Request $request)
+    {
+        $source = strtoupper($request->get('source', 'ALL'));
+        if (!in_array($source, ['ALL', 'MSME', 'LOCAL'])) {
+            $source = 'ALL';
+        }
+        $search = $request->input('search');
+        $expiryFilter = $request->get('expiry_filter');
+
+        $query = $this->buildInventoryQuery($request);
         $inventories = $query->orderBy('id', 'desc')->paginate(20)->withQueryString();
 
         return view('ddc.inventory.index', compact('inventories', 'search', 'source', 'expiryFilter'));
+    }
+
+    /**
+     * Export Inventory to CSV (Table fields only, direct clean data)
+     */
+    public function export(Request $request)
+    {
+        $ddc = Auth::guard('ddc')->user();
+        $ddcProfile = $ddc?->ddcProfile ?: $ddc?->profile;
+        $ddcCode = $ddcProfile?->ddc_code ?: ($ddc?->ddc_code ?: ('DDC' . str_pad($ddc?->id ?? 0, 3, '0', STR_PAD_LEFT)));
+
+        $query = $this->buildInventoryQuery($request);
+        $inventories = $query->orderBy('id', 'desc')->get();
+
+        $filename = "DDC_Inventory_{$ddcCode}_" . date('Ymd_His') . ".csv";
+
+        return response()->streamDownload(function () use ($inventories) {
+            $handle = fopen('php://output', 'w');
+
+            // UTF-8 BOM for Excel support
+            fputs($handle, "\xEF\xBB\xBF");
+
+            $putCsv = function (array $fields) use ($handle) {
+                fputcsv($handle, $fields, ',', '"', "\\");
+            };
+
+            // Exactly the Table Column Headers
+            $putCsv([
+                'S.No.',
+                'POS Status',
+                'Product Name',
+                'Product Code',
+                'Barcode',
+                'Source',
+                'Batch',
+                'UOM',
+                'Received',
+                'Sold',
+                'Returned',
+                'Balance',
+                'MRP',
+                'Purchase Price',
+                'ADC Price',
+                'MSP',
+                'CSP',
+                'MSP Margin (%)',
+                'CSP Margin (%)',
+                'GST (%)',
+                'Mfg Date',
+                'Expire Date',
+                'Status',
+            ]);
+
+            $today = \Carbon\Carbon::today()->startOfDay();
+
+            $formatQty = function ($qty) {
+                $v = (float) $qty;
+                if (abs($v - round($v)) < 0.0001) {
+                    return (string) ((int) round($v));
+                }
+                return rtrim(rtrim(number_format($v, 3, '.', ''), '0'), '.');
+            };
+
+            foreach ($inventories as $idx => $inv) {
+                $mrpVal = (float) ($inv->mrp ?? 0);
+                $purchasePriceVal = (float) ($inv->purchase_price ?? 0);
+                $adcPriceVal = (float) ($inv->product?->adc_purchase_price ?? $inv->purchase_price ?? 0);
+                $mspVal = (float) ($inv->msp ?? 0);
+                $cspVal = (float) ($inv->csp ?? 0);
+
+                // MSP Margin % = ((MSP - Purchase Price) / MSP) * 100
+                $calcAdcMargin = $mspVal > 0 ? round((($mspVal - $purchasePriceVal) / $mspVal) * 100, 2) : 0;
+                $adcMarginVal = $inv->adc_margin !== null ? (float) $inv->adc_margin : ($inv->margin !== null ? (float) $inv->margin : $calcAdcMargin);
+
+                // CSP Margin % = ((CSP - MSP) / MSP) * 100
+                $calcCspMargin = $mspVal > 0 ? round((($cspVal - $mspVal) / $mspVal) * 100, 2) : 0;
+                $cspMarginVal = $inv->csp_margin !== null ? (float) $inv->csp_margin : $calcCspMargin;
+
+                $soldQty = (float) ($inv->sold_quantity ?? 0);
+                $returnedQty = (float) ($inv->returned_quantity ?? 0);
+                $balanceQty = (float) ($inv->quantity ?? 0);
+                $receivedQty = $balanceQty + $soldQty - $returnedQty;
+
+                $uom = $inv->unit_of_measure ?? ($inv->product?->unit_of_measure ?? ($inv->localProduct?->unit_of_measure ?? 'Units'));
+                $gstRateVal = (float) (
+                    $inv->gst_rate
+                    ?? $inv->product?->gst_rate
+                    ?? $inv->localProduct?->gst_rate
+                    ?? 0
+                );
+
+                $daysLeft = $inv->expire_date ? (int) floor($today->diffInDays(\Carbon\Carbon::parse($inv->expire_date)->startOfDay(), false)) : null;
+                $expiryStatus = '';
+                if ($inv->expire_date) {
+                    if ($daysLeft !== null && $daysLeft < 0) {
+                        $expiryStatus = 'Expired';
+                    } elseif ($daysLeft !== null && $daysLeft >= 0 && $daysLeft <= 30) {
+                        if ($daysLeft == 0) {
+                            $expiryStatus = 'Today';
+                        } elseif ($daysLeft == 1) {
+                            $expiryStatus = '1 Day Left';
+                        } else {
+                            $expiryStatus = $daysLeft . ' Days Left';
+                        }
+                    } else {
+                        $expiryStatus = 'Valid';
+                    }
+                }
+
+                $putCsv([
+                    $idx + 1,
+                    $inv->pos_status ?? 'Active',
+                    $inv->product_name ?? ($inv->product?->product_name ?? ''),
+                    $inv->product_code ?? '',
+                    $inv->barcode ?? '',
+                    $inv->inventory_source ?? 'MSME',
+                    $inv->batch_number ?? '',
+                    $uom,
+                    $formatQty($receivedQty),
+                    $formatQty($soldQty),
+                    $formatQty($returnedQty),
+                    $formatQty($balanceQty),
+                    number_format($mrpVal, 2, '.', ''),
+                    number_format($purchasePriceVal, 2, '.', ''),
+                    number_format($adcPriceVal, 2, '.', ''),
+                    number_format($mspVal, 2, '.', ''),
+                    number_format($cspVal, 2, '.', ''),
+                    number_format($adcMarginVal, 2, '.', '') . '%',
+                    number_format($cspMarginVal, 2, '.', '') . '%',
+                    number_format($gstRateVal, 2, '.', '') . '%',
+                    $inv->mfg_date ? \Carbon\Carbon::parse($inv->mfg_date)->format('d-m-Y') : '',
+                    $inv->expire_date ? \Carbon\Carbon::parse($inv->expire_date)->format('d-m-Y') : '',
+                    $expiryStatus,
+                ]);
+            }
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Pragma'              => 'no-cache',
+            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires'             => '0',
+        ]);
     }
 
     public function expiredProducts(Request $request)

@@ -42,36 +42,15 @@ class PosController extends Controller
 
     private function getAssignedAdcsForDdc($ddcId)
     {
-        $explicitAdcUserIds = DB::table('adc_profiles')
-            ->where('assigned_ddc_id', $ddcId)
-            ->pluck('user_id')
-            ->toArray();
-
+        // Pincode-mapped ADCs only (strictly from ddc_pincodes table)
         $pincodeIds = DB::table('ddc_pincodes')->where('ddc_id', $ddcId)->pluck('pincode_id')->toArray();
         $mappedPincodes = DB::table('pincodes')->whereIn('id', $pincodeIds)->pluck('pincode')->toArray();
-
-        $ddcProfile = DB::table('ddc_profiles')->where('user_id', $ddcId)->first();
-        if ($ddcProfile) {
-            if (!empty($ddcProfile->pincode))
-                $mappedPincodes[] = $ddcProfile->pincode;
-            if (!empty($ddcProfile->ddc_pincode))
-                $mappedPincodes[] = $ddcProfile->ddc_pincode;
-            if (!empty($ddcProfile->adpl_pincode))
-                $mappedPincodes[] = $ddcProfile->adpl_pincode;
-        }
         $mappedPincodes = array_unique(array_filter($mappedPincodes));
 
         return User::where('role', 'adc')
             ->where('status', '1')
-            ->where(function ($q) use ($explicitAdcUserIds, $mappedPincodes) {
-                if (!empty($explicitAdcUserIds)) {
-                    $q->whereIn('id', $explicitAdcUserIds);
-                }
-                if (!empty($mappedPincodes)) {
-                    $q->orWhereHas('adcProfile', function ($apq) use ($mappedPincodes) {
-                        $apq->whereIn('pincode', $mappedPincodes);
-                    });
-                }
+            ->whereHas('adcProfile', function ($apq) use ($mappedPincodes) {
+                $apq->whereIn('pincode', $mappedPincodes);
             })
             ->with(['adcProfile'])
             ->orderBy('name')
