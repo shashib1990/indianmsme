@@ -20,12 +20,8 @@
     href="{{ \App\Models\SystemSetting::getVal('favicon', asset('ecommerce-assets/images/favicon.png')) }}"
     type="image/x-icon" />
 
-  <!-- ========== Google Fonts ========== -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
-    rel="stylesheet" />
+  <!-- ========== Google Fonts (Local) ========== -->
+  <link rel="stylesheet" href="{{ asset('fonts/poppins/poppins.css') }}" />
 
   <!-- ========== Huge Icons CSS ========== -->
   <link rel="stylesheet" href="{{ asset('ecommerce-assets/css/vendor/hugeicons/hgi-stroke-rounded.css') }}" />
@@ -43,9 +39,9 @@
   <link rel="stylesheet" href="{{ asset('ecommerce-assets/css/style.css') }}" />
   <meta name="csrf-token" content="{{ csrf_token() }}">
 
-  <!-- ========== Select2 & Toastify CSS ========== -->
-  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <!-- ========== Select2 & Toastify CSS (Local) ========== -->
+  <link href="{{ asset('vendor/select2/select2.min.css') }}" rel="stylesheet" />
+  <link rel="stylesheet" type="text/css" href="{{ asset('vendor/toastify/toastify.min.css') }}">
 
   <style>
     :root {
@@ -2736,10 +2732,10 @@
   <!-- ========== Custom JS ========== -->
   <script src="{{ asset('ecommerce-assets/js/main.js') }}"></script>
 
-  <!-- ========== Select2, Toastify & SweetAlert2 JS ========== -->
-  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- ========== Select2, Toastify & SweetAlert2 JS (Local) ========== -->
+  <script src="{{ asset('vendor/select2/select2.min.js') }}"></script>
+  <script type="text/javascript" src="{{ asset('vendor/toastify/toastify.min.js') }}"></script>
+  <script src="{{ asset('vendor/sweetalert2/sweetalert2.min.js') }}"></script>
 
   <script>
     // ═══════════════════════════════════════════════════════

@@ -21,10 +21,9 @@ class DashboardController extends Controller
         $user = Auth::guard('ddc')->user();
         $ddcId = $user->id;
 
-        // 1. Wallet Balance
-        $walletBalance = DB::table('ddc_profiles')
-            ->where('user_id', $ddcId)
-            ->value('wallet_balance') ?? 0;
+        // 1. Wallet Balance & DDC Profile
+        $ddcProfile = DB::table('ddc_profiles')->where('user_id', $ddcId)->first();
+        $walletBalance = $ddcProfile->wallet_balance ?? 0;
 
         // 2. Purchases (MSME POs Received + Local Purchases)
         $msmePurchaseAmount = PurchaseOrder::where('ddc_id', $ddcId)
@@ -64,33 +63,14 @@ class DashboardController extends Controller
             ->where('quantity', '>', 0)
             ->sum(DB::raw('quantity * mrp'));
 
-        // 5. Total Canteens (ADC Retail Stores assigned/mapped to this DDC)
-        $explicitAdcUserIds = DB::table('adc_profiles')
-            ->where('assigned_ddc_id', $ddcId)
-            ->pluck('user_id')
-            ->toArray();
-
+        // 5. Total Canteens (ADC Retail Stores mapped to this DDC via pincode only)
         $pincodeIds = DB::table('ddc_pincodes')->where('ddc_id', $ddcId)->pluck('pincode_id')->toArray();
         $mappedPincodes = DB::table('pincodes')->whereIn('id', $pincodeIds)->pluck('pincode')->toArray();
-
-        $ddcProfile = DB::table('ddc_profiles')->where('user_id', $ddcId)->first();
-        if ($ddcProfile) {
-            if (!empty($ddcProfile->pincode)) $mappedPincodes[] = $ddcProfile->pincode;
-            if (!empty($ddcProfile->ddc_pincode)) $mappedPincodes[] = $ddcProfile->ddc_pincode;
-            if (!empty($ddcProfile->adpl_pincode)) $mappedPincodes[] = $ddcProfile->adpl_pincode;
-        }
         $mappedPincodes = array_unique(array_filter($mappedPincodes));
 
         $allAdcUserIds = User::where('role', 'adc')
-            ->where(function ($q) use ($explicitAdcUserIds, $mappedPincodes) {
-                if (!empty($explicitAdcUserIds)) {
-                    $q->whereIn('id', $explicitAdcUserIds);
-                }
-                if (!empty($mappedPincodes)) {
-                    $q->orWhereHas('adcProfile', function ($apq) use ($mappedPincodes) {
-                        $apq->whereIn('pincode', $mappedPincodes);
-                    });
-                }
+            ->whereHas('adcProfile', function ($apq) use ($mappedPincodes) {
+                $apq->whereIn('pincode', $mappedPincodes);
             })
             ->pluck('id');
 

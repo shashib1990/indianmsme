@@ -315,6 +315,7 @@
 
     <!-- Scripts -->
     <script src="{{ asset('admin-assets/js/vendor.js') }}"></script>
+    <script src="{{ asset('admin-assets/js/config.js') }}"></script>
     <script src="{{ asset('admin-assets/js/app.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
