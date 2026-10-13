@@ -692,6 +692,278 @@
             background: #1e293b !important;
             border-top-color: #334155 !important;
         }
+
+        /* ═════════════════════════════════════════════════════════════════════
+           ADC MOBILE VIEW & HEADER RESPONSIVE DESIGN SYSTEM
+           ═════════════════════════════════════════════ */
+        /* ── Mobile Topbar / Header Responsiveness ── */
+        @media (max-width: 991.98px) {
+            .topbar {
+                height: 56px !important;
+                min-height: 56px !important;
+                max-height: 56px !important;
+                padding: 0 !important;
+                padding-left: 0 !important;
+                position: sticky !important;
+                top: 0 !important;
+                z-index: 1005 !important;
+                overflow: visible !important;
+                box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07) !important;
+                background-color: var(--bs-topbar-bg, #ffffff) !important;
+            }
+            .topbar .container-fluid {
+                padding-left: 10px !important;
+                padding-right: 10px !important;
+                height: 56px !important;
+            }
+            .topbar .navbar-header {
+                height: 56px !important;
+                min-height: 56px !important;
+                max-height: 56px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                flex-wrap: nowrap !important;
+                overflow: visible !important;
+                width: 100% !important;
+            }
+            .topbar .topbar-item {
+                height: 56px !important;
+                display: flex !important;
+                align-items: center !important;
+            }
+            .topbar .dropdown {
+                position: relative !important;
+            }
+            .topbar .button-toggle-menu {
+                width: 38px !important;
+                height: 38px !important;
+                padding: 0 !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                margin-right: 4px !important;
+                border-radius: 8px !important;
+                transition: background-color 0.15s ease;
+            }
+            .topbar-button {
+                width: 36px !important;
+                height: 36px !important;
+                padding: 0 !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                border-radius: 8px !important;
+            }
+            .page-content {
+                padding-bottom: 78px !important;
+            }
+            .footer {
+                margin-bottom: 60px !important;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .topbar {
+                height: 52px !important;
+                min-height: 52px !important;
+                max-height: 52px !important;
+            }
+            .topbar .container-fluid {
+                padding-left: 8px !important;
+                padding-right: 8px !important;
+                height: 52px !important;
+            }
+            .topbar .navbar-header {
+                height: 52px !important;
+                min-height: 52px !important;
+                max-height: 52px !important;
+            }
+            .topbar .topbar-item {
+                height: 52px !important;
+            }
+            .topbar .button-toggle-menu {
+                width: 34px !important;
+                height: 34px !important;
+            }
+            .topbar-button {
+                width: 34px !important;
+                height: 34px !important;
+            }
+            .topbar-title-text {
+                max-width: 140px !important;
+                font-size: 13px !important;
+            }
+            .topbar .dropdown-menu {
+                position: absolute !important;
+                right: 0 !important;
+                left: auto !important;
+                max-width: calc(100vw - 16px) !important;
+                margin-top: 4px !important;
+                border-radius: 12px !important;
+            }
+        }
+
+        @media (max-width: 375.98px) {
+            .topbar-title-text {
+                max-width: 95px !important;
+                font-size: 12px !important;
+            }
+        }
+
+        /* ── Floating Mobile Bottom Navigation Bar (Screens <= 991px) ── */
+        .adc-mobile-bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-top: 1px solid rgba(226, 232, 240, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 3px 6px 5px;
+            z-index: 1040;
+            box-shadow: 0 -4px 18px rgba(15, 23, 42, 0.08);
+        }
+
+        [data-bs-theme="dark"] .adc-mobile-bottom-nav {
+            background: rgba(15, 23, 42, 0.96);
+            border-top-color: rgba(51, 65, 85, 0.9);
+            box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.35);
+        }
+
+        .adc-mobile-bottom-nav .nav-item-mobile {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 0;
+            position: relative;
+            transition: all 0.2s ease;
+            line-height: 1.1;
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .adc-mobile-bottom-nav .nav-item-mobile .nav-icon-mobile {
+            font-size: 20px;
+            margin-bottom: 2px;
+            transition: transform 0.2s ease, color 0.2s ease;
+        }
+
+        .adc-mobile-bottom-nav .nav-item-mobile:active .nav-icon-mobile {
+            transform: scale(0.9);
+        }
+
+        .adc-mobile-bottom-nav .nav-item-mobile.active {
+            color: #0f269a;
+            font-weight: 700;
+        }
+
+        [data-bs-theme="dark"] .adc-mobile-bottom-nav .nav-item-mobile {
+            color: #94a3b8;
+        }
+
+        [data-bs-theme="dark"] .adc-mobile-bottom-nav .nav-item-mobile.active {
+            color: #60a5fa;
+        }
+
+        .adc-mobile-bottom-nav .nav-item-mobile.pos-fab {
+            position: relative;
+            top: -11px;
+        }
+
+        .adc-mobile-bottom-nav .pos-fab-inner {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 14px rgba(217, 119, 6, 0.45);
+            border: 2.5px solid #ffffff;
+            margin-bottom: 2px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        [data-bs-theme="dark"] .adc-mobile-bottom-nav .pos-fab-inner {
+            border-color: #0f172a;
+        }
+
+        .adc-mobile-bottom-nav .nav-item-mobile.pos-fab:active .pos-fab-inner {
+            transform: scale(0.92);
+        }
+
+        .adc-mobile-bottom-nav .text-amber {
+            color: #d97706 !important;
+        }
+
+        [data-bs-theme="dark"] .adc-mobile-bottom-nav .text-amber {
+            color: #fbbf24 !important;
+        }
+
+        @media (min-width: 992px) {
+            .adc-mobile-bottom-nav {
+                display: none !important;
+            }
+        }
+
+        /* ── General Mobile Form & Table Polish (<= 768px) ── */
+        @media (max-width: 768px) {
+            .container-fluid {
+                padding-left: 10px !important;
+                padding-right: 10px !important;
+            }
+            .card {
+                border-radius: 10px !important;
+                margin-bottom: 12px !important;
+            }
+            .card-body {
+                padding: 12px 14px !important;
+            }
+            .table-responsive {
+                -webkit-overflow-scrolling: touch !important;
+                border-radius: 8px !important;
+            }
+            .table thead th {
+                font-size: 10.5px !important;
+                padding: 8px 10px !important;
+                white-space: nowrap !important;
+            }
+            .table tbody td {
+                padding: 8px 10px !important;
+                white-space: nowrap !important;
+            }
+            .input-group {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            #filterForm, .filter-form {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                width: 100% !important;
+            }
+            .modal-dialog {
+                margin: 0.5rem !important;
+                max-width: calc(100% - 1rem) !important;
+            }
+            .swal2-popup {
+                width: 92% !important;
+                padding: 1.25rem !important;
+                font-size: 13px !important;
+            }
+        }
     </style>
 </head>
 
@@ -717,63 +989,69 @@
         <header class="topbar">
             <div class="container-fluid">
                 <div class="navbar-header">
-                    <div class="d-flex align-items-center">
+                    <!-- Left: Hamburger + ADC Badge/Title + Compact POS Pill -->
+                    <div class="d-flex align-items-center flex-nowrap" style="min-width: 0;">
                         <!-- Menu Toggle -->
-                        <div class="topbar-item">
-                            <button type="button" class="button-toggle-menu me-2">
+                        <div class="topbar-item flex-shrink-0">
+                            <button type="button" class="button-toggle-menu me-1 me-sm-2" aria-label="Toggle Navigation">
                                 <iconify-icon icon="solar:hamburger-menu-broken"
-                                    class="fs-24 align-middle"></iconify-icon>
+                                    class="fs-22 fs-sm-24 align-middle"></iconify-icon>
                             </button>
                         </div>
-                        <div class="topbar-item d-flex align-items-center gap-2">
-                            <h4 class="fw-bold topbar-button pe-none text-uppercase mb-0 d-inline-flex align-items-center me-2">
-                                <span class="badge bg-primary-subtle text-primary px-2 me-1">ADC</span>
-                                @yield('page-title', 'Dashboard')
-                            </h4>
-                            <!-- Premium Yellow / Amber Card POS Button on Left -->
+                        <div class="topbar-item d-flex align-items-center gap-1.5 flex-nowrap" style="min-width: 0;">
+                            <!-- Page Title with ADC Badge -->
+                            <div class="d-inline-flex align-items-center me-1 text-truncate" title="@yield('page-title', 'Dashboard')">
+                                <span class="badge bg-primary-subtle text-primary px-1.5 py-0.5 me-1 fs-10 fs-sm-11 flex-shrink-0">ADC</span>
+                                <span class="fw-bold text-dark fs-12 fs-sm-14 text-truncate topbar-title-text" style="line-height: 1.2;">
+                                    @yield('page-title', 'Dashboard')
+                                </span>
+                            </div>
+
+                            <!-- Premium Yellow / Amber Card POS Button (Visible on >= 576px; on mobile bottom nav FAB provides instant access) -->
                             <a href="{{ route('adc.pos.retail') }}"
-                                class="btn btn-sm px-3 py-1 rounded-pill fw-extrabold d-inline-flex align-items-center gap-1.5 shadow-sm me-2"
-                                style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.4) !important; font-size: 12px; text-shadow: 0 1px 2px rgba(0,0,0,0.25);"
+                                class="btn btn-sm px-2 px-sm-2.5 py-1 rounded-pill fw-extrabold d-none d-sm-inline-flex align-items-center gap-1 shadow-sm flex-shrink-0 btn-pos-topbar-yellow"
+                                style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.4) !important; font-size: 11.5px; text-shadow: 0 1px 2px rgba(0,0,0,0.25);"
                                 title="Open Retail POS Terminal">
-                                <iconify-icon icon="solar:shop-2-bold-duotone"
-                                    class="fs-16 align-middle" style="color: #ffffff !important;"></iconify-icon>
-                                <span>Yellow Card POS</span>
+                                <iconify-icon icon="solar:shop-2-bold-duotone" class="fs-15 align-middle"
+                                    style="color: #ffffff !important;"></iconify-icon>
+                                <span><span class="d-none d-md-inline">Yellow </span>POS</span>
                             </a>
 
-                            <!-- Premium Green Card POS External Button -->
+                            <!-- Premium Green Card POS External Button (Hidden on phones < 768px to prevent header overflow) -->
                             @php
                                 $greenCardAdcProfile = Auth::guard('adc')->user()?->adcProfile;
                                 $greenCardAbhhyamVendorId = $greenCardAdcProfile?->abhhyam_vendor_id;
                             @endphp
-                            @if(!empty($greenCardAbhhyamVendorId) && (int)$greenCardAbhhyamVendorId > 0)
-                                <a href="https://abhhyam.com/vendors/visit-asc-vendor/{{ base64_encode($greenCardAbhhyamVendorId) }}" target="_blank"
-                                    class="btn btn-sm px-3 py-1 rounded-pill fw-extrabold d-inline-flex align-items-center gap-1.5 shadow-sm"
-                                    style="background: linear-gradient(135deg, #10b981 0%, #047857 100%) !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.4) !important; font-size: 12px; text-shadow: 0 1px 2px rgba(0,0,0,0.25);"
+                            @if(!empty($greenCardAbhhyamVendorId) && (int) $greenCardAbhhyamVendorId > 0)
+                                <a href="https://abhhyam.com/vendors/visit-asc-vendor/{{ base64_encode($greenCardAbhhyamVendorId) }}"
+                                    target="_blank"
+                                    class="btn btn-sm px-2 px-sm-2.5 py-1 rounded-pill fw-extrabold d-none d-md-inline-flex align-items-center gap-1 shadow-sm flex-shrink-0"
+                                    style="background: linear-gradient(135deg, #10b981 0%, #047857 100%) !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.4) !important; font-size: 11.5px; text-shadow: 0 1px 2px rgba(0,0,0,0.25);"
                                     title="Visit Abhhyam Green Card POS Terminal">
-                                    <iconify-icon icon="solar:card-recive-bold-duotone"
-                                        class="fs-16 align-middle" style="color: #ffffff !important;"></iconify-icon>
-                                    <span>Green Card POS</span>
+                                    <iconify-icon icon="solar:card-recive-bold-duotone" class="fs-15 align-middle"
+                                        style="color: #ffffff !important;"></iconify-icon>
+                                    <span>Green POS</span>
                                 </a>
                             @endif
                         </div>
                     </div>
 
-                    <div class="d-flex align-items-center gap-1">
-                        <!-- Shopping / Visit Main Website Button -->
-                        <div class="topbar-item me-1">
+                    <!-- Right: Shopping + Dark Mode + Notifications + User Avatar -->
+                    <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                        <!-- Shopping / Visit Main Website Button (hidden on mobile phones) -->
+                        <div class="topbar-item d-none d-sm-flex me-1">
                             <a href="{{ main_website_url() }}" target="_blank"
-                                class="btn btn-sm btn-browse-web d-flex align-items-center gap-1.5 rounded-pill px-3 py-1.5 shadow-sm"
+                                class="btn btn-sm btn-browse-web d-flex align-items-center gap-1 rounded-pill px-2.5 py-1 shadow-sm"
                                 title="Shopping">
-                                <iconify-icon icon="solar:global-bold-duotone"
-                                    class="fs-18 align-middle"></iconify-icon>
-                                <span class="fw-semibold d-none d-sm-inline" style="font-size: 13px;">Shopping</span>
+                                <iconify-icon icon="solar:global-bold-duotone" class="fs-16 align-middle"></iconify-icon>
+                                <span class="fw-semibold d-none d-md-inline" style="font-size: 12px;">Shopping</span>
                             </a>
                         </div>
 
-                        <!-- Dark Mode -->
+                        <!-- Dark Mode Toggle Button -->
                         <div class="topbar-item">
-                            <button type="button" class="topbar-button" id="light-dark-mode">
-                                <iconify-icon icon="solar:moon-bold-duotone" class="fs-24 align-middle"></iconify-icon>
+                            <button type="button" class="topbar-button" id="light-dark-mode" title="Toggle Dark/Light Mode">
+                                <iconify-icon icon="solar:moon-bold-duotone" class="fs-22 fs-sm-24 align-middle"></iconify-icon>
                             </button>
                         </div>
 
@@ -792,39 +1070,42 @@
                             @endphp
                             <a type="button" class="topbar-button position-relative"
                                 id="page-header-notifications-dropdown" data-bs-toggle="dropdown" aria-haspopup="true"
-                                aria-expanded="false">
+                                aria-expanded="false" title="Notifications">
                                 <iconify-icon icon="solar:bell-bing-bold-duotone"
-                                    class="fs-24 align-middle"></iconify-icon>
+                                    class="fs-22 fs-sm-24 align-middle"></iconify-icon>
                                 @if($unreadCount > 0)
                                     <span
                                         class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                                        style="margin-top: 10px; margin-left: -10px; font-size: 10px;">
+                                        style="margin-top: 8px; margin-left: -8px; font-size: 9px; padding: 2px 5px;">
                                         {{ $unreadCount }}
                                     </span>
                                 @endif
                             </a>
-                            <div class="dropdown-menu dropdown-menu-end p-0"
-                                style="width: 300px; max-height: 400px; overflow-y: auto;">
+                            <div class="dropdown-menu dropdown-menu-end p-0 shadow-lg"
+                                style="width: 290px; max-width: calc(100vw - 20px); max-height: 400px; overflow-y: auto;">
                                 <div class="p-3 border-bottom d-flex align-items-center justify-content-between">
                                     <h6 class="mb-0 fw-bold">Notifications</h6>
+                                    @if($unreadCount > 0)
+                                        <span class="badge bg-danger-subtle text-danger">{{ $unreadCount }} new</span>
+                                    @endif
                                 </div>
                                 <div class="list-group list-group-flush">
                                     @forelse($adcNotifications as $notif)
                                         <a href="{{ $notif->link ?? '#' }}"
-                                            class="list-group-item list-group-item-action p-3">
+                                            class="list-group-item list-group-item-action p-2.5">
                                             <div class="d-flex align-items-start">
                                                 <div class="flex-grow-1">
-                                                    <h6 class="mb-1 text-slate-800 fw-semibold">{{ $notif->title }}</h6>
-                                                    <p class="mb-1 text-muted small">{{ $notif->message }}</p>
+                                                    <h6 class="mb-1 text-slate-800 fw-semibold fs-12">{{ $notif->title }}</h6>
+                                                    <p class="mb-1 text-muted small fs-11">{{ $notif->message }}</p>
                                                     <span
-                                                        class="text-muted small fs-11">{{ $notif->created_at->diffForHumans() }}</span>
+                                                        class="text-muted small fs-10">{{ $notif->created_at->diffForHumans() }}</span>
                                                 </div>
                                             </div>
                                         </a>
                                     @empty
                                         <div class="p-4 text-center text-muted">
                                             <iconify-icon icon="solar:bell-broken"
-                                                class="fs-32 text-muted mb-2"></iconify-icon><br>
+                                                class="fs-28 text-muted mb-1"></iconify-icon><br>
                                             <span class="small">No new notifications</span>
                                         </div>
                                     @endforelse
@@ -832,28 +1113,30 @@
                             </div>
                         </div>
 
-                        <!-- User Dropdown with Profile Image & Code Directly Below -->
+                        <!-- User Profile Dropdown -->
                         @php
                             $currentAdcUser = auth('adc')->user();
                             $adcCode = $currentAdcUser?->adc_code ?? $currentAdcUser?->adcProfile?->adc_code;
                         @endphp
                         <div class="dropdown topbar-item">
-                            <a type="button" class="topbar-button py-1 px-1.5" id="page-header-user-dropdown"
-                                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="{{ auth('adc')->user()->name }} ({{ $adcCode }})">
+                            <a type="button" class="topbar-button py-1 px-1 px-sm-1.5" id="page-header-user-dropdown"
+                                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                title="{{ auth('adc')->user()->name }} ({{ $adcCode }})">
                                 <span class="d-flex flex-column align-items-center justify-content-center">
-                                    <img class="rounded-circle border border-primary border-opacity-25 shadow-sm" width="30" height="30"
-                                        style="object-fit: cover; aspect-ratio: 1 / 1;"
+                                    <img class="rounded-circle border border-primary border-opacity-25 shadow-sm"
+                                        width="30" height="30" style="object-fit: cover; aspect-ratio: 1 / 1;"
                                         src="{{ auth('adc')->user()->avatar_url }}" alt="avatar">
                                     @if($adcCode)
-                                        <span class="fs-11 fw-semibold text-slate-700 mt-0.5" style="line-height: 1.1;">
+                                        <span class="fs-10 fw-semibold text-slate-700 mt-0.5 d-none d-sm-block" style="line-height: 1.1;">
                                             {{ $adcCode }}
                                         </span>
                                     @endif
                                 </span>
                             </a>
-                            <div class="dropdown-menu dropdown-menu-end">
+                            <div class="dropdown-menu dropdown-menu-end shadow-lg">
                                 <div class="px-3 py-2 border-bottom bg-light bg-opacity-50">
-                                    <h6 class="dropdown-header p-0 mb-1 fw-bold text-dark fs-13">Welcome {{ auth('adc')->user()->name }}!</h6>
+                                    <h6 class="dropdown-header p-0 mb-1 fw-bold text-dark fs-13">Welcome
+                                        {{ auth('adc')->user()->name }}!</h6>
                                     @if($adcCode)
                                         <span class="text-slate-600 fw-medium fs-12 d-block mt-0.5">{{ $adcCode }}</span>
                                     @endif
@@ -877,20 +1160,22 @@
                             </div>
                         </div>
 
-                        <!-- App Search with Live Menu & Submenu Auto-Suggestion -->
-                        <div class="app-search d-none d-md-block ms-2 position-relative" id="globalMenuSearchContainer" style="min-width: 260px;">
+                        <!-- App Search with Live Menu & Submenu Auto-Suggestion (Desktop XL Only) -->
+                        <div class="app-search d-none d-xl-block ms-2 position-relative" id="globalMenuSearchContainer"
+                            style="min-width: 240px;">
                             <div class="position-relative">
-                                <input type="search" class="form-control" id="globalMenuSearchInput" placeholder="Search menu, pages & reports..." autocomplete="off">
+                                <input type="search" class="form-control" id="globalMenuSearchInput"
+                                    placeholder="Search menu, pages & reports..." autocomplete="off">
                                 <iconify-icon icon="solar:magnifer-linear" class="search-widget-icon"></iconify-icon>
                             </div>
-                            <!-- Auto-Suggestion Dropdown -->
-                            <div class="dropdown-menu dropdown-menu-end p-0 shadow-lg border-0 rounded-3 position-absolute end-0 mt-1 d-none" id="globalMenuSearchDropdown" style="max-height: 380px; overflow-y: auto; z-index: 1060; background: #ffffff; width: 350px; max-width: calc(100vw - 20px); left: auto !important; right: 0 !important;">
+                            <div class="dropdown-menu dropdown-menu-end p-0 shadow-lg border-0 rounded-3 position-absolute end-0 mt-1 d-none"
+                                id="globalMenuSearchDropdown"
+                                style="max-height: 380px; overflow-y: auto; z-index: 1060; background: #ffffff; width: 340px; max-width: calc(100vw - 20px); left: auto !important; right: 0 !important;">
                                 <div class="p-2 border-bottom bg-light d-flex align-items-center justify-content-between">
                                     <span class="fs-11 fw-bold text-uppercase text-muted">Menu Navigation</span>
                                     <span class="badge bg-primary-subtle text-primary fs-10" id="globalSearchMatchCount">0 matches</span>
                                 </div>
-                                <div class="list-group list-group-flush py-1" id="globalMenuSearchResults">
-                                </div>
+                                <div class="list-group list-group-flush py-1" id="globalMenuSearchResults"></div>
                             </div>
                         </div>
                     </div>
@@ -915,6 +1200,10 @@
                     <img src="{{ \App\Models\SystemSetting::getVal('website_header_logo', \App\Models\SystemSetting::getVal('panel_logo', asset('admin-assets/images/IndianMSME.png'))) }}"
                         class="logo-lg" alt="logo light">
                 </a>
+                <!-- Mobile Close Button -->
+                <button type="button" class="btn btn-sm btn-icon btn-light rounded-circle d-lg-none position-absolute end-0 top-50 translate-middle-y me-3 button-toggle-menu shadow-sm" aria-label="Close menu" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
+                    <iconify-icon icon="solar:close-circle-bold" class="fs-20 text-danger"></iconify-icon>
+                </button>
             </div>
 
             <div class="scrollbar" data-simplebar>
@@ -1045,7 +1334,8 @@
                                 </li>
                                 <li class="sub-nav-item">
                                     <a class="sub-nav-link {{ request()->routeIs('adc.local-purchases.create') ? 'active' : '' }}"
-                                        href="{{ route('adc.local-purchases.create') }}">Stock In / Regional Purchase</a>
+                                        href="{{ route('adc.local-purchases.create') }}">Stock In / Regional
+                                        Purchase</a>
                                 </li>
                                 <li class="sub-nav-item">
                                     <a class="sub-nav-link {{ request()->routeIs('adc.local-purchases.index') || request()->routeIs('adc.local-purchases.show') ? 'active' : '' }}"
@@ -1053,7 +1343,8 @@
                                 </li>
                                 <li class="sub-nav-item">
                                     <a class="sub-nav-link {{ request()->routeIs('adc.local-products.comparison') ? 'active' : '' }}"
-                                        href="{{ route('adc.local-products.comparison') }}">Regional Price Comparison</a>
+                                        href="{{ route('adc.local-products.comparison') }}">Regional Price
+                                        Comparison</a>
                                 </li>
                             </ul>
                         </div>
@@ -1066,7 +1357,8 @@
                             href="#sidebarAdcReports" data-bs-toggle="collapse" role="button"
                             aria-expanded="{{ request()->routeIs('adc.reports.*') ? 'true' : 'false' }}"
                             aria-controls="sidebarAdcReports">
-                            <span class="nav-icon"><iconify-icon icon="solar:chart-2-bold-duotone"></iconify-icon></span>
+                            <span class="nav-icon"><iconify-icon
+                                    icon="solar:chart-2-bold-duotone"></iconify-icon></span>
                             <span class="nav-text">Reports</span>
                         </a>
                         <div class="collapse {{ request()->routeIs('adc.reports.*') ? 'show' : '' }}"
@@ -1148,7 +1440,8 @@
 
                 @if($globalAdcUser)
                     @if($globalIsActive == 0 || $globalIsActive === '0' || ($globalAdcProfile?->first_sale_at && $globalWalletBal <= 0))
-                        <div class="alert alert-danger border-0 shadow-sm d-flex align-items-center justify-content-between mb-3 rounded-3 py-2.5 px-3" style="background: #fef2f2; border-left: 4px solid #ef4444 !important; color: #991b1b;">
+                        <div class="alert alert-danger border-0 shadow-sm d-flex align-items-center justify-content-between mb-3 rounded-3 py-2.5 px-3"
+                            style="background: #fef2f2; border-left: 4px solid #ef4444 !important; color: #991b1b;">
                             <div class="d-flex align-items-center gap-2">
                                 <iconify-icon icon="solar:close-circle-bold-duotone" class="text-danger fs-22"></iconify-icon>
                                 <div>
@@ -1158,22 +1451,28 @@
                                     </span>
                                 </div>
                             </div>
-                            <a href="{{ route('adc.wallet.index') }}" class="btn btn-danger btn-sm fw-semibold rounded-pill px-3 ms-2 text-nowrap">
+                            <a href="{{ route('adc.wallet.index') }}"
+                                class="btn btn-danger btn-sm fw-semibold rounded-pill px-3 ms-2 text-nowrap">
                                 Recharge Wallet Now
                             </a>
                         </div>
                     @elseif($globalAdcProfile?->first_sale_at && $globalWalletBal <= 50)
-                        <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center justify-content-between mb-3 rounded-3 py-2 px-3" style="background: #fff8e6; border-left: 4px solid #f59e0b !important; color: #78350f;">
+                        <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center justify-content-between mb-3 rounded-3 py-2 px-3"
+                            style="background: #fff8e6; border-left: 4px solid #f59e0b !important; color: #78350f;">
                             <div class="d-flex align-items-center gap-2">
-                                <iconify-icon icon="solar:danger-triangle-bold-duotone" class="text-warning fs-20"></iconify-icon>
+                                <iconify-icon icon="solar:danger-triangle-bold-duotone"
+                                    class="text-warning fs-20"></iconify-icon>
                                 <div>
                                     <strong class="text-warning-emphasis">Wallet Balance Low!</strong>
                                     <span class="ms-1 fs-13">
-                                        Your wallet balance is low (<strong>₹{{ number_format($globalWalletBal, 2) }}</strong>). Daily platform fee of ₹10.00 will be deducted. Please recharge your wallet to avoid sales deactivation.
+                                        Your wallet balance is low (<strong>₹{{ number_format($globalWalletBal, 2) }}</strong>).
+                                        Daily platform fee of ₹10.00 will be deducted. Please recharge your wallet to avoid
+                                        sales deactivation.
                                     </span>
                                 </div>
                             </div>
-                            <a href="{{ route('adc.wallet.index') }}" class="btn btn-warning btn-sm fw-semibold rounded-pill px-3 ms-2 text-nowrap">
+                            <a href="{{ route('adc.wallet.index') }}"
+                                class="btn btn-warning btn-sm fw-semibold rounded-pill px-3 ms-2 text-nowrap">
                                 Recharge Wallet
                             </a>
                         </div>
@@ -1200,9 +1499,51 @@
     </div>
     <!-- END Wrapper -->
 
+    <!-- ========== Mobile Bottom Navigation Bar (Screens <= 991px) ========== -->
+    <nav class="adc-mobile-bottom-nav d-lg-none" aria-label="Mobile Navigation">
+        <a href="{{ route('adc.dashboard') }}" class="nav-item-mobile {{ request()->routeIs('adc.dashboard') ? 'active' : '' }}">
+            <iconify-icon icon="solar:home-smile-bold-duotone" class="nav-icon-mobile"></iconify-icon>
+            <span class="nav-label-mobile">Home</span>
+        </a>
+        <a href="{{ route('adc.orders.index') }}" class="nav-item-mobile {{ request()->routeIs('adc.orders.*') ? 'active' : '' }}">
+            <iconify-icon icon="solar:bag-check-bold-duotone" class="nav-icon-mobile"></iconify-icon>
+            <span class="nav-label-mobile">Orders</span>
+        </a>
+        <a href="{{ route('adc.pos.retail') }}" class="nav-item-mobile pos-fab" title="Yellow Card POS">
+            <div class="pos-fab-inner">
+                <iconify-icon icon="solar:shop-2-bold-duotone" class="fs-22 text-white"></iconify-icon>
+            </div>
+            <span class="nav-label-mobile fw-bold text-amber">POS</span>
+        </a>
+        <a href="{{ route('adc.inventory.index') }}" class="nav-item-mobile {{ request()->routeIs('adc.inventory.*') ? 'active' : '' }}">
+            <iconify-icon icon="solar:box-minimalistic-bold-duotone" class="nav-icon-mobile"></iconify-icon>
+            <span class="nav-label-mobile">Stock</span>
+        </a>
+        <button type="button" class="nav-item-mobile button-toggle-menu border-0 bg-transparent" id="mobileBottomMenuToggle" aria-label="Toggle Navigation Menu">
+            <iconify-icon icon="solar:hamburger-menu-broken" class="nav-icon-mobile"></iconify-icon>
+            <span class="nav-label-mobile">Menu</span>
+        </button>
+    </nav>
+
     <!-- Vendor & App Scripts -->
     <script src="{{ asset('admin-assets/js/vendor.js') }}"></script>
     <script src="{{ asset('admin-assets/js/app.js') }}"></script>
+    <script>
+        // Ensure all mobile toggle buttons (bottom nav, sidebar close button) trigger the menu toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const primaryToggle = document.querySelector('.topbar .button-toggle-menu');
+            document.querySelectorAll('.button-toggle-menu').forEach(function(btn) {
+                if (btn !== primaryToggle) {
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        if (primaryToggle) {
+                            primaryToggle.click();
+                        }
+                    });
+                }
+            });
+        });
+    </script>
 
     <!-- SweetAlert & Toastify CDNs -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -1482,7 +1823,7 @@
 
                     let titleText = link.querySelector('.nav-text')?.textContent?.trim() || link.textContent?.trim();
                     if (!titleText || titleText.length < 2) return;
-                    
+
                     titleText = titleText.replace(/\s+/g, ' ');
 
                     // Extract Icon if present
@@ -1608,8 +1949,8 @@
 
             function performSearch(query) {
                 const q = query.toLowerCase();
-                const matches = menuIndex.filter(item => 
-                    item.title.toLowerCase().includes(q) || 
+                const matches = menuIndex.filter(item =>
+                    item.title.toLowerCase().includes(q) ||
                     item.category.toLowerCase().includes(q)
                 );
 
@@ -1713,7 +2054,7 @@
     <script src="{{ asset('js/table-action-handler.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script>
-        window.exportToExcel = function(filename, dataArray, sheetName = 'Import_Data') {
+        window.exportToExcel = function (filename, dataArray, sheetName = 'Import_Data') {
             if (!dataArray || dataArray.length === 0) {
                 alert('No records available to export.');
                 return;
@@ -1749,7 +2090,7 @@
             document.body.removeChild(a);
         };
 
-        window.exportImportPreviewToExcel = function(filename, previewArray, onlyErrors = false) {
+        window.exportImportPreviewToExcel = function (filename, previewArray, onlyErrors = false) {
             if (!previewArray || previewArray.length === 0) {
                 alert('No preview data available to export.');
                 return;
@@ -1788,7 +2129,7 @@
             window.exportToExcel(filename, formattedRows, 'Preview_Export');
         };
 
-        window.exportImportLogsToExcel = function(filename, logArray, onlyErrors = false) {
+        window.exportImportLogsToExcel = function (filename, logArray, onlyErrors = false) {
             if (!logArray || logArray.length === 0) {
                 alert('No import log records available to export.');
                 return;
@@ -1826,7 +2167,7 @@
             window.exportToExcel(filename, formattedRows, 'Import_Log_Report');
         };
 
-        window.exportModalTableToExcel = function(modalId, filename, onlyErrors = false) {
+        window.exportModalTableToExcel = function (modalId, filename, onlyErrors = false) {
             const modal = document.getElementById(modalId);
             if (!modal) return;
             const table = modal.querySelector('table');
@@ -1847,7 +2188,7 @@
 
                 const rowObj = {};
                 headerCols.forEach((h, idx) => {
-                    rowObj[h || `Col ${idx+1}`] = cols[idx] || '';
+                    rowObj[h || `Col ${idx + 1}`] = cols[idx] || '';
                 });
 
                 const statusStr = (rowObj['Status'] || cols.join(' ')).toLowerCase();
@@ -1866,10 +2207,10 @@
             window.exportToExcel(filename, dataRows, 'Modal_Export');
         };
 
-        window.exportImportLogsToCsv = function(filename, logArray, onlyErrors) {
+        window.exportImportLogsToCsv = function (filename, logArray, onlyErrors) {
             window.exportImportLogsToExcel(filename, logArray, onlyErrors);
         };
-        window.exportModalTableToCsv = function(modalId, filename) {
+        window.exportModalTableToCsv = function (modalId, filename) {
             window.exportModalTableToExcel(modalId, filename, true);
         };
     </script>

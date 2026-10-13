@@ -164,6 +164,126 @@
         height: 55px;
         margin-top: 4px;
     }
+
+    /* ═════════════════════════════════════════════════════════════════════
+       ADC DASHBOARD MOBILE VIEW & CARDS DENSITY OPTIMIZATION
+       ═════════════════════════════════════════════ */
+    @media (max-width: 767.98px) {
+        /* Hero Banner on Phones */
+        .hero-banner-adc {
+            padding: 12px 14px !important;
+            border-radius: 12px !important;
+        }
+        .hero-banner-adc::before {
+            display: none;
+        }
+        .avatar-ring-hero {
+            width: 40px !important;
+            height: 40px !important;
+        }
+        .avatar-ring-hero iconify-icon {
+            font-size: 20px !important;
+        }
+        .hero-title-text {
+            font-size: 15px !important;
+        }
+
+        /* Horizontal Swipe for Quick Action Launcher (prevents vertical bloat) */
+        .quick-actions-mobile-scroll {
+            display: flex !important;
+            gap: 6px !important;
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            padding: 4px 1px 2px !important;
+            scrollbar-width: none !important;
+            width: 100% !important;
+        }
+        .quick-actions-mobile-scroll::-webkit-scrollbar {
+            display: none !important;
+        }
+        .quick-action-pill {
+            padding: 5px 11px !important;
+            font-size: 11px !important;
+            border-radius: 20px !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+        }
+
+        /* 2-Column KPI Cards (Clean high-density presentation without clutter) */
+        .kpi-card-v2 {
+            padding: 10px 10px !important;
+            border-radius: 10px !important;
+            border-width: 1px !important;
+            border-left-width: 3.5px !important;
+        }
+        .kpi-title-v2 {
+            font-size: 9.5px !important;
+            letter-spacing: 0.2px !important;
+            line-height: 1.2 !important;
+        }
+        .kpi-value-v2 {
+            font-size: 16px !important;
+            margin-top: 2px !important;
+            margin-bottom: 2px !important;
+            line-height: 1.2 !important;
+        }
+        .icon-box-lg {
+            width: 26px !important;
+            height: 26px !important;
+            border-radius: 7px !important;
+        }
+        .icon-box-lg iconify-icon {
+            font-size: 14px !important;
+        }
+        .interactive-row {
+            padding: 1px 0 !important;
+            font-size: 10.5px !important;
+        }
+        .interactive-row span {
+            font-size: 10px !important;
+        }
+        .interactive-row strong {
+            font-size: 10.5px !important;
+        }
+
+        /* Expiry KPI Cards (2-Column on Mobile) */
+        .expiry-kpi-card {
+            padding: 10px 9px !important;
+            border-radius: 10px !important;
+        }
+        .expiry-kpi-card h2 {
+            font-size: 20px !important;
+        }
+        .expiry-kpi-card .avatar-sm {
+            width: 28px !important;
+            height: 28px !important;
+            border-radius: 6px !important;
+        }
+        .expiry-kpi-card .avatar-sm iconify-icon {
+            font-size: 16px !important;
+        }
+
+        /* Chart Period Filter Horizontal Scroll */
+        .chart-filter-scroll {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            scrollbar-width: none !important;
+            width: 100% !important;
+            padding-bottom: 2px !important;
+        }
+        .chart-filter-scroll::-webkit-scrollbar {
+            display: none !important;
+        }
+        .chart-filter-scroll .btn-group {
+            flex-wrap: nowrap !important;
+            white-space: nowrap !important;
+        }
+        .chart-filter-scroll .btn {
+            font-size: 11px !important;
+            padding: 3px 8px !important;
+            white-space: nowrap !important;
+        }
+    }
 </style>
 @endpush
 
@@ -176,60 +296,55 @@
                 <div class="dot-pattern"></div>
                 <div class="row align-items-center g-2 position-relative" style="z-index: 2;">
                     <div class="col-lg-7">
-                        <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center gap-2.5">
                             <div class="avatar-ring-hero flex-shrink-0">
-                                <iconify-icon icon="solar:shop-bold-duotone" class="text-white fs-26"></iconify-icon>
+                                <iconify-icon icon="solar:shop-bold-duotone" class="text-white fs-24"></iconify-icon>
                                 <div class="online-indicator" title="ADC Store Active"></div>
                             </div>
-                            <div>
-                                <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
-                                    <h4 class="fw-bold text-white mb-0" style="font-family: 'Outfit', sans-serif; font-size: 20px;">
+                            <div style="min-width: 0;">
+                                <div class="d-flex align-items-center gap-1.5 flex-wrap mb-0.5">
+                                    <h4 class="fw-bold text-white mb-0 hero-title-text" style="font-family: 'Outfit', sans-serif;">
                                         Welcome back, {{ $user->name }}! 👋
                                     </h4>
                                     {{-- ADC Code Badge --}}
-                                    <span class="badge shadow-sm d-inline-flex align-items-center gap-1 font-monospace px-2.5 py-1 rounded-pill fw-bold" style="background: #0f172a; color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); font-size: 11.5px;">
-                                        <iconify-icon icon="solar:user-id-bold-duotone" width="14" height="14" class="text-warning"></iconify-icon>
-                                        <span>ADC Code: {{ $adcCode }}</span>
+                                    <span class="badge shadow-sm d-inline-flex align-items-center gap-1 font-monospace px-2 py-0.5 rounded-pill fw-bold" style="background: #0f172a; color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); font-size: 11px;">
+                                        <iconify-icon icon="solar:user-id-bold-duotone" width="13" height="13" class="text-warning"></iconify-icon>
+                                        <span>ADC: {{ $adcCode }}</span>
                                     </span>
                                 </div>
-                                <div class="d-flex flex-wrap align-items-center gap-2 text-white text-opacity-90 fs-12">
+                                <div class="d-flex flex-wrap align-items-center gap-1.5 text-white text-opacity-90 fs-11">
                                     <span>
-                                        <iconify-icon icon="solar:map-point-bold-duotone" class="text-warning align-middle me-0.5 fs-13"></iconify-icon>
+                                        <iconify-icon icon="solar:map-point-bold-duotone" class="text-warning align-middle me-0.5 fs-12"></iconify-icon>
                                         <strong class="text-white">{{ $adcProfile?->district ?? 'Area Center' }}</strong>@if($adcProfile?->state), {{ $adcProfile?->state }}@endif
                                         @if($adcProfile?->pincode) (PIN: {{ $adcProfile->pincode }})@endif
                                     </span>
-                                    <span>•</span>
-                                    <span>
-                                        <iconify-icon icon="solar:shield-check-bold-duotone" class="text-warning align-middle me-0.5 fs-13"></iconify-icon>
+                                    <span class="d-none d-sm-inline">•</span>
+                                    <span class="d-none d-sm-inline">
+                                        <iconify-icon icon="solar:shield-check-bold-duotone" class="text-warning align-middle me-0.5 fs-12"></iconify-icon>
                                         ADC Store Center
-                                    </span>
-                                    <span>•</span>
-                                    <span class="badge shadow-sm d-inline-flex align-items-center gap-1 font-monospace px-2.5 py-1 rounded-pill fw-bold" style="background: rgba(15, 23, 42, 0.65); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); font-size: 11px;" title="Joined Date">
-                                        <iconify-icon icon="solar:calendar-mark-bold-duotone" width="13" height="13" class="text-info"></iconify-icon>
-                                        <span>Joined: {{ $user->created_at ? $user->created_at->format('d M Y') : '—' }}</span>
                                     </span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Quick Action Launcher Buttons --}}
-                    <div class="col-lg-5 text-lg-end">
-                        <div class="d-flex flex-wrap align-items-center justify-content-lg-end gap-1.5">
+                    {{-- Quick Action Launcher Buttons (Horizontal scroll chips on mobile) --}}
+                    <div class="col-lg-5 text-lg-end mt-2 mt-lg-0">
+                        <div class="quick-actions-mobile-scroll justify-content-lg-end">
                             <a href="{{ route('adc.pos.retail') }}" class="quick-action-pill">
-                                <iconify-icon icon="solar:cart-large-minimalistic-bold-duotone" class="text-warning fs-14"></iconify-icon>
+                                <iconify-icon icon="solar:cart-large-minimalistic-bold-duotone" class="text-warning fs-13"></iconify-icon>
                                 Retail POS
                             </a>
                             <a href="{{ route('adc.pos.orders') }}" class="quick-action-pill">
-                                <iconify-icon icon="solar:bill-list-bold-duotone" class="text-white fs-14"></iconify-icon>
+                                <iconify-icon icon="solar:bill-list-bold-duotone" class="text-white fs-13"></iconify-icon>
                                 Sales Orders
                             </a>
                             <a href="{{ route('adc.inventory.index') }}" class="quick-action-pill">
-                                <iconify-icon icon="solar:box-bold-duotone" class="text-white fs-14"></iconify-icon>
+                                <iconify-icon icon="solar:box-bold-duotone" class="text-white fs-13"></iconify-icon>
                                 Store Stock
                             </a>
                             <a href="{{ route('adc.wallet.index') }}" class="quick-action-pill">
-                                <iconify-icon icon="solar:wallet-bold-duotone" class="text-warning fs-14"></iconify-icon>
+                                <iconify-icon icon="solar:wallet-bold-duotone" class="text-warning fs-13"></iconify-icon>
                                 Wallet Top Up
                             </a>
                         </div>
@@ -239,273 +354,271 @@
         </div>
     </div>
 
-    {{-- ── 2. Core Financial & Operational KPI Cards Grid (Matching DDC Layout) ── --}}
-    <div class="row g-2.5 mb-3">
+    {{-- ── 2. Core Financial & Operational KPI Cards Grid (2-Column Mobile Grid) ── --}}
+    <div class="row g-2 g-md-2.5 mb-3">
         {{-- Card 1: Total POS Sales Revenue --}}
-        <div class="col-xl-3 col-md-6">
+        <div class="col-6 col-md-6 col-xl-3">
             <div class="kpi-card-v2 border-start border-3 border-success">
                 <div>
                     <div class="d-flex align-items-center justify-content-between mb-1">
-                        <a href="{{ route('adc.pos.orders') }}" class="kpi-title-v2 text-decoration-none text-slate-600 hover-primary">
-                            Total POS Sales <iconify-icon icon="solar:alt-arrow-right-linear" class="align-middle fs-11"></iconify-icon>
+                        <a href="{{ route('adc.pos.orders') }}" class="kpi-title-v2 text-decoration-none text-slate-600 hover-primary text-truncate pe-1" title="Total POS Sales">
+                            Total POS Sales
                         </a>
-                        <a href="{{ route('adc.pos.orders') }}" class="icon-box-lg bg-success-subtle text-success text-decoration-none">
+                        <a href="{{ route('adc.pos.orders') }}" class="icon-box-lg bg-success-subtle text-success text-decoration-none flex-shrink-0">
                             <iconify-icon icon="solar:cart-large-minimalistic-bold-duotone" class="fs-18"></iconify-icon>
                         </a>
                     </div>
-                    <a href="{{ route('adc.pos.orders') }}" class="kpi-value-v2 text-decoration-none text-dark d-block">
+                    <a href="{{ route('adc.pos.orders') }}" class="kpi-value-v2 text-decoration-none text-dark d-block text-truncate" title="₹{{ number_format($totalPosSaleAmount, 2) }}">
                         ₹{{ number_format($totalPosSaleAmount, 2) }}
                     </a>
                 </div>
-                <div class="pt-2 border-top mt-1.5">
-                    <a href="{{ route('adc.pos.orders') }}" class="d-flex align-items-center justify-content-between text-decoration-none fs-11.5 mb-1 interactive-row">
-                        <span class="text-muted"><iconify-icon icon="solar:calendar-mark-bold-duotone" class="text-primary me-1 align-middle"></iconify-icon> Monthly POS:</span>
-                        <strong class="text-slate-800 font-monospace">₹{{ number_format($monthlyPosSaleAmount, 2) }}</strong>
+                <div class="pt-1.5 border-top mt-1">
+                    <a href="{{ route('adc.pos.orders') }}" class="d-flex align-items-center justify-content-between text-decoration-none fs-11.5 mb-0.5 interactive-row">
+                        <span class="text-muted text-truncate"><iconify-icon icon="solar:calendar-mark-bold-duotone" class="text-primary me-0.5 align-middle"></iconify-icon> Month:</span>
+                        <strong class="text-slate-800 font-monospace flex-shrink-0">₹{{ number_format($monthlyPosSaleAmount, 2) }}</strong>
                     </a>
                     <a href="{{ route('adc.pos.orders') }}" class="d-flex align-items-center justify-content-between text-decoration-none fs-11.5 interactive-row">
-                        <span class="text-muted"><iconify-icon icon="solar:graph-up-bold-duotone" class="text-success me-1 align-middle"></iconify-icon> Today POS:</span>
-                        <strong class="text-success font-monospace">₹{{ number_format($todayPosSaleAmount, 2) }}</strong>
+                        <span class="text-muted text-truncate"><iconify-icon icon="solar:graph-up-bold-duotone" class="text-success me-0.5 align-middle"></iconify-icon> Today:</span>
+                        <strong class="text-success font-monospace flex-shrink-0">₹{{ number_format($todayPosSaleAmount, 2) }}</strong>
                     </a>
                 </div>
             </div>
         </div>
 
         {{-- Card 2: Net POS Profit --}}
-        <div class="col-xl-3 col-md-6">
+        <div class="col-6 col-md-6 col-xl-3">
             <div class="kpi-card-v2 border-start border-3 border-primary">
                 <div>
                     <div class="d-flex align-items-center justify-content-between mb-1">
-                        <span class="kpi-title-v2 text-slate-600">Net POS Profit</span>
-                        <div class="icon-box-lg bg-primary-subtle text-primary">
+                        <span class="kpi-title-v2 text-slate-600 text-truncate pe-1">Net POS Profit</span>
+                        <div class="icon-box-lg bg-primary-subtle text-primary flex-shrink-0">
                             <iconify-icon icon="solar:dollar-minimalistic-bold-duotone" class="fs-18"></iconify-icon>
                         </div>
                     </div>
-                    <div class="kpi-value-v2 text-primary d-block">
+                    <div class="kpi-value-v2 text-primary d-block text-truncate" title="₹{{ number_format($totalProfit, 2) }}">
                         ₹{{ number_format($totalProfit, 2) }}
                     </div>
                 </div>
-                <div class="pt-2 border-top mt-1.5">
-                    <div class="d-flex align-items-center justify-content-between text-decoration-none fs-11.5 mb-1 interactive-row">
-                        <span class="text-muted"><iconify-icon icon="solar:chart-2-bold-duotone" class="text-primary me-1 align-middle"></iconify-icon> Monthly Profit:</span>
-                        <strong class="text-slate-800 font-monospace">₹{{ number_format($monthlyProfit, 2) }}</strong>
+                <div class="pt-1.5 border-top mt-1">
+                    <div class="d-flex align-items-center justify-content-between text-decoration-none fs-11.5 mb-0.5 interactive-row">
+                        <span class="text-muted text-truncate"><iconify-icon icon="solar:chart-2-bold-duotone" class="text-primary me-0.5 align-middle"></iconify-icon> Month:</span>
+                        <strong class="text-slate-800 font-monospace flex-shrink-0">₹{{ number_format($monthlyProfit, 2) }}</strong>
                     </div>
                     <div class="d-flex align-items-center justify-content-between text-decoration-none fs-11.5 interactive-row">
-                        <span class="text-muted"><iconify-icon icon="solar:clock-circle-bold-duotone" class="text-success me-1 align-middle"></iconify-icon> Today Profit:</span>
-                        <strong class="text-success font-monospace">₹{{ number_format($todayProfit, 2) }}</strong>
+                        <span class="text-muted text-truncate"><iconify-icon icon="solar:clock-circle-bold-duotone" class="text-success me-0.5 align-middle"></iconify-icon> Today:</span>
+                        <strong class="text-success font-monospace flex-shrink-0">₹{{ number_format($todayProfit, 2) }}</strong>
                     </div>
                 </div>
             </div>
         </div>
 
         {{-- Card 3: Wallet Balance --}}
-        <div class="col-xl-3 col-md-6">
+        <div class="col-6 col-md-6 col-xl-3">
             <div class="kpi-card-v2 border-start border-3 border-warning">
                 <div>
                     <div class="d-flex align-items-center justify-content-between mb-1">
-                        <a href="{{ route('adc.wallet.index') }}" class="kpi-title-v2 text-decoration-none text-slate-600 hover-primary">
-                            Store Wallet Balance <iconify-icon icon="solar:alt-arrow-right-linear" class="align-middle fs-11"></iconify-icon>
+                        <a href="{{ route('adc.wallet.index') }}" class="kpi-title-v2 text-decoration-none text-slate-600 hover-primary text-truncate pe-1" title="Store Wallet Balance">
+                            Wallet Balance
                         </a>
-                        <a href="{{ route('adc.wallet.index') }}" class="icon-box-lg bg-warning-subtle text-warning text-decoration-none">
+                        <a href="{{ route('adc.wallet.index') }}" class="icon-box-lg bg-warning-subtle text-warning text-decoration-none flex-shrink-0">
                             <iconify-icon icon="solar:wallet-bold-duotone" class="fs-18"></iconify-icon>
                         </a>
                     </div>
-                    <a href="{{ route('adc.wallet.index') }}" class="kpi-value-v2 text-decoration-none text-success d-block">
+                    <a href="{{ route('adc.wallet.index') }}" class="kpi-value-v2 text-decoration-none text-success d-block text-truncate">
                         ₹{{ number_format($walletBalance, 2) }}
                     </a>
                 </div>
-                <div class="pt-2 border-top mt-1.5 d-flex align-items-center justify-content-between">
-                    <span class="text-muted fs-11">Available Balance</span>
-                    <a href="{{ route('adc.wallet.index') }}" class="btn btn-xs btn-outline-primary fw-semibold py-0.5 px-2">
-                        Top Up <iconify-icon icon="solar:arrow-right-bold" class="align-middle"></iconify-icon>
+                <div class="pt-1.5 border-top mt-1 d-flex align-items-center justify-content-between">
+                    <span class="text-muted fs-11 text-truncate">Available</span>
+                    <a href="{{ route('adc.wallet.index') }}" class="btn btn-xs btn-outline-primary fw-semibold py-0.5 px-1.5 fs-10 flex-shrink-0">
+                        Top Up
                     </a>
                 </div>
             </div>
         </div>
 
         {{-- Card 4: Active Stock & Valuation --}}
-        <div class="col-xl-3 col-md-6">
+        <div class="col-6 col-md-6 col-xl-3">
             <div class="kpi-card-v2 border-start border-3 border-info">
                 <div>
                     <div class="d-flex align-items-center justify-content-between mb-1">
-                        <a href="{{ route('adc.inventory.index') }}" class="kpi-title-v2 text-decoration-none text-slate-600 hover-primary">
-                            Active Stock &amp; Valuation <iconify-icon icon="solar:alt-arrow-right-linear" class="align-middle fs-11"></iconify-icon>
+                        <a href="{{ route('adc.inventory.index') }}" class="kpi-title-v2 text-decoration-none text-slate-600 hover-primary text-truncate pe-1" title="Active Stock & Valuation">
+                            Active Stock
                         </a>
-                        <a href="{{ route('adc.inventory.index') }}" class="icon-box-lg bg-info-subtle text-info text-decoration-none">
+                        <a href="{{ route('adc.inventory.index') }}" class="icon-box-lg bg-info-subtle text-info text-decoration-none flex-shrink-0">
                             <iconify-icon icon="solar:box-bold-duotone" class="fs-18"></iconify-icon>
                         </a>
                     </div>
-                    <a href="{{ route('adc.inventory.index') }}" class="kpi-value-v2 text-decoration-none text-dark d-block">
+                    <a href="{{ route('adc.inventory.index') }}" class="kpi-value-v2 text-decoration-none text-dark d-block text-truncate">
                         {{ number_format($totalStockQuantity) }}
-                        <span class="fs-12 fw-normal text-muted">Units</span>
+                        <span class="fs-11 fw-normal text-muted">Units</span>
                     </a>
                 </div>
-                <div class="pt-2 border-top mt-1.5">
-                    <a href="{{ route('adc.inventory.index') }}" class="d-flex align-items-center justify-content-between text-decoration-none fs-11.5 mb-1 interactive-row">
-                        <span class="text-muted">Stock Items:</span>
-                        <strong class="text-slate-800">{{ $totalStockItems }} Batches</strong>
+                <div class="pt-1.5 border-top mt-1">
+                    <a href="{{ route('adc.inventory.index') }}" class="d-flex align-items-center justify-content-between text-decoration-none fs-11.5 mb-0.5 interactive-row">
+                        <span class="text-muted text-truncate">Batches:</span>
+                        <strong class="text-slate-800 flex-shrink-0">{{ $totalStockItems }}</strong>
                     </a>
                     <a href="{{ route('adc.inventory.index') }}" class="d-flex align-items-center justify-content-between text-decoration-none fs-11.5 interactive-row">
-                        <span class="text-muted">Total MRP Value:</span>
-                        <strong class="text-success font-monospace">₹{{ number_format($totalStockValue, 2) }}</strong>
+                        <span class="text-muted text-truncate">MRP:</span>
+                        <strong class="text-success font-monospace flex-shrink-0">₹{{ number_format($totalStockValue, 2) }}</strong>
                     </a>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- ── 3. Secondary Operational Grid (Matching DDC Layout Row 2) ── --}}
-    <div class="row g-2.5 mb-3">
+    {{-- ── 3. Secondary Operational Grid (2-Column Mobile Grid for Customers & Returns) ── --}}
+    <div class="row g-2 g-md-2.5 mb-3">
         {{-- POS Customers Card --}}
-        <div class="col-lg-4 col-md-6">
+        <div class="col-6 col-md-6 col-lg-4">
             <div class="kpi-card-v2 border-start border-3 border-info">
                 <div>
                     <div class="d-flex align-items-center justify-content-between mb-1">
-                        <a href="{{ route('adc.pos.customers') }}" class="kpi-title-v2 text-decoration-none text-slate-600 hover-primary">
-                            POS Customers Directory <iconify-icon icon="solar:alt-arrow-right-linear" class="align-middle fs-11"></iconify-icon>
+                        <a href="{{ route('adc.pos.customers') }}" class="kpi-title-v2 text-decoration-none text-slate-600 hover-primary text-truncate pe-1" title="POS Customers Directory">
+                            Customers
                         </a>
-                        <a href="{{ route('adc.pos.customers') }}" class="icon-box-lg bg-info-subtle text-info text-decoration-none">
+                        <a href="{{ route('adc.pos.customers') }}" class="icon-box-lg bg-info-subtle text-info text-decoration-none flex-shrink-0">
                             <iconify-icon icon="solar:users-group-two-rounded-bold-duotone" class="fs-18"></iconify-icon>
                         </a>
                     </div>
                     <div class="d-flex align-items-baseline justify-content-between">
-                        <a href="{{ route('adc.pos.customers') }}" class="kpi-value-v2 text-decoration-none text-dark d-block mb-0">
+                        <a href="{{ route('adc.pos.customers') }}" class="kpi-value-v2 text-decoration-none text-dark d-block mb-0 text-truncate">
                             {{ number_format($totalCustomersCount) }}
-                            <span class="fs-12 fw-normal text-muted">Customers</span>
+                            <span class="fs-11 fw-normal text-muted d-none d-sm-inline">Cust</span>
                         </a>
-                        <a href="{{ route('adc.pos.customers') }}" class="btn btn-xs btn-outline-primary fw-semibold py-0.5 px-2">Directory</a>
+                        <a href="{{ route('adc.pos.customers') }}" class="btn btn-xs btn-outline-primary fw-semibold py-0.5 px-1.5 fs-10 flex-shrink-0 d-none d-sm-inline-block">List</a>
                     </div>
                 </div>
-                <div class="pt-2 border-top mt-1.5">
-                    <a href="{{ route('adc.pos.customers') }}" class="d-flex align-items-center justify-content-between text-decoration-none fs-11.5 mb-1 interactive-row">
-                        <span class="text-muted"><iconify-icon icon="solar:user-bold-duotone" class="text-info me-1 align-middle"></iconify-icon> Registered Customers:</span>
-                        <strong class="text-slate-800 font-monospace">{{ number_format($totalCustomersCount) }}</strong>
+                <div class="pt-1.5 border-top mt-1">
+                    <a href="{{ route('adc.pos.customers') }}" class="d-flex align-items-center justify-content-between text-decoration-none fs-11.5 mb-0.5 interactive-row">
+                        <span class="text-muted text-truncate"><iconify-icon icon="solar:user-bold-duotone" class="text-info me-0.5 align-middle"></iconify-icon> Reg:</span>
+                        <strong class="text-slate-800 font-monospace flex-shrink-0">{{ number_format($totalCustomersCount) }}</strong>
                     </a>
                     <a href="{{ route('adc.pos.orders') }}" class="d-flex align-items-center justify-content-between text-decoration-none fs-11.5 interactive-row">
-                        <span class="text-muted"><iconify-icon icon="solar:bill-list-bold-duotone" class="text-primary me-1 align-middle"></iconify-icon> POS Bills Issued:</span>
-                        <strong class="text-primary font-monospace">{{ number_format($totalPosSaleCount) }} Bills</strong>
+                        <span class="text-muted text-truncate"><iconify-icon icon="solar:bill-list-bold-duotone" class="text-primary me-0.5 align-middle"></iconify-icon> Bills:</span>
+                        <strong class="text-primary font-monospace flex-shrink-0">{{ number_format($totalPosSaleCount) }}</strong>
                     </a>
                 </div>
             </div>
         </div>
 
         {{-- Sales Returns Card --}}
-        <div class="col-lg-4 col-md-6">
+        <div class="col-6 col-md-6 col-lg-4">
             <div class="kpi-card-v2 border-start border-3 border-danger">
                 <div>
                     <div class="d-flex align-items-center justify-content-between mb-1">
-                        <a href="{{ route('adc.pos.returns.index') }}" class="kpi-title-v2 text-decoration-none text-slate-600 hover-primary">
-                            Sales Returns &amp; Refunds <iconify-icon icon="solar:alt-arrow-right-linear" class="align-middle fs-11"></iconify-icon>
+                        <a href="{{ route('adc.pos.returns.index') }}" class="kpi-title-v2 text-decoration-none text-slate-600 hover-primary text-truncate pe-1" title="Sales Returns & Refunds">
+                            Returns
                         </a>
-                        <a href="{{ route('adc.pos.returns.index') }}" class="icon-box-lg bg-danger-subtle text-danger text-decoration-none">
+                        <a href="{{ route('adc.pos.returns.index') }}" class="icon-box-lg bg-danger-subtle text-danger text-decoration-none flex-shrink-0">
                             <iconify-icon icon="solar:restart-bold-duotone" class="fs-18"></iconify-icon>
                         </a>
                     </div>
                     <div class="d-flex align-items-baseline justify-content-between">
-                        <a href="{{ route('adc.pos.returns.index') }}" class="kpi-value-v2 text-decoration-none text-danger d-block mb-0 font-monospace">
+                        <a href="{{ route('adc.pos.returns.index') }}" class="kpi-value-v2 text-decoration-none text-danger d-block mb-0 font-monospace text-truncate">
                             ₹{{ number_format($totalSalesReturnAmount, 2) }}
                         </a>
-                        <a href="{{ route('adc.pos.returns.index') }}" class="btn btn-xs btn-outline-danger fw-semibold py-0.5 px-2">Manage</a>
                     </div>
                 </div>
-                <div class="pt-2 border-top mt-1.5 d-flex align-items-center justify-content-between">
-                    <span class="text-muted fs-11.5">Processed Return Orders</span>
-                    <a href="{{ route('adc.pos.returns.index') }}" class="text-danger fw-semibold fs-11.5 text-decoration-none font-monospace">
-                        <strong>{{ number_format($totalSalesReturnCount) }} Returns</strong> &rarr;
+                <div class="pt-1.5 border-top mt-1 d-flex align-items-center justify-content-between">
+                    <span class="text-muted fs-11 text-truncate">Refunds:</span>
+                    <a href="{{ route('adc.pos.returns.index') }}" class="text-danger fw-semibold fs-11 text-decoration-none font-monospace flex-shrink-0">
+                        <strong>{{ number_format($totalSalesReturnCount) }} Orders</strong> &rarr;
                     </a>
                 </div>
             </div>
         </div>
 
-        {{-- Quarantine Stock Alert Card --}}
-        <div class="col-lg-4 col-md-12">
+        {{-- Quarantine Stock Alert Card (Span full width on phone as a priority alert banner) --}}
+        <div class="col-12 col-md-12 col-lg-4">
             <div class="kpi-card-v2 border-start border-3 border-danger">
                 <div>
                     <div class="d-flex align-items-center justify-content-between mb-1">
                         <a href="{{ route('adc.inventory.index', ['expiry_filter' => 'expired']) }}" class="kpi-title-v2 text-decoration-none text-slate-600 hover-primary">
                             Quarantine &amp; Expiry Risk <iconify-icon icon="solar:alt-arrow-right-linear" class="align-middle fs-11"></iconify-icon>
                         </a>
-                        <a href="{{ route('adc.inventory.index', ['expiry_filter' => 'expired']) }}" class="icon-box-lg bg-danger-subtle text-danger text-decoration-none">
+                        <a href="{{ route('adc.inventory.index', ['expiry_filter' => 'expired']) }}" class="icon-box-lg bg-danger-subtle text-danger text-decoration-none flex-shrink-0">
                             <iconify-icon icon="solar:danger-triangle-bold-duotone" class="fs-18"></iconify-icon>
                         </a>
                     </div>
                     <div class="d-flex align-items-baseline justify-content-between">
                         <a href="{{ route('adc.inventory.index', ['expiry_filter' => 'expired']) }}" class="kpi-value-v2 text-decoration-none text-danger d-block mb-0">
                             {{ $expiredCount }}
-                            <span class="fs-12 fw-normal text-muted">Expired</span>
+                            <span class="fs-12 fw-normal text-muted">Expired Batches</span>
                         </a>
                         <a href="{{ route('adc.inventory.index', ['expiry_filter' => 'expired']) }}" class="btn btn-xs btn-danger fw-semibold py-0.5 px-2">Manage Stock</a>
                     </div>
                 </div>
-                <div class="pt-2 border-top mt-1.5">
-                    <a href="{{ route('adc.inventory.index', ['expiry_filter' => 'expired']) }}" class="d-flex align-items-center justify-content-between text-decoration-none fs-11.5 mb-1 interactive-row">
-                        <span class="text-danger fw-semibold"><iconify-icon icon="solar:danger-bold-duotone" class="text-danger me-1 align-middle"></iconify-icon> Expired Batches:</span>
-                        <strong class="text-danger font-monospace">{{ $expiredCount }}</strong>
+                <div class="pt-1.5 border-top mt-1 d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <a href="{{ route('adc.inventory.index', ['expiry_filter' => 'expired']) }}" class="text-danger fs-11 fw-semibold text-decoration-none">
+                        <iconify-icon icon="solar:danger-bold-duotone" class="text-danger me-0.5 align-middle"></iconify-icon>
+                        Expired: <strong class="font-monospace">{{ $expiredCount }}</strong>
                     </a>
-                    <a href="{{ route('adc.inventory.index', ['expiry_filter' => '1_month']) }}" class="d-flex align-items-center justify-content-between text-decoration-none fs-11.5 interactive-row">
-                        <span class="text-muted"><iconify-icon icon="solar:alarm-bold-duotone" class="text-warning me-1 align-middle"></iconify-icon> Near-Expiry (1M):</span>
-                        <strong class="text-warning-emphasis font-monospace">{{ $nearExpiry1MonthCount }} Batches</strong>
+                    <a href="{{ route('adc.inventory.index', ['expiry_filter' => '1_month']) }}" class="text-warning-emphasis fs-11 fw-semibold text-decoration-none">
+                        <iconify-icon icon="solar:alarm-bold-duotone" class="text-warning me-0.5 align-middle"></iconify-icon>
+                        Near-Expiry (1M): <strong class="font-monospace">{{ $nearExpiry1MonthCount }} Batches</strong>
                     </a>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- ── 4. Product Expiry Analytics Section (Matching DDC Header & Risk Cards) ── --}}
+    {{-- ── 4. Product Expiry Analytics Section (2-Column Grid on Mobile) ── --}}
     <div class="row mb-3">
         <div class="col-12">
             <div class="card border-0 shadow-sm rounded-3 overflow-hidden bg-white">
-                {{-- Card Header with High-Contrast White Background & Red Accent Badge --}}
-                <div class="card-header bg-white border-bottom py-3 px-3.5 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
-                    <div class="d-flex align-items-center gap-2.5">
-                        <div class="avatar-sm bg-danger-subtle text-danger rounded-3 d-flex align-items-center justify-content-center shadow-xs" style="width: 40px; height: 40px; border: 1px solid #fecdd3;">
-                            <iconify-icon icon="solar:clock-circle-bold-duotone" class="fs-22 text-danger"></iconify-icon>
+                {{-- Card Header --}}
+                <div class="card-header bg-white border-bottom py-2.5 px-3 d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="avatar-sm bg-danger-subtle text-danger rounded-3 d-flex align-items-center justify-content-center shadow-xs flex-shrink-0" style="width: 36px; height: 36px; border: 1px solid #fecdd3;">
+                            <iconify-icon icon="solar:clock-circle-bold-duotone" class="fs-20 text-danger"></iconify-icon>
                         </div>
                         <div>
-                            <h6 class="fw-bold text-dark mb-0 fs-15" style="font-family: 'Outfit', sans-serif;">
-                                Product Expiry Analytics &amp; Smart Risk Alerts
+                            <h6 class="fw-bold text-dark mb-0 fs-13 fs-sm-15" style="font-family: 'Outfit', sans-serif;">
+                                Product Expiry Analytics &amp; Risk Alerts
                             </h6>
-                            <span class="text-muted fs-11">Real-time batch tracking &amp; shelf-life risk distribution across active store inventory.</span>
+                            <span class="text-muted fs-10 fs-sm-11 d-none d-sm-inline">Real-time batch tracking &amp; shelf-life risk distribution across active store inventory.</span>
                         </div>
                     </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="badge bg-light text-slate-700 border px-3 py-1.5 fs-12 font-monospace rounded-pill shadow-xs">
-                            Total Batches Monitored: <strong class="text-dark">{{ number_format($totalStockItems ?? 0) }}</strong>
+                    <div class="d-flex align-items-center gap-2 w-100 w-sm-auto justify-content-between justify-content-sm-end">
+                        <span class="badge bg-light text-slate-700 border px-2 py-1 fs-11 font-monospace rounded-pill">
+                            Batches: <strong class="text-dark">{{ number_format($totalStockItems ?? 0) }}</strong>
                         </span>
-                        <a href="{{ route('adc.inventory.index') }}" class="btn btn-sm btn-outline-danger fw-semibold px-3 py-1.5 rounded-2">
-                            Manage Stock <iconify-icon icon="solar:arrow-right-bold" class="align-middle ms-0.5 fs-12"></iconify-icon>
+                        <a href="{{ route('adc.inventory.index') }}" class="btn btn-xs btn-outline-danger fw-semibold px-2 py-1 rounded-2 fs-11">
+                            Manage Stock <iconify-icon icon="solar:arrow-right-bold" class="align-middle ms-0.5 fs-10"></iconify-icon>
                         </a>
                     </div>
                 </div>
 
-                {{-- Metric Cards Grid --}}
-                <div class="card-body p-3 bg-light-subtle">
-                    <div class="row g-2.5">
+                {{-- Metric Cards Grid (2-Column on Mobile) --}}
+                <div class="card-body p-2 p-sm-3 bg-light-subtle">
+                    <div class="row g-2 g-sm-2.5">
                         {{-- 1. Expired Products (< Today) --}}
-                        <div class="col-xl-3 col-md-6">
+                        <div class="col-6 col-md-6 col-xl-3">
                             <a href="{{ route('adc.inventory.index', ['expiry_filter' => 'expired']) }}" class="text-decoration-none d-block h-100">
-                                <div class="expiry-kpi-card p-3 rounded-3 bg-white border border-danger border-opacity-25 shadow-sm h-100">
-                                    <div class="d-flex align-items-center justify-content-between mb-2">
-                                        <span class="badge bg-danger text-white fw-bold fs-10 px-2 py-1 rounded-pill d-inline-flex align-items-center gap-1">
-                                            Expired (&lt; Today)
+                                <div class="expiry-kpi-card p-2.5 rounded-3 bg-white border border-danger border-opacity-25 shadow-sm h-100">
+                                    <div class="d-flex align-items-center justify-content-between mb-1.5">
+                                        <span class="badge bg-danger text-white fw-bold fs-9 px-1.5 py-0.5 rounded-pill text-truncate">
+                                            Expired
                                         </span>
-                                        <div class="avatar-sm bg-danger-subtle text-danger rounded-3 d-flex align-items-center justify-content-center shadow-xs" style="width: 36px; height: 36px; border: 1px solid #fecdd3;">
-                                            <iconify-icon icon="solar:danger-triangle-bold-duotone" class="fs-20"></iconify-icon>
+                                        <div class="avatar-sm bg-danger-subtle text-danger rounded-2 d-flex align-items-center justify-content-center shadow-xs flex-shrink-0" style="width: 28px; height: 28px; border: 1px solid #fecdd3;">
+                                            <iconify-icon icon="solar:danger-triangle-bold-duotone" class="fs-16"></iconify-icon>
                                         </div>
                                     </div>
-                                    <div class="d-flex align-items-baseline justify-content-between gap-2 mb-2">
+                                    <div class="d-flex align-items-baseline justify-content-between gap-1 mb-1">
                                         <div>
-                                            <h2 class="fw-bold text-danger mb-0" style="font-family: 'Outfit', sans-serif; font-size: 26px; line-height: 1;">{{ number_format($expiredCount) }}</h2>
-                                            <span class="fs-11 text-slate-700 fw-semibold">Expired Batches</span>
+                                            <h2 class="fw-bold text-danger mb-0 fs-20 fs-sm-24" style="font-family: 'Outfit', sans-serif; line-height: 1;">{{ number_format($expiredCount) }}</h2>
+                                            <span class="fs-10 text-slate-700 fw-semibold text-truncate d-block">Expired Batches</span>
                                         </div>
-                                        <span class="text-danger fs-11 fw-bold text-nowrap">Quarantine &rarr;</span>
                                     </div>
-                                    <div class="mt-2 pt-1">
-                                        <div class="progress" style="height: 5px; background: #fee2e2;">
+                                    <div class="mt-1 pt-1 border-top">
+                                        <div class="progress" style="height: 4px; background: #fee2e2;">
                                             <div class="progress-bar bg-danger" role="progressbar" style="width: {{ $totalStockItems > 0 ? min(100, round(($expiredCount / $totalStockItems) * 100)) : 0 }}%;"></div>
                                         </div>
-                                        <div class="d-flex justify-content-between align-items-center mt-1.5">
-                                            <span class="fs-10 text-muted fw-medium">Risk: Immediate</span>
-                                            <span class="fs-10 fw-bold text-danger">{{ $totalStockItems > 0 ? round(($expiredCount / $totalStockItems) * 100, 1) : 0 }}% of Stock</span>
+                                        <div class="d-flex justify-content-between align-items-center mt-1">
+                                            <span class="fs-9 text-muted fw-medium">Risk: High</span>
+                                            <span class="fs-9 fw-bold text-danger">{{ $totalStockItems > 0 ? round(($expiredCount / $totalStockItems) * 100, 1) : 0 }}%</span>
                                         </div>
                                     </div>
                                 </div>
@@ -513,31 +626,30 @@
                         </div>
 
                         {{-- 2. Urgent Near-Expiry (1 - 30 Days) --}}
-                        <div class="col-xl-3 col-md-6">
+                        <div class="col-6 col-md-6 col-xl-3">
                             <a href="{{ route('adc.inventory.index', ['expiry_filter' => '1_month']) }}" class="text-decoration-none d-block h-100">
-                                <div class="expiry-kpi-card p-3 rounded-3 bg-white border border-warning border-opacity-50 shadow-sm h-100">
-                                    <div class="d-flex align-items-center justify-content-between mb-2">
-                                        <span class="badge bg-warning text-dark fw-bold fs-10 px-2 py-1 rounded-pill d-inline-flex align-items-center gap-1">
-                                            1 Month (1–30 Days)
+                                <div class="expiry-kpi-card p-2.5 rounded-3 bg-white border border-warning border-opacity-50 shadow-sm h-100">
+                                    <div class="d-flex align-items-center justify-content-between mb-1.5">
+                                        <span class="badge bg-warning text-dark fw-bold fs-9 px-1.5 py-0.5 rounded-pill text-truncate">
+                                            1M (1–30 D)
                                         </span>
-                                        <div class="avatar-sm bg-warning-subtle text-warning-emphasis rounded-3 d-flex align-items-center justify-content-center shadow-xs" style="width: 36px; height: 36px; border: 1px solid #fef08a;">
-                                            <iconify-icon icon="solar:alarm-bold-duotone" class="fs-20"></iconify-icon>
+                                        <div class="avatar-sm bg-warning-subtle text-warning-emphasis rounded-2 d-flex align-items-center justify-content-center shadow-xs flex-shrink-0" style="width: 28px; height: 28px; border: 1px solid #fef08a;">
+                                            <iconify-icon icon="solar:alarm-bold-duotone" class="fs-16"></iconify-icon>
                                         </div>
                                     </div>
-                                    <div class="d-flex align-items-baseline justify-content-between gap-2 mb-2">
+                                    <div class="d-flex align-items-baseline justify-content-between gap-1 mb-1">
                                         <div>
-                                            <h2 class="fw-bold text-dark mb-0" style="font-family: 'Outfit', sans-serif; font-size: 26px; line-height: 1;">{{ number_format($nearExpiry1MonthCount) }}</h2>
-                                            <span class="fs-11 text-slate-700 fw-semibold">Critical Batches</span>
+                                            <h2 class="fw-bold text-dark mb-0 fs-20 fs-sm-24" style="font-family: 'Outfit', sans-serif; line-height: 1;">{{ number_format($nearExpiry1MonthCount) }}</h2>
+                                            <span class="fs-10 text-slate-700 fw-semibold text-truncate d-block">Critical Batches</span>
                                         </div>
-                                        <span class="text-warning-emphasis fs-11 fw-bold text-nowrap">Urgent Action &rarr;</span>
                                     </div>
-                                    <div class="mt-2 pt-1">
-                                        <div class="progress" style="height: 5px; background: #fef3c7;">
+                                    <div class="mt-1 pt-1 border-top">
+                                        <div class="progress" style="height: 4px; background: #fef3c7;">
                                             <div class="progress-bar bg-warning" role="progressbar" style="width: {{ $totalStockItems > 0 ? min(100, round(($nearExpiry1MonthCount / $totalStockItems) * 100)) : 0 }}%;"></div>
                                         </div>
-                                        <div class="d-flex justify-content-between align-items-center mt-1.5">
-                                            <span class="fs-10 text-muted fw-medium">Sale Priority</span>
-                                            <span class="fs-10 fw-bold text-warning-emphasis">{{ $totalStockItems > 0 ? round(($nearExpiry1MonthCount / $totalStockItems) * 100, 1) : 0 }}% of Stock</span>
+                                        <div class="d-flex justify-content-between align-items-center mt-1">
+                                            <span class="fs-9 text-muted fw-medium">Priority</span>
+                                            <span class="fs-9 fw-bold text-warning-emphasis">{{ $totalStockItems > 0 ? round(($nearExpiry1MonthCount / $totalStockItems) * 100, 1) : 0 }}%</span>
                                         </div>
                                     </div>
                                 </div>
@@ -545,31 +657,30 @@
                         </div>
 
                         {{-- 3. Clearance Scope (31 - 90 Days) --}}
-                        <div class="col-xl-3 col-md-6">
+                        <div class="col-6 col-md-6 col-xl-3">
                             <a href="{{ route('adc.inventory.index', ['expiry_filter' => '3_months']) }}" class="text-decoration-none d-block h-100">
-                                <div class="expiry-kpi-card p-3 rounded-3 bg-white border border-info border-opacity-30 shadow-sm h-100">
-                                    <div class="d-flex align-items-center justify-content-between mb-2">
-                                        <span class="badge bg-info text-white fw-bold fs-10 px-2 py-1 rounded-pill d-inline-flex align-items-center gap-1">
-                                            1 to 3 Months (31–90 Days)
+                                <div class="expiry-kpi-card p-2.5 rounded-3 bg-white border border-info border-opacity-30 shadow-sm h-100">
+                                    <div class="d-flex align-items-center justify-content-between mb-1.5">
+                                        <span class="badge bg-info text-white fw-bold fs-9 px-1.5 py-0.5 rounded-pill text-truncate">
+                                            1–3M (31–90 D)
                                         </span>
-                                        <div class="avatar-sm bg-info-subtle text-info rounded-3 d-flex align-items-center justify-content-center shadow-xs" style="width: 36px; height: 36px; border: 1px solid #bae6fd;">
-                                            <iconify-icon icon="solar:calendar-minimalistic-bold-duotone" class="fs-20"></iconify-icon>
+                                        <div class="avatar-sm bg-info-subtle text-info rounded-2 d-flex align-items-center justify-content-center shadow-xs flex-shrink-0" style="width: 28px; height: 28px; border: 1px solid #bae6fd;">
+                                            <iconify-icon icon="solar:calendar-minimalistic-bold-duotone" class="fs-16"></iconify-icon>
                                         </div>
                                     </div>
-                                    <div class="d-flex align-items-baseline justify-content-between gap-2 mb-2">
+                                    <div class="d-flex align-items-baseline justify-content-between gap-1 mb-1">
                                         <div>
-                                            <h2 class="fw-bold text-dark mb-0" style="font-family: 'Outfit', sans-serif; font-size: 26px; line-height: 1;">{{ number_format($nearExpiry3MonthsCount) }}</h2>
-                                            <span class="fs-11 text-slate-700 fw-semibold">Moderate Batches</span>
+                                            <h2 class="fw-bold text-dark mb-0 fs-20 fs-sm-24" style="font-family: 'Outfit', sans-serif; line-height: 1;">{{ number_format($nearExpiry3MonthsCount) }}</h2>
+                                            <span class="fs-10 text-slate-700 fw-semibold text-truncate d-block">Moderate Batches</span>
                                         </div>
-                                        <span class="text-info fs-11 fw-bold text-nowrap">Clearance &rarr;</span>
                                     </div>
-                                    <div class="mt-2 pt-1">
-                                        <div class="progress" style="height: 5px; background: #e0f2fe;">
+                                    <div class="mt-1 pt-1 border-top">
+                                        <div class="progress" style="height: 4px; background: #e0f2fe;">
                                             <div class="progress-bar bg-info" role="progressbar" style="width: {{ $totalStockItems > 0 ? min(100, round(($nearExpiry3MonthsCount / $totalStockItems) * 100)) : 0 }}%;"></div>
                                         </div>
-                                        <div class="d-flex justify-content-between align-items-center mt-1.5">
-                                            <span class="fs-10 text-muted fw-medium">Monitor FIFO</span>
-                                            <span class="fs-10 fw-bold text-info">{{ $totalStockItems > 0 ? round(($nearExpiry3MonthsCount / $totalStockItems) * 100, 1) : 0 }}% of Stock</span>
+                                        <div class="d-flex justify-content-between align-items-center mt-1">
+                                            <span class="fs-9 text-muted fw-medium">FIFO</span>
+                                            <span class="fs-9 fw-bold text-info">{{ $totalStockItems > 0 ? round(($nearExpiry3MonthsCount / $totalStockItems) * 100, 1) : 0 }}%</span>
                                         </div>
                                     </div>
                                 </div>
@@ -577,31 +688,30 @@
                         </div>
 
                         {{-- 4. Safe Shelf-Life (91 - 180 Days) --}}
-                        <div class="col-xl-3 col-md-6">
+                        <div class="col-6 col-md-6 col-xl-3">
                             <a href="{{ route('adc.inventory.index', ['expiry_filter' => '6_months']) }}" class="text-decoration-none d-block h-100">
-                                <div class="expiry-kpi-card p-3 rounded-3 bg-white border border-success border-opacity-30 shadow-sm h-100">
-                                    <div class="d-flex align-items-center justify-content-between mb-2">
-                                        <span class="badge bg-success text-white fw-bold fs-10 px-2 py-1 rounded-pill d-inline-flex align-items-center gap-1">
-                                            3 to 6 Months (91–180 Days)
+                                <div class="expiry-kpi-card p-2.5 rounded-3 bg-white border border-success border-opacity-30 shadow-sm h-100">
+                                    <div class="d-flex align-items-center justify-content-between mb-1.5">
+                                        <span class="badge bg-success text-white fw-bold fs-9 px-1.5 py-0.5 rounded-pill text-truncate">
+                                            3–6M (91–180 D)
                                         </span>
-                                        <div class="avatar-sm bg-success-subtle text-success rounded-3 d-flex align-items-center justify-content-center shadow-xs" style="width: 36px; height: 36px; border: 1px solid #bbf7d0;">
-                                            <iconify-icon icon="solar:check-circle-bold-duotone" class="fs-20"></iconify-icon>
+                                        <div class="avatar-sm bg-success-subtle text-success rounded-2 d-flex align-items-center justify-content-center shadow-xs flex-shrink-0" style="width: 28px; height: 28px; border: 1px solid #bbf7d0;">
+                                            <iconify-icon icon="solar:check-circle-bold-duotone" class="fs-16"></iconify-icon>
                                         </div>
                                     </div>
-                                    <div class="d-flex align-items-baseline justify-content-between gap-2 mb-2">
+                                    <div class="d-flex align-items-baseline justify-content-between gap-1 mb-1">
                                         <div>
-                                            <h2 class="fw-bold text-dark mb-0" style="font-family: 'Outfit', sans-serif; font-size: 26px; line-height: 1;">{{ number_format($nearExpiry6MonthsCount) }}</h2>
-                                            <span class="fs-11 text-slate-700 fw-semibold">Safe Shelf-Life</span>
+                                            <h2 class="fw-bold text-dark mb-0 fs-20 fs-sm-24" style="font-family: 'Outfit', sans-serif; line-height: 1;">{{ number_format($nearExpiry6MonthsCount) }}</h2>
+                                            <span class="fs-10 text-slate-700 fw-semibold text-truncate d-block">Safe Batches</span>
                                         </div>
-                                        <span class="text-success fs-11 fw-bold text-nowrap">Optimal &rarr;</span>
                                     </div>
-                                    <div class="mt-2 pt-1">
-                                        <div class="progress" style="height: 5px; background: #dcfce7;">
+                                    <div class="mt-1 pt-1 border-top">
+                                        <div class="progress" style="height: 4px; background: #dcfce7;">
                                             <div class="progress-bar bg-success" role="progressbar" style="width: {{ $totalStockItems > 0 ? min(100, round(($nearExpiry6MonthsCount / $totalStockItems) * 100)) : 0 }}%;"></div>
                                         </div>
-                                        <div class="d-flex justify-content-between align-items-center mt-1.5">
-                                            <span class="fs-10 text-muted fw-medium">Healthy Stock</span>
-                                            <span class="fs-10 fw-bold text-success">{{ $totalStockItems > 0 ? round(($nearExpiry6MonthsCount / $totalStockItems) * 100, 1) : 0 }}% of Stock</span>
+                                        <div class="d-flex justify-content-between align-items-center mt-1">
+                                            <span class="fs-9 text-muted fw-medium">Healthy</span>
+                                            <span class="fs-9 fw-bold text-success">{{ $totalStockItems > 0 ? round(($nearExpiry6MonthsCount / $totalStockItems) * 100, 1) : 0 }}%</span>
                                         </div>
                                     </div>
                                 </div>
@@ -629,8 +739,8 @@
                         </div>
                     </div>
 
-                    {{-- Period Selection Filters --}}
-                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                    {{-- Period Selection Filters (Horizontal Scroll on Mobile) --}}
+                    <div class="chart-filter-scroll">
                         <div class="btn-group btn-group-sm" role="group" aria-label="Period Filter">
                             <button type="button" class="btn btn-primary active chart-period-btn" data-period="this_year">Current FY</button>
                             <button type="button" class="btn btn-outline-secondary chart-period-btn" data-period="last_year">Previous FY</button>
@@ -640,16 +750,18 @@
                     </div>
                 </div>
 
-                <div class="card-body p-3">
+                <div class="card-body p-2.5 p-sm-3">
                     <div class="row g-2 align-items-center mb-2">
-                        <div class="col-md-12 d-flex align-items-center gap-3">
-                            <div class="p-2 px-3 bg-light rounded-2 border">
-                                <span class="text-muted fs-11 fw-semibold text-uppercase d-block">Period Sales Revenue</span>
-                                <span class="fw-bold text-slate-900 fs-15 font-monospace" id="chartTotalSales">₹{{ number_format($sixMonthTotalSales, 2) }}</span>
+                        <div class="col-6">
+                            <div class="p-2 px-2.5 bg-light rounded-2 border">
+                                <span class="text-muted fs-10 fs-sm-11 fw-semibold text-uppercase d-block text-truncate">Period Revenue</span>
+                                <span class="fw-bold text-slate-900 fs-13 fs-sm-15 font-monospace text-truncate d-block" id="chartTotalSales">₹{{ number_format($sixMonthTotalSales, 2) }}</span>
                             </div>
-                            <div class="p-2 px-3 bg-success-subtle border border-success-subtle rounded-2">
-                                <span class="text-success fw-semibold fs-11 text-uppercase d-block">Period Net Profit</span>
-                                <span class="fw-bold text-success fs-15 font-monospace" id="chartTotalProfit">₹{{ number_format($sixMonthTotalProfit, 2) }}</span>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2 px-2.5 bg-success-subtle border border-success-subtle rounded-2">
+                                <span class="text-success fw-semibold fs-10 fs-sm-11 text-uppercase d-block text-truncate">Period Net Profit</span>
+                                <span class="fw-bold text-success fs-13 fs-sm-15 font-monospace text-truncate d-block" id="chartTotalProfit">₹{{ number_format($sixMonthTotalProfit, 2) }}</span>
                             </div>
                         </div>
                     </div>
