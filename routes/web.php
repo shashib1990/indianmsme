@@ -45,7 +45,9 @@ Route::get('/vendor/{imv_code}', [VendorController::class, 'products'])->name('v
 Route::get('/vendor/{imv_code}/ajax', [VendorController::class, 'products'])->name('vendor.products.ajax');
 Route::get('/vendor/{imv_code}/sub-sellers', [VendorController::class, 'subSellers'])->name('vendor.sub-sellers');
 
-
+// ── Public Order / POS Receipt View (Accessible via WhatsApp Invoice Link) ──
+Route::get('/receipt/order/{id}', [\App\Http\Controllers\ADC\PosController::class, 'publicReceipt'])->name('pos.receipt.public');
+Route::get('/invoices/{filename}', [\App\Http\Controllers\ADC\PosController::class, 'downloadInvoicePdf'])->name('invoice.pdf.public');
 
 // ── Unified Authentication Routes ──
 Route::middleware(['guest:adc,web'])->group(function () {
