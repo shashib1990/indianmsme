@@ -23,6 +23,10 @@ Route::prefix('api/locations')->name('ddc.api.locations.')->group(function () {
 
 Route::get('/api/ama-codes', [\App\Http\Controllers\Web\AuthController::class, 'getAmaCodes'])->name('ddc.api.ama-codes');
 
+// ── Impersonation SSO Handlers ──
+Route::get('/impersonate/auth', [\App\Http\Controllers\Admin\ImpersonationController::class, 'authenticateWithToken'])->name('ddc.impersonate.auth');
+Route::post('/impersonate/stop', [\App\Http\Controllers\Admin\ImpersonationController::class, 'stopImpersonation'])->name('ddc.impersonate.stop');
+
 Route::name('ddc.')->group(function () {
     Route::middleware(['guest:ddc'])->group(function () {
         Route::get('/login', [AuthController::class, 'showLogin'])->name('login');

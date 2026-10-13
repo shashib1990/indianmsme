@@ -24,6 +24,10 @@ Route::prefix('api/locations')->name('adc.api.locations.')->group(function () {
     Route::get('/pincodes', [\App\Http\Controllers\Api\LocationApiController::class, 'pincodes'])->name('pincodes');
 });
 
+// ── Impersonation SSO Handlers ──
+Route::get('/impersonate/auth', [\App\Http\Controllers\Admin\ImpersonationController::class, 'authenticateWithToken'])->name('adc.impersonate.auth');
+Route::post('/impersonate/stop', [\App\Http\Controllers\Admin\ImpersonationController::class, 'stopImpersonation'])->name('adc.impersonate.stop');
+
 Route::name('adc.')->group(function () {
     Route::middleware(['auth:adc', 'force.password:adc', 'role.adc'])->group(function () {
 

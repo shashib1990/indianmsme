@@ -155,7 +155,11 @@ class AdcOrderController extends Controller
 
         $extractedDetails = \App\Models\Invoice::extractAdcInvoiceDetails($order);
 
-        if (!$invoice && in_array($order->status, ['Pending', 'Processing', 'Dispatched', 'Partially Dispatched', 'Received', 'Delivered', 'Completed'])) {
+        if (!$invoice && in_array($order->status, ['Pending', 'Processing'])) {
+            return redirect()->back()->with('error', 'Tax Invoice will be available once the order has been dispatched.');
+        }
+
+        if (!$invoice && in_array($order->status, ['Dispatched', 'Partially Dispatched', 'Received', 'Delivered', 'Completed'])) {
             $isPhysicalDdcOrder = ($order->fulfillment_type === 'physical') || !empty($order->selected_ddc_id) || !empty($order->assigned_ddc_id);
 
             if ($isPhysicalDdcOrder) {

@@ -223,7 +223,11 @@ class OrderController extends Controller
 
         $extractedDetails = Invoice::extractAdcInvoiceDetails($order);
 
-        if (!$invoice && in_array($order->status, ['Pending', 'Processing', 'Dispatched', 'Partially Dispatched', 'Received', 'Delivered', 'Completed'])) {
+        if (!$invoice && in_array($order->status, ['Pending', 'Processing'])) {
+            return redirect()->back()->with('error', 'Tax Invoice will be available once the order is dispatched by the seller/store.');
+        }
+
+        if (!$invoice && in_array($order->status, ['Dispatched', 'Partially Dispatched', 'Received', 'Delivered', 'Completed'])) {
             $isPhysicalDdcOrder = ($order->fulfillment_type === 'physical') || !empty($order->selected_ddc_id) || !empty($order->assigned_ddc_id);
 
             if ($isPhysicalDdcOrder) {
@@ -233,7 +237,8 @@ class OrderController extends Controller
                 $invoiceDetails = Invoice::generateNextInvoiceNumber(now(), $ddcGstin, 'INV', 'wholesale');
             } else {
                 // Category 1: Virtual Order routed to Seller -> DL/26-27/XXXX series under ADPL Central DL Sequence
-                $invoiceDetails = Invoice::generateNextInvoiceNumber(now(), null, 'DL');
+                $adplGstin = Invoice::getAdplGstin();
+                $invoiceDetails = Invoice::generateNextInvoiceNumber(now(), $adplGstin, 'DL');
             }
 
             $invoice = Invoice::create(array_merge([

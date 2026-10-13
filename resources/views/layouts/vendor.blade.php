@@ -592,7 +592,7 @@
         <div class="alert alert-warning alert-dismissible text-center mb-0 rounded-0 py-2" role="alert">
             <i class="bx bx-user-check me-1"></i>
             You are impersonating <strong>{{ session('impersonating.user_name') }}</strong>.
-            <form action="{{ route('admin.impersonate.stop') }}" method="POST" class="d-inline ms-3">
+            <form action="{{ url('impersonate/stop') }}" method="POST" class="d-inline ms-3">
                 @csrf
                 <button type="submit" class="btn btn-sm btn-danger">
                     <i class="bx bx-log-out me-1"></i> Return to Admin

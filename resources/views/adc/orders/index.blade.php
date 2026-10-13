@@ -127,7 +127,7 @@
                                         <a href="{{ route('adc.orders.show', $order->id) }}" class="btn btn-sm btn-primary py-1 px-2.5" title="View Order Details">
                                             <i class="bx bx-show me-1"></i> Details
                                         </a>
-                                        @if(!in_array($order->status, ['Cancelled']))
+                                        @if(in_array($order->status, ['Dispatched', 'Partially Dispatched', 'Received', 'Delivered', 'Completed']) || $order->invoice)
                                             <a href="{{ route('adc.orders.invoice', $order->id) }}" target="_blank" class="btn btn-sm btn-outline-secondary py-1 px-2.5 ms-1" title="Download Tax Invoice">
                                                 <i class="bx bx-file me-1"></i> Invoice
                                             </a>

@@ -25,6 +25,10 @@ Route::middleware(['guest:vendor'])->group(function () {
     Route::post('/register/resend-otp', [AuthController::class, 'resendOtp'])->name('vendor.resend-otp');
 });
 
+// ── Impersonation SSO Handlers ──
+Route::get('/impersonate/auth', [\App\Http\Controllers\Admin\ImpersonationController::class, 'authenticateWithToken'])->name('vendor.impersonate.auth');
+Route::post('/impersonate/stop', [\App\Http\Controllers\Admin\ImpersonationController::class, 'stopImpersonation'])->name('vendor.impersonate.stop');
+
 Route::middleware(['auth:vendor', 'force.password:vendor', 'role.seller'])->group(function () {
 
     Route::get('/', [DashboardController::class, 'index'])->name('vendor.dashboard');

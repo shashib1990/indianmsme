@@ -9,7 +9,7 @@
         <a href="{{ route('adc.orders.index') }}" class="btn btn-sm btn-outline-secondary">
             <i class="bx bx-arrow-back me-1"></i> Back to Orders
         </a>
-        @if(!in_array($order->status, ['Cancelled']))
+        @if(in_array($order->status, ['Dispatched', 'Partially Dispatched', 'Received', 'Delivered', 'Completed']) || $order->invoice)
             <a href="{{ route('adc.orders.invoice', $order->id) }}" target="_blank" class="btn btn-sm btn-outline-primary fw-medium">
                 <i class="bx bx-file me-1"></i> Download Tax Invoice
             </a>

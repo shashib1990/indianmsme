@@ -171,19 +171,20 @@ class Invoice extends Model
             }
         }
 
+        $padFormat = ($basePrefix === 'DL') ? '%03d' : '%04d';
         $nextSerial = $maxSerial + 1;
-        $invoiceNumber = $seriesPrefix . '/' . sprintf('%04d', $nextSerial);
+        $invoiceNumber = $seriesPrefix . '/' . sprintf($padFormat, $nextSerial);
 
         // Fail-safe collision check loop
         if ($basePrefix === 'DL') {
             while (self::where('invoice_number', $invoiceNumber)->exists()) {
                 $nextSerial++;
-                $invoiceNumber = $seriesPrefix . '/' . sprintf('%04d', $nextSerial);
+                $invoiceNumber = $seriesPrefix . '/' . sprintf($padFormat, $nextSerial);
             }
         } else {
             while (self::where('supplier_gstin', $gstinVal)->where('invoice_number', $invoiceNumber)->exists()) {
                 $nextSerial++;
-                $invoiceNumber = $seriesPrefix . '/' . sprintf('%04d', $nextSerial);
+                $invoiceNumber = $seriesPrefix . '/' . sprintf($padFormat, $nextSerial);
             }
         }
 

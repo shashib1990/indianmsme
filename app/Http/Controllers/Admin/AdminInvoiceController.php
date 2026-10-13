@@ -395,94 +395,201 @@ class AdminInvoiceController extends Controller
         $invoiceNumber = trim($request->input('invoice_number'));
 
         try {
+            $currentInvId  = null;
+            $supplierGstin = null;
+            $existingInv   = null;
+
+            // Resolve target record, existing invoice, and supplier GSTIN
             switch ($tableType) {
                 case 'invoices':
-                    DB::table('invoices')
-                        ->where('id', $recordId)
-                        ->update([
-                            'invoice_number' => $invoiceNumber,
-                            'updated_at'     => now(),
-                        ]);
+                    $existingInv = DB::table('invoices')->where('id', $recordId)->first();
+                    if (!$existingInv) {
+                        return response()->json(['success' => false, 'message' => 'Invoice record not found.'], 404);
+                    }
+                    $currentInvId  = $existingInv->id;
+                    $supplierGstin = $existingInv->supplier_gstin;
                     break;
 
                 case 'purchase_orders':
-                    $inv = DB::table('invoices')->where('purchase_order_id', $recordId)->first();
-                    if ($inv) {
-                        DB::table('invoices')->where('id', $inv->id)->update([
-                            'invoice_number' => $invoiceNumber,
-                            'updated_at'     => now(),
-                        ]);
-                    } else {
-                        DB::table('invoices')->insert([
-                            'purchase_order_id' => $recordId,
-                            'invoice_number'    => $invoiceNumber,
-                            'type'              => 'msme_po',
-                            'invoice_date'      => now(),
-                            'created_at'        => now(),
-                            'updated_at'        => now(),
-                        ]);
+                    $po = DB::table('purchase_orders')->where('id', $recordId)->first();
+                    if (!$po) {
+                        return response()->json(['success' => false, 'message' => 'Purchase Order not found.'], 404);
+                    }
+                    $existingInv   = DB::table('invoices')->where('purchase_order_id', $recordId)->first();
+                    $currentInvId  = $existingInv?->id;
+                    $supplierGstin = $existingInv?->supplier_gstin;
+                    if (!$supplierGstin) {
+                        if ($po->fulfillment_type === 'virtual') {
+                            $supplierGstin = \App\Models\Invoice::getAdplGstin();
+                        } else {
+                            $sp = DB::table('seller_profiles')->where('user_id', $po->seller_id)->first();
+                            $supplierGstin = $sp?->gst_number ?: 'N/A';
+                        }
                     }
                     break;
 
                 case 'adc_orders':
-                    DB::table('adc_orders')
-                        ->where('id', $recordId)
-                        ->update([
-                            'received_invoice_number' => $invoiceNumber,
-                            'updated_at'              => now(),
-                        ]);
-                    $inv = DB::table('invoices')->where('adc_order_id', $recordId)->first();
-                    if ($inv) {
-                        DB::table('invoices')->where('id', $inv->id)->update([
-                            'invoice_number' => $invoiceNumber,
-                            'updated_at'     => now(),
-                        ]);
+                    $ord = DB::table('adc_orders')->where('id', $recordId)->first();
+                    if (!$ord) {
+                        return response()->json(['success' => false, 'message' => 'ADC Order not found.'], 404);
+                    }
+                    $existingInv   = DB::table('invoices')->where('adc_order_id', $recordId)->first();
+                    $currentInvId  = $existingInv?->id;
+                    $supplierGstin = $existingInv?->supplier_gstin;
+                    if (!$supplierGstin) {
+                        if ($ord->fulfillment_type === 'virtual') {
+                            $supplierGstin = \App\Models\Invoice::getAdplGstin();
+                        } else {
+                            $dp = DB::table('ddc_profiles')->where('user_id', $ord->selected_ddc_id ?? $ord->assigned_ddc_id)->first();
+                            $supplierGstin = $dp?->ddc_gst_number ?: ($dp?->adpl_gst_number ?: ($dp?->gst_number ?: 'N/A'));
+                        }
                     }
                     break;
 
                 case 'ddc_pos_orders':
                 case 'adc_pos_orders':
-                    $inv = DB::table('invoices')->where('pos_order_id', $recordId)->first();
-                    if ($inv) {
-                        DB::table('invoices')->where('id', $inv->id)->update([
-                            'invoice_number' => $invoiceNumber,
-                            'updated_at'     => now(),
-                        ]);
+                    $existingInv   = DB::table('invoices')->where('pos_order_id', $recordId)->first();
+                    $currentInvId  = $existingInv?->id;
+                    $supplierGstin = $existingInv?->supplier_gstin;
+                    break;
+
+                case 'ddc_local_purchases':
+                case 'adc_local_purchases':
+                    // Local purchase tables handled directly below
+                    break;
+
+                default:
+                    return response()->json(['success' => false, 'message' => 'Invalid table type specified.'], 422);
+            }
+
+            // DUPLICATE INVOICE NUMBER CHECK:
+            // 1. DL Series (Central ADPL): Must be globally unique across all DL invoices
+            $isDlSeries = str_starts_with($invoiceNumber, 'DL/') || ($existingInv && str_starts_with($existingInv->invoice_number ?? '', 'DL/'));
+
+            if ($isDlSeries) {
+                $duplicateQuery = DB::table('invoices')->where('invoice_number', $invoiceNumber);
+                if ($currentInvId) {
+                    $duplicateQuery->where('id', '!=', $currentInvId);
+                }
+                if ($duplicateQuery->exists()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Invoice Number '{$invoiceNumber}' pehle se ADPL (DL) series mein exist karta hai. Ek hi invoice number dobara update nahi ho sakta.",
+                    ], 422);
+                }
+            } elseif ($tableType !== 'ddc_local_purchases' && $tableType !== 'adc_local_purchases') {
+                // 2. GST-wise Series: Must be unique for the same Supplier GSTIN
+                $duplicateQuery = DB::table('invoices')->where('invoice_number', $invoiceNumber);
+                if ($currentInvId) {
+                    $duplicateQuery->where('id', '!=', $currentInvId);
+                }
+                if (!empty($supplierGstin) && $supplierGstin !== 'N/A') {
+                    $duplicateQuery->where('supplier_gstin', $supplierGstin);
+                }
+                if ($duplicateQuery->exists()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Invoice Number '{$invoiceNumber}' is GSTIN ({$supplierGstin}) ke liye pehle se exist karta hai. Dobara kisi aur record mein update nahi ho sakta.",
+                    ], 422);
+                }
+            }
+
+            // 3. Local purchases duplicate checks
+            if ($tableType === 'ddc_local_purchases') {
+                $dup = DB::table('ddc_local_purchases')->where('id', '!=', $recordId)->where('invoice_number', $invoiceNumber)->exists();
+                if ($dup) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Invoice Number '{$invoiceNumber}' pehle se DDC Local Purchases mein exist karta hai.",
+                    ], 422);
+                }
+            } elseif ($tableType === 'adc_local_purchases') {
+                $dup = DB::table('adc_local_purchases')->where('id', '!=', $recordId)->where('invoice_number', $invoiceNumber)->exists();
+                if ($dup) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Invoice Number '{$invoiceNumber}' pehle se ADC Local Purchases mein exist karta hai.",
+                    ], 422);
+                }
+            }
+
+            // Build metadata fields to keep serial_number and financial_year in sync
+            $updateData = [
+                'invoice_number'     => $invoiceNumber,
+                'ddc_invoice_number' => $invoiceNumber,
+                'updated_at'         => now(),
+            ];
+            if (preg_match('/\/(\d+)$/', $invoiceNumber, $m)) {
+                $updateData['serial_number'] = (int)$m[1];
+            }
+            if (preg_match('/\/(\d{2}-\d{2})\//', $invoiceNumber, $m)) {
+                $updateData['financial_year'] = $m[1];
+            }
+
+            // Execute the update
+            switch ($tableType) {
+                case 'invoices':
+                    DB::table('invoices')->where('id', $recordId)->update($updateData);
+                    break;
+
+                case 'purchase_orders':
+                    if ($existingInv) {
+                        DB::table('invoices')->where('id', $existingInv->id)->update($updateData);
                     } else {
-                        DB::table('invoices')->insert([
-                            'pos_order_id'   => $recordId,
-                            'invoice_number' => $invoiceNumber,
-                            'type'           => $tableType === 'ddc_pos_orders' ? 'ddc_pos' : 'adc_pos',
-                            'invoice_date'   => now(),
-                            'created_at'     => now(),
-                            'updated_at'     => now(),
-                        ]);
+                        DB::table('invoices')->insert(array_merge([
+                            'purchase_order_id' => $recordId,
+                            'invoice_number'    => $invoiceNumber,
+                            'ddc_invoice_number'=> $invoiceNumber,
+                            'supplier_gstin'    => $supplierGstin ?: 'N/A',
+                            'type'              => 'msme_po',
+                            'invoice_date'      => now(),
+                            'created_at'        => now(),
+                            'updated_at'        => now(),
+                        ], $updateData));
+                    }
+                    break;
+
+                case 'adc_orders':
+                    DB::table('adc_orders')->where('id', $recordId)->update([
+                        'received_invoice_number' => $invoiceNumber,
+                        'updated_at'              => now(),
+                    ]);
+                    if ($existingInv) {
+                        DB::table('invoices')->where('id', $existingInv->id)->update($updateData);
+                    }
+                    break;
+
+                case 'ddc_pos_orders':
+                case 'adc_pos_orders':
+                    if ($existingInv) {
+                        DB::table('invoices')->where('id', $existingInv->id)->update($updateData);
+                    } else {
+                        DB::table('invoices')->insert(array_merge([
+                            'pos_order_id'      => $recordId,
+                            'invoice_number'    => $invoiceNumber,
+                            'ddc_invoice_number'=> $invoiceNumber,
+                            'supplier_gstin'    => $supplierGstin ?: 'N/A',
+                            'type'              => $tableType === 'ddc_pos_orders' ? 'ddc_pos' : 'adc_pos',
+                            'invoice_date'      => now(),
+                            'created_at'        => now(),
+                            'updated_at'        => now(),
+                        ], $updateData));
                     }
                     break;
 
                 case 'ddc_local_purchases':
-                    DB::table('ddc_local_purchases')
-                        ->where('id', $recordId)
-                        ->update([
-                            'invoice_number' => $invoiceNumber,
-                            'updated_at'     => now(),
-                        ]);
+                    DB::table('ddc_local_purchases')->where('id', $recordId)->update([
+                        'invoice_number' => $invoiceNumber,
+                        'updated_at'     => now(),
+                    ]);
                     break;
 
                 case 'adc_local_purchases':
-                    DB::table('adc_local_purchases')
-                        ->where('id', $recordId)
-                        ->update([
-                            'invoice_number' => $invoiceNumber,
-                            'updated_at'     => now(),
-                        ]);
+                    DB::table('adc_local_purchases')->where('id', $recordId)->update([
+                        'invoice_number' => $invoiceNumber,
+                        'updated_at'     => now(),
+                    ]);
                     break;
-
-                default:
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Invalid table type specified.',
-                    ], 422);
             }
 
             return response()->json([

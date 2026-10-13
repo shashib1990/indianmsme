@@ -285,6 +285,7 @@ Route::name('admin.')->group(function () {
         // Impersonation
         Route::post('/impersonate/{type}/{id}', [ImpersonationController::class, 'impersonate'])->name('impersonate');
         Route::post('/impersonate/stop', [ImpersonationController::class, 'stopImpersonation'])->name('impersonate.stop');
+        Route::get('/impersonate/return', [ImpersonationController::class, 'returnWithToken'])->name('impersonate.return');
 
         // System Settings / Pricing Margins
         Route::get('settings/pricing', [SystemSettingController::class, 'index'])->name('settings.pricing.index');

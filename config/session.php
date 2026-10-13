@@ -159,9 +159,6 @@ return [
             if ($host === 'localhost' || $host === '127.0.0.1' || filter_var($host, FILTER_VALIDATE_IP) || str_ends_with($host, '.localhost')) {
                 return null;
             }
-            if (str_ends_with($host, '.localhost')) {
-                return '.localhost';
-            }
             $parts = explode('.', $host);
             if (count($parts) >= 2) {
                 return '.' . implode('.', array_slice($parts, -2));

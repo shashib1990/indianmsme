@@ -7,7 +7,9 @@ use App\Models\User;
 use App\Models\ImpersonationLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Str;
 
 class ImpersonationController extends Controller
 {
@@ -44,7 +46,28 @@ class ImpersonationController extends Controller
             default  => 'admin',
         };
 
-        // 3. Store original admin ID in session
+        // 3. Add security Audit Log
+        ImpersonationLog::create([
+            'admin_id'       => $admin->id,
+            'target_user_id' => $user->id,
+            'target_role'    => $targetRole,
+            'login_time'     => now(),
+            'ip_address'     => $request->ip(),
+        ]);
+
+        // 4. Create one-time secure SSO token (TTL: 2 minutes)
+        $token = Str::random(48);
+        Cache::put("impersonate_token_{$token}", [
+            'admin_id'   => $admin->id,
+            'admin_name' => $admin->name,
+            'user_id'    => $user->id,
+            'user_name'  => $user->name,
+            'type'       => $type,
+            'guard'      => $guard,
+        ], now()->addMinutes(2));
+
+        // Also login locally on this domain as safety net
+        Auth::guard($guard)->loginUsingId($user->id);
         Session::put('impersonating', [
             'admin_id'   => $admin->id,
             'admin_name' => $admin->name,
@@ -54,26 +77,16 @@ class ImpersonationController extends Controller
             'guard'      => $guard,
         ]);
 
-        // 4. Add security Audit Log
-        ImpersonationLog::create([
-            'admin_id'       => $admin->id,
-            'target_user_id' => $user->id,
-            'target_role'    => $targetRole,
-            'login_time'     => now(),
-            'ip_address'     => $request->ip(),
-        ]);
-
-        // 5. Use Auth::loginUsingId() to login target user
-        Auth::guard($guard)->loginUsingId($user->id);
-
         $host = $request->getHost();
-        $adminSub = config('app.admin_subdomain') ?: 'admin';
+        $adminSub  = config('app.admin_subdomain') ?: 'admin';
         $vendorSub = config('app.vendor_subdomain') ?: 'vendor';
-        $ddcSub = config('app.ddc_subdomain') ?: 'ddc';
+        $ddcSub    = config('app.ddc_subdomain') ?: 'ddc';
+        $adcSub    = config('app.adc_subdomain') ?: 'adc';
 
         $isSubdomainRequest = str_starts_with($host, $adminSub . '.') 
                            || str_starts_with($host, $vendorSub . '.') 
-                           || str_starts_with($host, $ddcSub . '.');
+                           || str_starts_with($host, $ddcSub . '.')
+                           || str_starts_with($host, $adcSub . '.');
 
         if ($isSubdomainRequest && $type !== 'adc') {
             $baseDomain = substr($host, strpos($host, '.') + 1);
@@ -84,7 +97,7 @@ class ImpersonationController extends Controller
             };
             $port = $request->getPort();
             $portStr = (($request->isSecure() && $port === 443) || (!$request->isSecure() && $port === 80)) ? '' : ":{$port}";
-            $targetUrl = "{$request->getScheme()}://{$targetSub}.{$baseDomain}{$portStr}/";
+            $targetUrl = "{$request->getScheme()}://{$targetSub}.{$baseDomain}{$portStr}/impersonate/auth?token={$token}";
         } else {
             $prefix = match ($type) {
                 'vendor', 'seller' => 'vendor',
@@ -92,11 +105,52 @@ class ImpersonationController extends Controller
                 'adc'    => 'adc',
                 default  => 'admin',
             };
-            $targetUrl = url($prefix);
+            $targetUrl = url("{$prefix}/impersonate/auth?token={$token}");
         }
 
-        return redirect($targetUrl)
-            ->with('info', "You are now impersonating {$user->name}. Click 'Return to Admin' to go back.");
+        return redirect($targetUrl);
+    }
+
+    public function authenticateWithToken(Request $request)
+    {
+        $token = $request->query('token');
+        if (!$token) {
+            return redirect()->to('/login')->with('error', 'Missing impersonation token.');
+        }
+
+        $data = Cache::pull("impersonate_token_{$token}");
+        if (!$data) {
+            return redirect()->to('/login')->with('error', 'Impersonation token has expired or is invalid.');
+        }
+
+        $guard  = $data['guard'];
+        $userId = $data['user_id'];
+
+        // Clean out any conflicting existing session
+        Auth::guard($guard)->logout();
+        Session::forget('impersonating');
+
+        // Log into target guard on this domain
+        Auth::guard($guard)->loginUsingId($userId);
+
+        Session::put('impersonating', [
+            'admin_id'   => $data['admin_id'],
+            'admin_name' => $data['admin_name'],
+            'type'       => $data['type'],
+            'user_id'    => $userId,
+            'user_name'  => $data['user_name'],
+            'guard'      => $guard,
+        ]);
+
+        $redirectUrl = match ($data['type']) {
+            'ddc'              => route('ddc.dashboard', [], false) ?: '/ddc',
+            'vendor', 'seller' => route('vendor.dashboard', [], false) ?: '/vendor',
+            'adc'              => route('adc.dashboard', [], false) ?: '/adc',
+            default            => '/',
+        };
+
+        return redirect($redirectUrl)
+            ->with('info', "You are now impersonating {$data['user_name']}. Click 'Return to Admin' to go back.");
     }
 
     public function stopImpersonation(Request $request)
@@ -104,37 +158,59 @@ class ImpersonationController extends Controller
         $impersonating = Session::get('impersonating');
 
         if (!$impersonating) {
-            return redirect()->route('admin.dashboard');
+            $adminUrl = url('admin');
+            return redirect($adminUrl);
         }
+
+        $guard   = $impersonating['guard'] ?? 'ddc';
+        $adminId = $impersonating['admin_id'] ?? null;
 
         // Log out of the impersonated guard
-        Auth::guard($impersonating['guard'])->logout();
-
-        // Restore original admin session properly using loginUsingId()
-        $adminId = $impersonating['admin_id'];
-        Auth::guard('admin')->loginUsingId($adminId);
-
+        Auth::guard($guard)->logout();
         Session::forget('impersonating');
 
-        $host = $request->getHost();
-        $adminSub = config('app.admin_subdomain') ?: 'admin';
-        $vendorSub = config('app.vendor_subdomain') ?: 'vendor';
-        $ddcSub = config('app.ddc_subdomain') ?: 'ddc';
+        if ($adminId) {
+            $returnToken = Str::random(48);
+            Cache::put("impersonate_return_{$returnToken}", [
+                'admin_id' => $adminId,
+            ], now()->addMinutes(2));
 
-        $isSubdomainRequest = str_starts_with($host, $adminSub . '.') 
-                           || str_starts_with($host, $vendorSub . '.') 
-                           || str_starts_with($host, $ddcSub . '.');
+            $host = $request->getHost();
+            $adminSub  = config('app.admin_subdomain') ?: 'admin';
+            $vendorSub = config('app.vendor_subdomain') ?: 'vendor';
+            $ddcSub    = config('app.ddc_subdomain') ?: 'ddc';
 
-        if ($isSubdomainRequest) {
-            $baseDomain = substr($host, strpos($host, '.') + 1);
-            $port = $request->getPort();
-            $portStr = (($request->isSecure() && $port === 443) || (!$request->isSecure() && $port === 80)) ? '' : ":{$port}";
-            $adminUrl = "{$request->getScheme()}://{$adminSub}.{$baseDomain}{$portStr}/";
-        } else {
-            $adminUrl = url('admin');
+            $isSubdomainRequest = str_starts_with($host, $adminSub . '.') 
+                               || str_starts_with($host, $vendorSub . '.') 
+                               || str_starts_with($host, $ddcSub . '.');
+
+            if ($isSubdomainRequest) {
+                $baseDomain = substr($host, strpos($host, '.') + 1);
+                $port = $request->getPort();
+                $portStr = (($request->isSecure() && $port === 443) || (!$request->isSecure() && $port === 80)) ? '' : ":{$port}";
+                $adminUrl = "{$request->getScheme()}://{$adminSub}.{$baseDomain}{$portStr}/impersonate/return?token={$returnToken}";
+            } else {
+                $adminUrl = url("admin/impersonate/return?token={$returnToken}");
+            }
+
+            return redirect($adminUrl);
         }
 
-        return redirect($adminUrl)
-            ->with('success', "Returned to admin account from {$impersonating['user_name']}.");
+        return redirect()->route('admin.dashboard');
+    }
+
+    public function returnWithToken(Request $request)
+    {
+        $token = $request->query('token');
+        if ($token) {
+            $data = Cache::pull("impersonate_return_{$token}");
+            if ($data && !empty($data['admin_id'])) {
+                Auth::guard('admin')->loginUsingId($data['admin_id']);
+                return redirect()->route('admin.dashboard')
+                    ->with('success', 'Returned to admin account.');
+            }
+        }
+
+        return redirect()->route('admin.dashboard');
     }
 }
