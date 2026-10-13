@@ -423,12 +423,22 @@
             loadSavedCart();
 
             container.addEventListener('scroll', function () {
-                if (container.scrollTop + container.clientHeight >= container.scrollHeight - 100) {
+                if (container.scrollTop + container.clientHeight >= container.scrollHeight - 250) {
                     if (hasMorePages && !isLoadingProducts) {
                         fetchProducts(false);
                     }
                 }
             });
+
+            // IntersectionObserver for reliable infinite scrolling
+            if ('IntersectionObserver' in window && loader) {
+                const scrollObserver = new IntersectionObserver((entries) => {
+                    if (entries[0].isIntersecting && hasMorePages && !isLoadingProducts) {
+                        fetchProducts(false);
+                    }
+                }, { root: container, threshold: 0.05 });
+                scrollObserver.observe(loader);
+            }
 
             let searchInput = document.getElementById('productSearchInput');
             let searchTimeout = null;
@@ -510,6 +520,11 @@
                         } else {
                             renderProductCards(data.items);
                             currentPage++;
+
+                            // Auto-load next page if screen has remaining space and more items exist
+                            if (hasMorePages && !isLoadingProducts && container.scrollHeight <= container.clientHeight + 100) {
+                                setTimeout(() => fetchProducts(false), 100);
+                            }
                         }
                     }
                 })

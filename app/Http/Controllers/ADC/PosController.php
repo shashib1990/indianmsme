@@ -33,7 +33,57 @@ class PosController extends Controller
     {
         $mode = 'retail';
         $search = $request->get('search', '');
+
+        // Check view preference
+        $viewPref = $request->get('view');
+        if ($viewPref === 'desktop') {
+            session(['adc_pos_view_pref' => 'desktop']);
+        } elseif ($viewPref === 'mobile') {
+            session(['adc_pos_view_pref' => 'mobile']);
+            return redirect()->route('adc.pos.retail.mobile', $request->query());
+        }
+
+        // Auto-redirect mobile devices if not forced to desktop
+        $sessionPref = session('adc_pos_view_pref');
+        if ($sessionPref !== 'desktop') {
+            $userAgent = $request->header('User-Agent', '');
+            $isMobile = preg_match('/(android|avantgo|blackberry|bolt|boost|cricket|docomo|fone|hiptop|mini|mobi|palm|phone|pie|tablet|up\.browser|up\.link|webos|wos)/i', $userAgent);
+            if ($isMobile) {
+                return redirect()->route('adc.pos.retail.mobile', $request->query());
+            }
+        }
+
         return view('adc.pos.retail', compact('mode', 'search'));
+    }
+
+    public function retailMobile(Request $request)
+    {
+        $mode = 'retail';
+        $search = $request->get('search', '');
+
+        // Switch to desktop if requested
+        $viewPref = $request->get('view');
+        if ($viewPref === 'desktop') {
+            session(['adc_pos_view_pref' => 'desktop']);
+            return redirect()->route('adc.pos.retail', $request->query());
+        } elseif ($viewPref === 'mobile') {
+            session(['adc_pos_view_pref' => 'mobile']);
+        }
+
+        $adcUser = Auth::guard('adc')->user();
+        if ($adcUser) {
+            $adcUser->load(['adcProfile', 'profile']);
+        }
+        $adcCode = $adcUser?->adcProfile?->adc_code ?: ($adcUser?->adc_code ?: ($adcUser ? 'ADC' . str_pad($adcUser->id, 3, '0', STR_PAD_LEFT) : 'ADC'));
+        $storeName = $adcUser?->name ?? 'ADC Store';
+
+        $recentBills = AdcPosOrder::where('adc_id', $adcUser?->id)
+            ->with(['invoice', 'customer'])
+            ->orderBy('id', 'desc')
+            ->take(15)
+            ->get();
+
+        return view('adc.pos.retail_mobile', compact('mode', 'search', 'adcUser', 'adcCode', 'storeName', 'recentBills'));
     }
 
     public function getProducts(Request $request)
@@ -41,7 +91,7 @@ class PosController extends Controller
         $adcId = Auth::guard('adc')->id();
         $search = trim($request->get('search', ''));
         $page = (int) $request->get('page', 1);
-        $perPage = 16;
+        $perPage = min(60, max(16, (int) $request->get('per_page', 32)));
         $today = date('Y-m-d');
 
         $query = AdcInventory::where('adc_id', $adcId)
@@ -54,7 +104,8 @@ class PosController extends Controller
                         ->where('pos_status', 'Active');
                 });
             })
-            ->where('quantity', '>', 0)
+            // Enforce available quantity > 0 (quantity - reserved_quantity) and NOT expired for ALL searches & listings
+            ->whereRaw('(quantity - COALESCE(reserved_quantity, 0)) > 0')
             ->where(function ($q) use ($today) {
                 $q->whereNull('expire_date')
                     ->orWhereDate('expire_date', '>=', $today);
@@ -67,6 +118,17 @@ class PosController extends Controller
                     ->orWhere('product_code', 'like', "%{$search}%")
                     ->orWhere('barcode', 'like', "%{$search}%")
                     ->orWhere('batch_number', 'like', "%{$search}%");
+            });
+        }
+
+        $category = trim($request->get('category', ''));
+        if ($category && strtolower($category) !== 'all') {
+            $query->where(function ($q) use ($category) {
+                $q->whereHas('product.category', function ($cq) use ($category) {
+                    $cq->where('name', 'like', "%{$category}%");
+                })->orWhereHas('localProduct.category', function ($cq) use ($category) {
+                    $cq->where('name', 'like', "%{$category}%");
+                });
             });
         }
 
@@ -92,7 +154,7 @@ class PosController extends Controller
                 'csp' => (float) $inv->csp,
                 'price' => $salePrice,
                 'gst_rate' => (float) ($inv->gst_rate ?? ($inv->product?->gst_rate ?? ($inv->localProduct?->gst_rate ?? 0))),
-                'quantity' => (float) $inv->quantity,
+                'quantity' => (float) $inv->available_quantity,
                 'unit_of_measure' => $inv->unit_of_measure ?: ($inv->product?->unit_of_measure ?: ($inv->localProduct?->unit_of_measure ?: 'Unit')),
                 'batch_number' => $inv->batch_number,
                 'expire_date' => $inv->expire_date ? \Carbon\Carbon::parse($inv->expire_date)->format('Y-m-d') : null,
@@ -282,6 +344,12 @@ class PosController extends Controller
                 if (!$inv)
                     continue;
 
+                // Do not fetch expired products
+                $today = date('Y-m-d');
+                if ($inv->expire_date && \Carbon\Carbon::parse($inv->expire_date)->toDateString() < $today) {
+                    continue;
+                }
+
                 $salePrice = (float) ($inv->csp > 0 ? $inv->csp : $inv->mrp);
                 $imageUrl = null;
                 if ($inv->product) {
@@ -431,6 +499,12 @@ class PosController extends Controller
                 if (!$inv)
                     continue;
 
+                // Do not fetch expired products
+                $today = date('Y-m-d');
+                if ($inv->expire_date && \Carbon\Carbon::parse($inv->expire_date)->toDateString() < $today) {
+                    continue;
+                }
+
                 $salePrice = (float) ($inv->csp > 0 ? $inv->csp : $inv->mrp);
                 $qty = (float) ($ri['qty'] ?? 1);
                 $subtotal += ($salePrice * $qty);
@@ -564,6 +638,12 @@ class PosController extends Controller
             if (!$inv)
                 continue;
 
+            // Do not fetch expired products
+            $today = date('Y-m-d');
+            if ($inv->expire_date && \Carbon\Carbon::parse($inv->expire_date)->toDateString() < $today) {
+                continue;
+            }
+
             $salePrice = (float) ($inv->csp > 0 ? $inv->csp : $inv->mrp);
             $imageUrl = null;
             if ($inv->product) {
@@ -641,6 +721,12 @@ class PosController extends Controller
 
                 $inv = AdcInventory::where('id', $invId)->where('adc_id', $adcId)->firstOrFail();
 
+                // Prevent selling expired product
+                $today = date('Y-m-d');
+                if ($inv->expire_date && \Carbon\Carbon::parse($inv->expire_date)->toDateString() < $today) {
+                    throw new \Exception("Product '{$inv->product_name}' (Batch: {$inv->batch_number}) has expired and cannot be sold.");
+                }
+
                 if ($inv->quantity < $qty) {
                     throw new \Exception("Stock insufficient for product: {$inv->product_name} (Available: {$inv->quantity})");
                 }
@@ -713,8 +799,21 @@ class PosController extends Controller
             if ($custMobile && !$custId) {
                 $cust = AdcPosCustomer::firstOrCreate(
                     ['adc_id' => $adcId, 'mobile' => $custMobile],
-                    ['name' => $custName ?: ('Customer ' . $custMobile)]
+                    [
+                        'name' => $custName ?: ('Customer ' . $custMobile),
+                        'email' => $request->input('customer_email'),
+                        'address' => $request->input('customer_address'),
+                    ]
                 );
+                if ($custName && $cust->name !== $custName) {
+                    $cust->update(['name' => $custName]);
+                }
+                if ($request->input('customer_address') && !$cust->address) {
+                    $cust->update(['address' => $request->input('customer_address')]);
+                }
+                if ($request->input('customer_email') && !$cust->email) {
+                    $cust->update(['email' => $request->input('customer_email')]);
+                }
                 $custId = $cust->id;
             }
 
@@ -807,341 +906,17 @@ class PosController extends Controller
 
             DB::commit();
             
-                        // Added by Sanjeet Theek hai API
-            
-           // ── TheekHai WhatsApp Invoice & Notification ──
-if (!empty($custMobile)) {
-    try {
-
-        $custDisplayName = $custName ?: 'Customer';
-
-        $receiverPhone = preg_replace('/[^0-9]/', '', $custMobile);
-
-        if (strlen($receiverPhone) > 10) {
-            $receiverPhone = substr($receiverPhone, -10);
-        }
-
-        // 1. Register Customer on TheekHai
-        TheekHaiService::registerUser(
-            $custDisplayName,
-            $receiverPhone
-        );
-
-        // 2. Prepare Store Details
-        $senderPhone = config(
-            'theekhai.sender_number',
-            '8800001259'
-        );
-
-        $canteenCode = $adcUser?->adcProfile?->adc_code
-            ?: ($adcUser?->adc_code
-                ?: ('ADC' . str_pad(
-                    $adcUser->id,
-                    3,
-                    '0',
-                    STR_PAD_LEFT
-                )));
-
-        $canteenAddress = $adcUser?->adcProfile?->address
-            ?? ($adcUser?->profile?->address ?? 'ADC Store');
-
-        $canteenEmail = $adcUser?->email
-            ?? ($adcUser?->adcProfile?->email ?? 'N/A');
-
-        $billAmount = number_format(
-            (float) $grandTotal,
-            2
-        );
-
-        $discountAmount = number_format(
-            (float) ($mrpDiscount + $specialDiscount),
-            2
-        );
-
-        $numberInvoice = $invoice->invoice_number;
-
-        $paymentMode = ucfirst(
-            strtolower($payModeRaw)
-        );
-
-        // 3. Build WhatsApp Text Message
-        $itemsSummary = "";
-
-        foreach ($orderItems as $it) {
-
-            $pName = $it['product_name'] ?? 'Product';
-
-            $pQty = (float) (
-                $it['quantity'] ?? 1
-            );
-
-            $pTotal = number_format(
-                (float) ($it['total_price'] ?? 0),
-                2
-            );
-
-            $itemsSummary .=
-                "• {$pName} (x{$pQty}) - ₹{$pTotal}\n";
-        }
-
-        // Prepare PDF URL early so it can be included in textMsg
-        $pdfFileName = str_replace(
-            ['/', '\\'],
-            '_',
-            $invoice->invoice_number
-        ) . '.pdf';
-
-        $pdfUrl = asset('invoices/' . $pdfFileName);
-
-        $textMsg = "🛍️ *Thank You for Shopping!*\n"
-        . "Dear {$custDisplayName},\n"
-        . "Thank you for shopping with Abhhyam India Ecosystem.\n"
-        . "🏪 ADC Store: {$canteenCode}\n"
-        . "🧾 Invoice: {$numberInvoice}\n"
-        . "💰 Shopping Amount: ₹{$billAmount}\n"
-        . "📅 Date: " . now()->format('d/m/Y h:i A') . "\n"
-        // . "💳 Yellow Card Account: [AVI Account ID]\n"
-        // . "🪙 YDC Earned: [Coins]\n"
-        . "📎 Your Tax Invoice is attached.\n"
-        . "Abhhyam Business Community (ABC)\n"
-        . "Your Shopping • Your Savings • Your Future\n"
-        . "करोगे तो होगा! 🇮🇳";
-
-        // 4. Send WhatsApp / TheekHai Message
-        $messageSent = TheekHaiService::sendMessage(
-            $receiverPhone,
-            $textMsg,
-            $senderPhone
-        );
-
-        \Log::info('TheekHai POS Message Result', [
-            'order_id' => $posOrder->id,
-            'customer_mobile' => $receiverPhone,
-            'message_sent' => $messageSent,
-            // 'pdf_url' => $pdfUrl,
-        ]);
-
-
-        // =========================================================
-        // 5. GENERATE PDF + SEND PDF
-        // =========================================================
-
-        try {
-
-            \Log::info('POS PDF STEP 1: Starting', [
-                'order_id' => $posOrder->id,
-                'invoice_number' => $invoice->invoice_number,
-            ]);
-
-
-            // PDF file name
-            $pdfFileName = str_replace(
-                ['/', '\\'],
-                '_',
-                $invoice->invoice_number
-            ) . '.pdf';
-
-
-            // PDF directory
-            $pdfDirectory = public_path('invoices');
-
-
-            \Log::info('POS PDF STEP 2: Directory', [
-                'directory' => $pdfDirectory,
-                'exists' => file_exists($pdfDirectory),
-                'public_writable' => is_writable(public_path()),
-            ]);
-
-
-            // Create invoices directory
-            if (!file_exists($pdfDirectory)) {
-
-                mkdir(
-                    $pdfDirectory,
-                    0755,
-                    true
-                );
+            // Asynchronously dispatch TheekHai & Abhhyam notification in background so POS checkout response is instant (< 100ms)
+            if (!empty($custMobile)) {
+                $orderId = (int) $posOrder->id;
+                $artisan = escapeshellarg(base_path('artisan'));
+                $php = escapeshellarg(PHP_BINARY ?: '/usr/bin/php');
+                $rootUrl = escapeshellarg(request()->root());
+                $logPath = escapeshellarg(storage_path('logs/whatsapp_cmd.log'));
+                $cmd = "{$php} {$artisan} pos:send-whatsapp {$orderId} --base-url={$rootUrl} > {$logPath} 2>&1 &";
+                \Illuminate\Support\Facades\Log::info("Dispatching POS WhatsApp/Abhhyam background command: {$cmd}");
+                @exec($cmd);
             }
-
-
-            // Check directory creation
-            if (!file_exists($pdfDirectory)) {
-
-                throw new \Exception(
-                    'Unable to create invoices directory: '
-                    . $pdfDirectory
-                );
-            }
-
-
-            $pdfPath =
-                $pdfDirectory
-                . DIRECTORY_SEPARATOR
-                . $pdfFileName;
-
-
-            // =====================================================
-            // Load Fresh Order
-            // =====================================================
-
-            \Log::info(
-                'POS PDF STEP 3: Loading order relations'
-            );
-
-
-            $pdfOrder = $posOrder->fresh([
-                'items.product',
-                'items.localProduct',
-                'items.inventory.product',
-                'items.inventory.localProduct',
-                'customer',
-                'adc.adcProfile',
-                'adc.profile',
-                'invoice',
-            ]);
-
-
-            if (!$pdfOrder) {
-
-                throw new \Exception(
-                    'Unable to refresh POS order for PDF.'
-                );
-            }
-
-
-            \Log::info(
-                'POS PDF STEP 4: Order loaded'
-            );
-
-
-            // =====================================================
-            // Generate PDF
-            // =====================================================
-
-            $pdf = Pdf::loadView(
-                'adc.pos.invoice-pdf',
-                [
-                    'order' => $pdfOrder,
-                ]
-            );
-
-
-            \Log::info(
-                'POS PDF STEP 5: Blade loaded successfully'
-            );
-
-
-            // 80mm receipt paper
-            $pdf->setPaper(
-                [0, 0, 226.77, 600],
-                'portrait'
-            );
-
-
-            // =====================================================
-            // Save PDF
-            // =====================================================
-
-            $pdf->save($pdfPath);
-
-
-            // Verify file
-            if (
-                !file_exists($pdfPath)
-                || filesize($pdfPath) <= 0
-            ) {
-
-                throw new \Exception(
-                    'PDF file was not created properly: '
-                    . $pdfPath
-                );
-            }
-
-
-            \Log::info(
-                'POS PDF STEP 6: PDF saved successfully',
-                [
-                    'pdf_path' => $pdfPath,
-                    'pdf_size' => filesize($pdfPath),
-                ]
-            );
-
-
-            // =====================================================
-            // Public PDF URL
-            // =====================================================
-
-            $pdfUrl = asset(
-                'invoices/' . $pdfFileName
-            );
-
-
-            \Log::info(
-                'POS PDF STEP 7: Public URL created',
-                [
-                    'pdf_url' => $pdfUrl,
-                ]
-            );
-
-
-            // =====================================================
-            // Send PDF through TheekHai
-            // =====================================================
-
-            $pdfSent = TheekHaiService::sendPdf(
-                $receiverPhone,
-                $pdfUrl,
-                $pdfFileName,
-                $senderPhone,
-                $textMsg
-            );
-
-
-            \Log::info(
-                'POS PDF STEP 8: TheekHai PDF result',
-                [
-                    'order_id' => $posOrder->id,
-                    'invoice_number' => $invoice->invoice_number,
-                    'pdf_url' => $pdfUrl,
-                    'pdf_file_name' => $pdfFileName,
-                    'pdf_sent' => $pdfSent,
-                ]
-            );
-
-
-        } catch (\Throwable $pdfEx) {
-
-            // PDF error should NOT stop checkout
-            \Log::error(
-                'POS INVOICE PDF ERROR',
-                [
-                    'message' => $pdfEx->getMessage(),
-                    'file' => $pdfEx->getFile(),
-                    'line' => $pdfEx->getLine(),
-                    'order_id' => $posOrder->id ?? null,
-                    'invoice_number' => $invoice->invoice_number ?? null,
-                    'trace' => $pdfEx->getTraceAsString(),
-                ]
-            );
-        }
-
-
-    } catch (\Throwable $thEx) {
-
-        \Log::error(
-            'TheekHai POS Notification Error',
-            [
-                'message' => $thEx->getMessage(),
-                'file' => $thEx->getFile(),
-                'line' => $thEx->getLine(),
-                'order_id' => $posOrder->id ?? null,
-                'customer_mobile' => $custMobile,
-            ]
-        );
-    }
-}
-
-// End Here
 
             return response()->json([
                 'status' => true,
@@ -1174,6 +949,15 @@ if (!empty($custMobile)) {
         }
 
         $orders = $query->orderBy('id', 'desc')->paginate(15)->withQueryString();
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'status' => true,
+                'orders' => $orders->items(),
+                'has_more' => $orders->hasMorePages()
+            ]);
+        }
+
         return view('adc.pos.orders', compact('orders', 'search'));
     }
 

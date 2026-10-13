@@ -130,6 +130,7 @@ Route::name('adc.')->group(function () {
         // ── POS Billing Routes (Retail) ──
         Route::get('/pos', [\App\Http\Controllers\ADC\PosController::class, 'index'])->name('pos.index');
         Route::get('/pos/retail', [\App\Http\Controllers\ADC\PosController::class, 'retail'])->name('pos.retail');
+        Route::get('/pos/retail/mobile', [\App\Http\Controllers\ADC\PosController::class, 'retailMobile'])->name('pos.retail.mobile');
         Route::get('/pos/cart', [\App\Http\Controllers\ADC\PosController::class, 'getCart'])->name('pos.cart.get');
         Route::post('/pos/cart/sync', [\App\Http\Controllers\ADC\PosController::class, 'syncCart'])->name('pos.cart.sync');
         Route::post('/pos/cart/clear', [\App\Http\Controllers\ADC\PosController::class, 'clearCartDb'])->name('pos.cart.clear');
