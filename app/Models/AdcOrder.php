@@ -148,6 +148,26 @@ class AdcOrder extends Model
     }
 
     /**
+     * Scope to filter ADC orders visible to DDC according to ADC Profile show_order setting:
+     * Hide if:
+     * 1. ADC Profile setting is 'No'
+     * 2. adc_orders.status is 'Processing'
+     */
+    public function scopeForDdcVisibility($query)
+    {
+        return $query->where(function ($q) {
+            $q->where('adc_orders.status', '!=', 'Processing')
+              ->orWhereDoesntHave('adc.adcProfile', function ($apq) {
+                  $apq->where('show_order', 'No')
+                      ->orWhere(function ($spq) {
+                          $spq->whereNull('show_order')
+                              ->where('pos_status', 'Inactive');
+                      });
+              });
+        });
+    }
+
+    /**
      * Generate a unique Order number in ORD/26-27/000001 format using global OrderNumberService.
      */
     public static function generateOrderNumber($date = null): string

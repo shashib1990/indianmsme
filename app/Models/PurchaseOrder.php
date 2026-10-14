@@ -197,6 +197,34 @@ class PurchaseOrder extends Model
     }
 
     /**
+     * Scope to filter purchase orders visible to seller according to ADC Profile show_order setting:
+     * Hide if:
+     * 1. PO is from ADC via Virtual DDC (fulfillment_type = 'virtual' OR adc_order_id IS NOT NULL with virtual_ddc_id IS NOT NULL)
+     * 2. Related ADC Profile show_order = 'No' (or pos_status = 'Inactive')
+     * 3. Purchase Order status = 'Pending'
+     */
+    public function scopeForSellerVisibility($query)
+    {
+        return $query->where(function ($q) {
+            // Keep all orders that are NOT (ADC via Virtual DDC with Pending status and ADC show_order = 'No')
+            $q->where('purchase_orders.status', '!=', 'Pending')
+              ->orWhereNull('purchase_orders.adc_order_id')
+              ->orWhereDoesntHave('adcOrder', function ($aoq) {
+                  $aoq->where(function ($vq) {
+                      $vq->whereNotNull('virtual_ddc_id')
+                         ->orWhere('fulfillment_type', 'virtual');
+                  })->whereHas('adc.adcProfile', function ($apq) {
+                      $apq->where('show_order', 'No')
+                          ->orWhere(function ($spq) {
+                              $spq->whereNull('show_order')
+                                  ->where('pos_status', 'Inactive');
+                          });
+                  });
+              });
+        });
+    }
+
+    /**
      * Generate a unique Purchase Order number.
      */
     public static function generatePoNumber(): string

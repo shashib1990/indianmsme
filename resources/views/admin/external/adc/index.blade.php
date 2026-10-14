@@ -70,6 +70,7 @@
                                     <x-admin.table-header field="created_at" :sort="$sort"
                                         :order="$order">Joined</x-admin.table-header>
                                     <th class="text-end pe-3" style="width: 150px;">Actions</th>
+                                    <th class="text-center pe-3" style="width: 130px;">Show Order</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -191,10 +192,32 @@
                                                 </form>
                                             </div>
                                         </td>
+                                        <td class="text-center pe-3">
+                                            @php
+                                                $showOrderVal = $user->adcProfile?->show_order ?? (strtolower($user->adcProfile?->pos_status ?? 'active') === 'inactive' ? 'No' : 'Yes');
+                                                $posIsActive = strtolower($showOrderVal) === 'yes';
+                                            @endphp
+                                            <div class="d-inline-flex align-items-center gap-1">
+                                                <div class="form-check form-switch m-0 d-inline-block">
+                                                    <input class="form-check-input pos-status-toggle" 
+                                                           type="checkbox" 
+                                                           role="switch"
+                                                           id="posSwitch{{ $user->id }}"
+                                                           data-user-id="{{ $user->id }}"
+                                                           data-url="{{ route('admin.external.adc.toggle-pos-status', $user->id) }}"
+                                                           {{ $posIsActive ? 'checked' : '' }}
+                                                           style="cursor: pointer; width: 2.5em; height: 1.35em;">
+                                                </div>
+                                                <span class="badge {{ $posIsActive ? 'bg-success text-white' : 'bg-danger text-white' }} px-2 py-1 fs-11 fw-semibold pos-status-badge"
+                                                      id="posBadge{{ $user->id }}">
+                                                    {{ $posIsActive ? 'YES' : 'NO' }}
+                                                </span>
+                                            </div>
+                                        </td>
                                     </tr>
                                 @empty
                                     <x-admin.empty-state icon="solar:user-speak-rounded-bold-duotone" title="No ADC Users Found"
-                                        description="We couldn't find any ADC users matching your search." colspan="15" />
+                                        description="We couldn't find any ADC users matching your search." colspan="16" />
                                 @endforelse
                             </tbody>
                         </table>
@@ -551,6 +574,61 @@
                     error: function () {
                         alert('Failed to load ADC details. Please try again.');
                         reviewModal.hide();
+                    }
+                });
+            });
+
+            // POS Status Switch Toggle Handler
+            $(document).on('change', '.pos-status-toggle', function () {
+                const switchEl = this;
+                const userId = $(switchEl).data('user-id');
+                const toggleUrl = $(switchEl).data('url');
+                const badgeEl = $('#posBadge' + userId);
+                const isChecked = switchEl.checked;
+
+                // Disable during AJAX to prevent double click
+                switchEl.disabled = true;
+
+                $.ajax({
+                    url: toggleUrl,
+                    type: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    dataType: 'json',
+                    success: function (res) {
+                        switchEl.disabled = false;
+                        if (res.success) {
+                            const newStatus = (res.status || '').toLowerCase();
+                            if (newStatus === 'active' || newStatus === 'yes') {
+                                switchEl.checked = true;
+                                badgeEl.removeClass('bg-danger').addClass('bg-success').text('YES');
+                            } else {
+                                switchEl.checked = false;
+                                badgeEl.removeClass('bg-success').addClass('bg-danger').text('NO');
+                            }
+
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({
+                                    toast: true,
+                                    position: 'top-end',
+                                    icon: 'success',
+                                    title: res.message || 'Status updated successfully',
+                                    showConfirmButton: false,
+                                    timer: 2500
+                                });
+                            }
+                        } else {
+                            // Revert on error
+                            switchEl.checked = !isChecked;
+                            alert(res.message || 'Failed to update POS status.');
+                        }
+                    },
+                    error: function (xhr) {
+                        switchEl.disabled = false;
+                        switchEl.checked = !isChecked;
+                        const msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Error updating POS status.';
+                        alert(msg);
                     }
                 });
             });

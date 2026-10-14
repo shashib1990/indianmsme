@@ -200,6 +200,7 @@ Route::name('admin.')->group(function () {
         Route::post('external/adc/bulk', [ADCUsersController::class, 'bulk'])->name('external.adc.bulk')->middleware('permission:users.manage');
         Route::post('external/adc/{id}/reset-password', [ADCUsersController::class, 'resetPassword'])->name('external.adc.reset-password')->middleware('permission:users.manage');
         Route::post('external/adc/{id}/toggle-status', [ADCUsersController::class, 'toggleStatus'])->name('external.adc.toggle-status')->middleware('permission:users.manage');
+        Route::post('external/adc/{id}/toggle-pos-status', [ADCUsersController::class, 'togglePosStatus'])->name('external.adc.toggle-pos-status')->middleware('permission:users.manage');
         Route::post('external/adc/{id}/kyc-status', [ADCUsersController::class, 'updateKycStatus'])->name('external.adc.kyc-status')->middleware('permission:users.manage');
 
         // ADC Wallet Requests (Physical DDC & Virtual DDC)
