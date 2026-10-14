@@ -40,10 +40,10 @@ class Controller extends BaseController
 
 
 
-        // 2. API Credentials (with environment fallbacks)
-        $projectKey = env('FILE_SERVICE_PROJECT_KEY', 'CHI8M5LQ');
-        $secretKey = env('FILE_SERVICE_SECRET_KEY', 'q6qWfYt9fYcBj4kjZ4ZtbEl7lg0RjUoD');
-        $uploadUrl = env('FILE_SERVICE_UPLOAD_URL', 'https://upload.sainikcanteen.com/api/upload');
+        // 2. API Credentials (with config and environment fallbacks)
+        $projectKey = config('services.file_service.project_key', env('FILE_SERVICE_PROJECT_KEY', 'CHI8M5LQ'));
+        $secretKey  = config('services.file_service.secret_key', env('FILE_SERVICE_SECRET_KEY', 'q6qWfYt9fYcBj4kjZ4ZtbEl7lg0RjUoD'));
+        $uploadUrl  = config('services.file_service.upload_url', env('FILE_SERVICE_UPLOAD_URL', 'https://upload.sainikcanteen.com/api/upload'));
 
         try {
             // Attach the file and send the post request with a standard timeout (30 seconds)

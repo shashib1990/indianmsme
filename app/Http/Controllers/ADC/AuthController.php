@@ -67,4 +67,26 @@ class AuthController extends Controller
 
         return redirect()->route('adc.login')->with('success', 'Logged out successfully.');
     }
+
+    /**
+     * Generate SSO token and bridge the ADC session to the main shopping website.
+     */
+    public function shoppingBridge(Request $request)
+    {
+        $user = Auth::guard('adc')->user();
+        if (!$user) {
+            return redirect(main_website_url('login'));
+        }
+
+        $pincode = $user->adcProfile?->pincode ?? $user->profile?->pincode ?? session('user_pincode');
+
+        $token = \Illuminate\Support\Str::random(48);
+        \Illuminate\Support\Facades\Cache::put("adc_shopping_token_{$token}", [
+            'user_id'       => $user->id,
+            'pincode'       => $pincode,
+            'impersonating' => Session::get('impersonating'),
+        ], now()->addMinutes(2));
+
+        return redirect(main_website_url("shopping/auth?token={$token}"));
+    }
 }

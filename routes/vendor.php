@@ -32,6 +32,7 @@ Route::post('/impersonate/stop', [\App\Http\Controllers\Admin\ImpersonationContr
 Route::middleware(['auth:vendor', 'force.password:vendor', 'role.seller'])->group(function () {
 
     Route::get('/', [DashboardController::class, 'index'])->name('vendor.dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index']);
 
     Route::get('/profile', [ProfileController::class, 'index'])->name('vendor.profile');
     Route::put('/profile', [ProfileController::class, 'update'])->name('vendor.profile.update');

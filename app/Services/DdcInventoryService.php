@@ -11,6 +11,21 @@ use Illuminate\Support\Facades\DB;
 class DdcInventoryService
 {
     /**
+     * Request-level cache for mapped DDC users, strictly keyed by normalized pincode.
+     *
+     * @var array<string, ?User>
+     */
+    protected static array $mappedDdcCache = [];
+
+    /**
+     * Clear the request-level mapped DDC cache.
+     */
+    public static function clearCache(): void
+    {
+        self::$mappedDdcCache = [];
+    }
+
+    /**
      * Get active mapped DDC User for a pincode string.
      */
     public static function getMappedDdcForPincode(?string $pincode): ?User
@@ -19,12 +34,21 @@ class DdcInventoryService
             return null;
         }
 
-        $pincodeObj = Pincode::where('pincode', $pincode)
+        $cleanPincode = trim((string) $pincode);
+        if ($cleanPincode === '') {
+            return null;
+        }
+
+        if (array_key_exists($cleanPincode, self::$mappedDdcCache)) {
+            return self::$mappedDdcCache[$cleanPincode];
+        }
+
+        $pincodeObj = Pincode::where('pincode', $cleanPincode)
             ->where('status', '1')
             ->first();
 
         if (!$pincodeObj) {
-            return null;
+            return self::$mappedDdcCache[$cleanPincode] = null;
         }
 
         $ddcId = DB::table('ddc_pincodes')
@@ -32,16 +56,18 @@ class DdcInventoryService
             ->value('ddc_id');
 
         if (!$ddcId) {
-            return null;
+            return self::$mappedDdcCache[$cleanPincode] = null;
         }
 
-        return User::where('id', $ddcId)
+        $ddcUser = User::where('id', $ddcId)
             ->where('role', 'ddc')
             ->where('status', '1')
             ->whereHas('ddcProfile', function ($q) {
                 $q->where('type', '!=', 'virtual')->orWhereNull('type');
             })
             ->first();
+
+        return self::$mappedDdcCache[$cleanPincode] = $ddcUser;
     }
 
     /**

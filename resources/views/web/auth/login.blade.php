@@ -1184,8 +1184,8 @@
 
 
 @push('styles')
-  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <link href="{{ asset('plugins/select2/select2.min.css') }}" rel="stylesheet" />
+  <link rel="stylesheet" type="text/css" href="{{ asset('plugins/toastify/toastify.min.css') }}">
   <style>
     .al .select2-container--default .select2-selection--single {
       height: 40px !important;

@@ -35,23 +35,23 @@ class PosController extends Controller
         $search = $request->get('search', '');
 
         // Check view preference
-        $viewPref = $request->get('view');
-        if ($viewPref === 'desktop') {
-            session(['adc_pos_view_pref' => 'desktop']);
-        } elseif ($viewPref === 'mobile') {
-            session(['adc_pos_view_pref' => 'mobile']);
-            return redirect()->route('adc.pos.retail.mobile', $request->query());
-        }
+        // $viewPref = $request->get('view');
+        // if ($viewPref === 'desktop') {
+        //     session(['adc_pos_view_pref' => 'desktop']);
+        // } elseif ($viewPref === 'mobile') {
+        //     session(['adc_pos_view_pref' => 'mobile']);
+        //     return redirect()->route('adc.pos.retail.mobile', $request->query());
+        // }
 
-        // Auto-redirect mobile devices if not forced to desktop
-        $sessionPref = session('adc_pos_view_pref');
-        if ($sessionPref !== 'desktop') {
-            $userAgent = $request->header('User-Agent', '');
-            $isMobile = preg_match('/(android|avantgo|blackberry|bolt|boost|cricket|docomo|fone|hiptop|mini|mobi|palm|phone|pie|tablet|up\.browser|up\.link|webos|wos)/i', $userAgent);
-            if ($isMobile) {
-                return redirect()->route('adc.pos.retail.mobile', $request->query());
-            }
-        }
+        // // Auto-redirect mobile devices if not forced to desktop
+        // $sessionPref = session('adc_pos_view_pref');
+        // if ($sessionPref !== 'desktop') {
+        //     $userAgent = $request->header('User-Agent', '');
+        //     $isMobile = preg_match('/(android|avantgo|blackberry|bolt|boost|cricket|docomo|fone|hiptop|mini|mobi|palm|phone|pie|tablet|up\.browser|up\.link|webos|wos)/i', $userAgent);
+        //     if ($isMobile) {
+        //         return redirect()->route('adc.pos.retail.mobile', $request->query());
+        //     }
+        // }
 
         return view('adc.pos.retail', compact('mode', 'search'));
     }
@@ -261,7 +261,7 @@ class PosController extends Controller
 
         // Register customer on external Abhhyam API
         \App\Services\AbhhyamService::registerCustomer($customer, 'ADC');
-        
+
         // Register customer on TheekHai API
         TheekHaiService::registerUser($customer->name, $customer->mobile);
 
@@ -905,7 +905,7 @@ class PosController extends Controller
             }
 
             DB::commit();
-            
+
             // Asynchronously dispatch TheekHai & Abhhyam notification in background so POS checkout response is instant (< 100ms)
             if (!empty($custMobile)) {
                 $orderId = (int) $posOrder->id;
@@ -1210,9 +1210,9 @@ class PosController extends Controller
                     ], 422);
                 }
 
-                $uom = $orderItem->unit_of_measure 
-                    ?: ($orderItem->product?->unit_of_measure 
-                    ?: ($orderItem->localProduct?->unit_of_measure ?: 'Units'));
+                $uom = $orderItem->unit_of_measure
+                    ?: ($orderItem->product?->unit_of_measure
+                        ?: ($orderItem->localProduct?->unit_of_measure ?: 'Units'));
 
                 $isDecimalAllowed = \App\Models\UnitOfMeasure::isDecimalAllowed($uom);
 
@@ -1453,8 +1453,8 @@ class PosController extends Controller
         $adcUser = $payment->adc;
         return view('adc.pos.payments.print', compact('payment', 'adcUser'));
     }
-    
-     /**
+
+    /**
      * Send Custom SMS to POS Customer via TheekHai API
      */
     public function sendCustomerMessage(Request $request)
@@ -1499,7 +1499,7 @@ class PosController extends Controller
 
             // Best effort register on TheekHai
             try {
-                 if ($adcUser && !empty($adcUser->mobile)) {
+                if ($adcUser && !empty($adcUser->mobile)) {
                     TheekHaiService::registerUser($adcUser->name ?: 'ADC Store', $adcUser->mobile);
                 }
                 TheekHaiService::registerUser($custName, $rawMobile);
@@ -1529,8 +1529,8 @@ class PosController extends Controller
             ], 500);
         }
     }
-    
-    
+
+
     /**
      * Send Broadcast Message in Batches to all POS Customers of this ADC
      */
@@ -1561,7 +1561,8 @@ class PosController extends Controller
         if ($adcUser && !empty($adcUser->mobile)) {
             try {
                 TheekHaiService::registerUser($adcUser->name ?: 'ADC Store', $adcUser->mobile);
-            } catch (\Throwable $t) {}
+            } catch (\Throwable $t) {
+            }
         }
 
         $lastId = (int) $request->input('last_id', 0);

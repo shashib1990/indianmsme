@@ -1002,6 +1002,9 @@ $(document).ready(function() {
                                 });
                             }
                             updateCartUI(response);
+                            if (parseInt(response.cart_count) === 0) {
+                                location.reload();
+                            }
                         });
                     } else {
                         $form.find('button').prop('disabled', false);

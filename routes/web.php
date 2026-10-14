@@ -61,6 +61,8 @@ Route::middleware(['guest:adc,web'])->group(function () {
     Route::post('/register/resend-otp', [\App\Http\Controllers\Web\AuthController::class, 'resendOtp'])->name('adc.resend-otp');
 });
 Route::match(['get', 'post'], '/logout', [\App\Http\Controllers\Web\AuthController::class, 'logout'])->name('logout');
+Route::get('/shopping/auth', [\App\Http\Controllers\Web\AuthController::class, 'authenticateAdcShopping'])->name('shop.adc.auth');
+Route::post('/impersonate/stop', [\App\Http\Controllers\Admin\ImpersonationController::class, 'stopImpersonation'])->name('web.impersonate.stop');
 
 // ── Proxy APIs for registration (public) ──
 Route::get('/api/running-store-code/{type}', [\App\Http\Controllers\Web\AuthController::class, 'getRunningStoreCodes'])->name('api.running-store-code');

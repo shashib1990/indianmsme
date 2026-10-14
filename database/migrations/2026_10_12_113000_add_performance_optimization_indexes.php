@@ -84,6 +84,9 @@ return new class extends Migration
         // 10. ADC Local Products
         $this->addIndexSafely('adc_local_products', ['adc_id', 'status'], 'idx_adc_lp_adc_status');
         $this->addIndexSafely('adc_local_products', 'barcode', 'idx_adc_lp_barcode');
+
+        // 11. System Settings
+        $this->addIndexSafely('system_settings', 'key', 'idx_system_settings_key');
     }
 
     /**
@@ -118,5 +121,6 @@ return new class extends Migration
         $this->dropIndexSafely('adc_inventories', 'idx_adc_inv_barcode');
         $this->dropIndexSafely('adc_local_products', 'idx_adc_lp_adc_status');
         $this->dropIndexSafely('adc_local_products', 'idx_adc_lp_barcode');
+        $this->dropIndexSafely('system_settings', 'idx_system_settings_key');
     }
 };

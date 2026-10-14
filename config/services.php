@@ -37,4 +37,10 @@ return [
         'update_ama_incentive_url' => env('ABHHYAM_UPDATE_AMA_INCENTIVE_URL', 'https://abhhyamindia.com/api/save_income'),
     ],
 
+    'file_service' => [
+        'project_key' => env('FILE_SERVICE_PROJECT_KEY', 'CHI8M5LQ'),
+        'secret_key'  => env('FILE_SERVICE_SECRET_KEY', 'q6qWfYt9fYcBj4kjZ4ZtbEl7lg0RjUoD'),
+        'upload_url'  => env('FILE_SERVICE_UPLOAD_URL', 'https://upload.sainikcanteen.com/api/upload'),
+    ],
+
 ];

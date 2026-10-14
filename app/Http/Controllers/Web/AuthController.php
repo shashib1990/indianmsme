@@ -355,4 +355,41 @@ class AuthController extends Controller
         }
         return response()->json([]);
     }
+
+    /**
+     * Authenticate ADC session passed from ADC portal via secure SSO token.
+     */
+    public function authenticateAdcShopping(Request $request)
+    {
+        $token = $request->query('token');
+        if ($token) {
+            $data = \Illuminate\Support\Facades\Cache::pull("adc_shopping_token_{$token}");
+            if ($data && !empty($data['user_id'])) {
+                $user = User::where('role', 'adc')->find($data['user_id']);
+                if ($user) {
+                    Auth::guard('adc')->login($user);
+                    Auth::guard('web')->login($user);
+
+                    $pincode = !empty($data['pincode']) ? $data['pincode'] : ($user->adcProfile?->pincode ?? $user->profile?->pincode);
+                    if (!empty($pincode)) {
+                        session(['user_pincode' => $pincode]);
+                        $pincodeModel = \App\Models\Pincode::where('pincode', $pincode)->first();
+                        if ($pincodeModel) {
+                            session(['user_pincode_name' => $pincodeModel->name ?? $pincode]);
+                        }
+                    }
+
+                    if (!empty($data['impersonating'])) {
+                        session(['impersonating' => $data['impersonating']]);
+                    }
+
+                    $request->session()->save();
+
+                    return redirect()->route('shop')->with('success', "You are shopping as {$user->name}.");
+                }
+            }
+        }
+
+        return redirect()->route('shop');
+    }
 }

@@ -25,14 +25,28 @@ class HomeController extends Controller
             ->take(12)
             ->get();
 
-        $newArrivals = Product::approved()
-            ->with(['category', 'brand', 'seller'])
-            ->latest()
-            ->take(12)
-            ->get();
+        $newArrivals = clone $featuredProducts;
 
         $brands = Brand::where('status', '1')->orderBy('name')->take(12)->get();
         $categories = Category::where('status', '1')->orderBy('name')->get();
+
+        $displayCategories = Category::where('status', '1')
+            ->whereHas('products', function ($q) {
+                $q->where('status', 'Approved');
+            })
+            ->orderBy('name')
+            ->take(4)
+            ->get();
+
+        foreach ($displayCategories as $cat) {
+            $cat->setRelation('displayProducts', $cat->products()
+                ->where('status', 'Approved')
+                ->with(['category', 'brand', 'seller'])
+                ->latest()
+                ->take(8)
+                ->get()
+            );
+        }
 
         return view('web.home', compact(
             'leftBanners',
@@ -42,7 +56,8 @@ class HomeController extends Controller
             'featuredProducts',
             'newArrivals',
             'brands',
-            'categories'
+            'categories',
+            'displayCategories'
         ));
     }
 

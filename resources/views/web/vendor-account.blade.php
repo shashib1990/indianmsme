@@ -1803,8 +1803,8 @@
 @endsection
 
 @push('styles')
-  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <link href="{{ asset('plugins/select2/select2.min.css') }}" rel="stylesheet">
+  <link rel="stylesheet" href="{{ asset('plugins/toastify/toastify.min.css') }}">
   <style>
     /* Fix horizontal scroll caused by theme layout */
     html,
@@ -1865,8 +1865,8 @@
 @endpush
 
 @push('scripts')
-  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script src="{{ asset('plugins/select2/select2.min.js') }}"></script>
+  <script src="{{ asset('plugins/toastify/toastify.min.js') }}"></script>
   <script>
     jQuery(document).ready(function ($) {
       // Remove NiceSelect if present

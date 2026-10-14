@@ -16,7 +16,7 @@
 
     <!-- Bootstrap 5 & Icons -->
     <link href="{{ asset('admin-assets/css/vendor.min.css') }}" rel="stylesheet" type="text/css" />
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link rel="stylesheet" type="text/css" href="{{ asset('plugins/toastify/toastify.min.css') }}">
 
     <style>
         :root {
@@ -2342,8 +2342,9 @@
          SCRIPTS & CAMERA BARCODE SCANNER ENGINE
          ═══════════════════════════════════════════════════════════ -->
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <link rel="stylesheet" type="text/css" href="{{ asset('plugins/sweetalert2/sweetalert2.min.css') }}">
+    <script src="{{ asset('plugins/sweetalert2/sweetalert2.min.js') }}"></script>
+    <script src="{{ asset('plugins/toastify/toastify.min.js') }}"></script>
     <!-- Local Fast HTML5-QRCode Scanner Library -->
     <script src="{{ asset('admin-assets/js/html5-qrcode.min.js') }}"></script>
 

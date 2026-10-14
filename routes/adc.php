@@ -32,6 +32,7 @@ Route::name('adc.')->group(function () {
     Route::middleware(['auth:adc', 'force.password:adc', 'role.adc'])->group(function () {
 
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/shopping', [AuthController::class, 'shoppingBridge'])->name('shopping');
         Route::get('/analytics/sales-profit-chart', [DashboardController::class, 'salesProfitChartData'])->name('analytics.sales-profit-chart');
 
         Route::get('/profile', [ProfileController::class, 'index'])->name('profile');

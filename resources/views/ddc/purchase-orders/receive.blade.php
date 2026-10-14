@@ -309,11 +309,11 @@
     </div>
 
 @push('styles')
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<link rel="stylesheet" type="text/css" href="{{ asset('plugins/toastify/toastify.min.css') }}">
 @endpush
 
 @push('scripts')
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script type="text/javascript" src="{{ asset('plugins/toastify/toastify.min.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const forms = document.querySelectorAll('form[id^="stock-in-form-"]');

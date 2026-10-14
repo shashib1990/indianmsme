@@ -81,13 +81,13 @@ class ImpersonationController extends Controller
         $adminSub  = config('app.admin_subdomain') ?: 'admin';
         $vendorSub = config('app.vendor_subdomain') ?: 'vendor';
         $ddcSub    = config('app.ddc_subdomain') ?: 'ddc';
-        $adcSub    = config('app.adc_subdomain') ?: 'adc';
 
         $isSubdomainRequest = str_starts_with($host, $adminSub . '.') 
                            || str_starts_with($host, $vendorSub . '.') 
-                           || str_starts_with($host, $ddcSub . '.')
-                           || str_starts_with($host, $adcSub . '.');
+                           || str_starts_with($host, $ddcSub . '.');
 
+        // ADC runs under path prefix /adc (e.g. admin.indianmsme.org/adc or localhost:8000/adc)
+        // because adc.indianmsme.org is not a configured DNS subdomain.
         if ($isSubdomainRequest && $type !== 'adc') {
             $baseDomain = substr($host, strpos($host, '.') + 1);
             $targetSub = match ($type) {
@@ -142,12 +142,23 @@ class ImpersonationController extends Controller
             'guard'      => $guard,
         ]);
 
-        $redirectUrl = match ($data['type']) {
-            'ddc'              => route('ddc.dashboard', [], false) ?: '/ddc',
-            'vendor', 'seller' => route('vendor.dashboard', [], false) ?: '/vendor',
-            'adc'              => route('adc.dashboard', [], false) ?: '/adc',
-            default            => '/',
-        };
+        $host = $request->getHost();
+        $isSubdomain = str_starts_with($host, 'vendor.')
+                    || str_starts_with($host, 'ddc.')
+                    || str_starts_with($host, (config('app.vendor_subdomain') ?: 'vendor') . '.')
+                    || str_starts_with($host, (config('app.ddc_subdomain') ?: 'ddc') . '.');
+
+        if ($data['type'] === 'adc') {
+            $redirectUrl = '/adc';
+        } elseif ($isSubdomain) {
+            $redirectUrl = '/';
+        } else {
+            $redirectUrl = match ($data['type']) {
+                'ddc'              => '/ddc',
+                'vendor', 'seller' => '/vendor',
+                default            => '/',
+            };
+        }
 
         return redirect($redirectUrl)
             ->with('info', "You are now impersonating {$data['user_name']}. Click 'Return to Admin' to go back.");
@@ -189,6 +200,8 @@ class ImpersonationController extends Controller
                 $port = $request->getPort();
                 $portStr = (($request->isSecure() && $port === 443) || (!$request->isSecure() && $port === 80)) ? '' : ":{$port}";
                 $adminUrl = "{$request->getScheme()}://{$adminSub}.{$baseDomain}{$portStr}/impersonate/return?token={$returnToken}";
+            } elseif (str_contains($host, 'indianmsme.org')) {
+                $adminUrl = "https://admin.indianmsme.org/impersonate/return?token={$returnToken}";
             } else {
                 $adminUrl = url("admin/impersonate/return?token={$returnToken}");
             }

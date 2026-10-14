@@ -770,9 +770,11 @@
   <section class="py-6 pb-10 text-left">
     <div class="container">
       @php
-        $displayCategories = $categories->filter(function($cat) {
-            return $cat->products()->where('status', 'Approved')->exists();
-        })->take(4);
+        if (!isset($displayCategories)) {
+            $displayCategories = $categories->filter(function($cat) {
+                return $cat->products()->where('status', 'Approved')->exists();
+            })->take(4);
+        }
       @endphp
       <div class="mb-3 flex xl:flex-row flex-col gap-y-4 items-start xl:items-center justify-between text-left">
         <h3 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight text-left"
@@ -812,7 +814,12 @@
         @foreach($displayCategories as $cat)
           <div class="tab-pane hidden" id="category-{{ $cat->id }}">
             <div class="grid grid-cols-12 gap-3 sm:gap-4">
-              @foreach($cat->products()->where('status', 'Approved')->with(['category', 'brand', 'seller'])->latest()->take(8)->get() as $product)
+              @php
+                $catProducts = $cat->relationLoaded('displayProducts')
+                    ? $cat->displayProducts
+                    : $cat->products()->where('status', 'Approved')->with(['category', 'brand', 'seller'])->latest()->take(8)->get();
+              @endphp
+              @foreach($catProducts as $product)
                 <div class="2xl:col-span-2 xl:col-span-2 lg:col-span-3 md:col-span-4 sm:col-span-6 col-span-6">
                   @include('web.partials.product-card', ['product' => $product])
                 </div>

@@ -333,64 +333,14 @@ class User extends Authenticatable
             return $query;
         }
 
-        $pincodeRecord = \App\Models\Pincode::where('pincode', $pincode)
-            ->where('status', '1')
-            ->first();
+        $sellerIds = \App\Models\Product::getServiceableSellerIdsForPincode($pincode);
 
-        if (!$pincodeRecord) {
+        if (empty($sellerIds)) {
             // No serviceable sellers for an invalid pincode
             return $query->whereRaw('1 = 0');
         }
 
-        $stateId = $pincodeRecord->state_id;
-        $districtId = $pincodeRecord->district_id;
-
-        return $query->whereExists(function ($query) use ($pincode, $stateId, $districtId) {
-            $query->select(\DB::raw(1))
-                ->from('pickup_stores')
-                ->whereColumn('pickup_stores.owner_id', 'users.id')
-                ->where('pickup_stores.status', 'Active')
-                ->where(function ($sq) use ($pincode, $stateId, $districtId) {
-                    $sq->where('delivery_coverage_type', 'pan_india');
-                    if ($stateId) {
-                        $sq->orWhere(function ($ssq) use ($stateId) {
-                            $ssq->where('delivery_coverage_type', 'state')
-                                ->whereExists(function ($daQuery) use ($stateId) {
-                                    $daQuery->select(\DB::raw(1))
-                                        ->from('pickup_store_delivery_areas')
-                                        ->whereColumn('pickup_store_delivery_areas.pickup_store_id', 'pickup_stores.id')
-                                        ->where('pickup_store_delivery_areas.status', 'Active')
-                                        ->where('pickup_store_delivery_areas.coverage_type', 'state')
-                                        ->where('pickup_store_delivery_areas.state_id', $stateId);
-                                });
-                        });
-                    }
-                    if ($districtId) {
-                        $sq->orWhere(function ($ssq) use ($districtId) {
-                            $ssq->where('delivery_coverage_type', 'district')
-                                ->whereExists(function ($daQuery) use ($districtId) {
-                                    $daQuery->select(\DB::raw(1))
-                                        ->from('pickup_store_delivery_areas')
-                                        ->whereColumn('pickup_store_delivery_areas.pickup_store_id', 'pickup_stores.id')
-                                        ->where('pickup_store_delivery_areas.status', 'Active')
-                                        ->where('pickup_store_delivery_areas.coverage_type', 'district')
-                                        ->where('pickup_store_delivery_areas.district_id', $districtId);
-                                });
-                        });
-                    }
-                    $sq->orWhere(function ($ssq) use ($pincode) {
-                        $ssq->where('delivery_coverage_type', 'pincode')
-                            ->whereExists(function ($daQuery) use ($pincode) {
-                                $daQuery->select(\DB::raw(1))
-                                    ->from('pickup_store_delivery_areas')
-                                    ->whereColumn('pickup_store_delivery_areas.pickup_store_id', 'pickup_stores.id')
-                                    ->where('pickup_store_delivery_areas.status', 'Active')
-                                    ->where('pickup_store_delivery_areas.coverage_type', 'pincode')
-                                    ->where('pickup_store_delivery_areas.pincode', $pincode);
-                            });
-                    });
-                });
-        });
+        return $query->whereIn('users.id', $sellerIds);
     }
 
     /**

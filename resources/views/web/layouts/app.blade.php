@@ -39,9 +39,10 @@
   <link rel="stylesheet" href="{{ asset('ecommerce-assets/css/style.css') }}" />
   <meta name="csrf-token" content="{{ csrf_token() }}">
 
-  <!-- ========== Select2 & Toastify CSS (Local) ========== -->
-  <link href="{{ asset('vendor/select2/select2.min.css') }}" rel="stylesheet" />
-  <link rel="stylesheet" type="text/css" href="{{ asset('vendor/toastify/toastify.min.css') }}">
+  <!-- ========== Select2, Toastify & SweetAlert2 CSS (Local) ========== -->
+  <link href="{{ asset('plugins/select2/select2.min.css') }}" rel="stylesheet" />
+  <link rel="stylesheet" type="text/css" href="{{ asset('plugins/toastify/toastify.min.css') }}">
+  <link rel="stylesheet" type="text/css" href="{{ asset('plugins/sweetalert2/sweetalert2.min.css') }}">
 
   <style>
     :root {
@@ -1897,6 +1898,19 @@
   </div>
   <!-- Size Variation Modal End -->
 
+  <!-- ========== Impersonation Banner ========== -->
+  @if(session('impersonating'))
+    <div class="bg-amber-400 text-slate-900 text-xs py-2 px-4 text-center font-medium flex items-center justify-center gap-x-3 z-50 relative border-b border-amber-500 shadow-sm">
+      <span>You are currently shopping as ADC: <strong>{{ session('impersonating.user_name') }}</strong></span>
+      <form action="{{ url('impersonate/stop') }}" method="POST" class="inline m-0 p-0">
+        @csrf
+        <button type="submit" class="bg-slate-900 hover:bg-black text-white text-xs font-semibold px-3 py-1 rounded cursor-pointer transition-colors border-0">
+          Return to Admin
+        </button>
+      </form>
+    </div>
+  @endif
+
   <!-- ========== HEADER Section Start ========== -->
   @include('web.partials.header')
 
@@ -2733,9 +2747,9 @@
   <script src="{{ asset('ecommerce-assets/js/main.js') }}"></script>
 
   <!-- ========== Select2, Toastify & SweetAlert2 JS (Local) ========== -->
-  <script src="{{ asset('vendor/select2/select2.min.js') }}"></script>
-  <script type="text/javascript" src="{{ asset('vendor/toastify/toastify.min.js') }}"></script>
-  <script src="{{ asset('vendor/sweetalert2/sweetalert2.min.js') }}"></script>
+  <script src="{{ asset('plugins/select2/select2.min.js') }}"></script>
+  <script type="text/javascript" src="{{ asset('plugins/toastify/toastify.min.js') }}"></script>
+  <script src="{{ asset('plugins/sweetalert2/sweetalert2.min.js') }}"></script>
 
   <script>
     // ═══════════════════════════════════════════════════════

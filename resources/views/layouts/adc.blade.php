@@ -1040,7 +1040,7 @@
                     <div class="d-flex align-items-center gap-1 flex-shrink-0">
                         <!-- Shopping / Visit Main Website Button (hidden on mobile phones) -->
                         <div class="topbar-item d-none d-sm-flex me-1">
-                            <a href="{{ main_website_url() }}" target="_blank"
+                            <a href="{{ route('adc.shopping') }}" target="_blank"
                                 class="btn btn-sm btn-browse-web d-flex align-items-center gap-1 rounded-pill px-2.5 py-1 shadow-sm"
                                 title="Shopping">
                                 <iconify-icon icon="solar:global-bold-duotone" class="fs-16 align-middle"></iconify-icon>
@@ -1545,10 +1545,11 @@
         });
     </script>
 
-    <!-- SweetAlert & Toastify CDNs -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <!-- SweetAlert & Toastify Local Vendor Assets -->
+    <link rel="stylesheet" type="text/css" href="{{ asset('plugins/sweetalert2/sweetalert2.min.css') }}">
+    <script src="{{ asset('plugins/sweetalert2/sweetalert2.min.js') }}"></script>
+    <link rel="stylesheet" type="text/css" href="{{ asset('plugins/toastify/toastify.min.css') }}">
+    <script type="text/javascript" src="{{ asset('plugins/toastify/toastify.min.js') }}"></script>
 
     <!-- TomSelect JS -->
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>

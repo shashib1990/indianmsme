@@ -59,6 +59,17 @@
                                     <i class="hgi hgi-stroke hgi-dashboard-01 text-sm"
                                         style="color: #0d6efd !important;"></i> Dashboard
                                 </a>
+                                @if(session('impersonating'))
+                                    <form action="{{ url('impersonate/stop') }}" method="POST" class="w-full m-0 p-0">
+                                        @csrf
+                                        <button type="submit"
+                                            class="flex items-center justify-start gap-2 w-full px-3 py-2 text-xs font-semibold hover:bg-amber-50 transition-colors text-left border-0 bg-transparent cursor-pointer"
+                                            style="color: #b45309 !important;">
+                                            <i class="hgi hgi-stroke hgi-arrow-left-01 text-sm"
+                                                style="color: #b45309 !important;"></i> Return to Admin
+                                        </button>
+                                    </form>
+                                @endif
                                 <a href="#"
                                     onclick="event.preventDefault(); document.getElementById('adc-header-logout-form-partial').submit();"
                                     class="flex items-center justify-start gap-2 px-3 py-2 text-xs font-semibold hover:bg-red-50 transition-colors text-left"

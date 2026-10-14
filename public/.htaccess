@@ -38,3 +38,20 @@
     php_value memory_limit 1024M
     php_value max_execution_time 3600
 </IfModule>
+
+<IfModule mod_deflate.c>
+    # Compress CSS, JavaScript, JSON, SVG and text files
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/json
+    AddOutputFilterByType DEFLATE application/x-javascript
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/javascript
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE font/ttf
+    AddOutputFilterByType DEFLATE font/otf
+    AddOutputFilterByType DEFLATE font/x-woff
+    AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>

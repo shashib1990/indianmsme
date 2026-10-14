@@ -1577,13 +1577,14 @@
     <!-- App Javascript -->
     <script src="{{ asset('admin-assets/js/app.js') }}"></script>
 
-    <!-- SweetAlert & Toastify CDNs -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <!-- SweetAlert & Toastify Local Vendor Assets -->
+    <link rel="stylesheet" type="text/css" href="{{ asset('plugins/sweetalert2/sweetalert2.min.css') }}">
+    <script src="{{ asset('plugins/sweetalert2/sweetalert2.min.js') }}"></script>
+    <link rel="stylesheet" type="text/css" href="{{ asset('plugins/toastify/toastify.min.css') }}">
+    <script type="text/javascript" src="{{ asset('plugins/toastify/toastify.min.js') }}"></script>
 
     <!-- jQuery (needed for SweetAlert confirm-action plugin patterns + AJAX) -->
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="{{ asset('plugins/jquery/jquery.min.js') }}"></script>
 
     <!-- Tom Select: zero-dependency searchable dropdown -->
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
