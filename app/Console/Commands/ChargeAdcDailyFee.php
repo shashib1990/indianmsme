@@ -74,7 +74,7 @@ class ChargeAdcDailyFee extends Command
                 if ($newBalance <= 0) {
                     // Wallet exhausted — deactivate ADC
                     $profile->update([
-                        'wallet_balance'      => 0.00,
+                        'wallet_balance' => 0.00,
                         'deactivation_reason' => 'Wallet balance exhausted. Daily platform fee of ₹' . number_format($dailyCharge, 2) . ' could not be fully deducted on ' . $today . '. Please recharge your wallet to resume sales.',
                     ]);
 
@@ -84,23 +84,22 @@ class ChargeAdcDailyFee extends Command
                     // Record partial deduction if any balance was left
                     if ($currentBalance > 0) {
                         AdcWallet::create([
-                            'adc_id'      => $user->id,
-                            'amount'      => -$currentBalance,
-                            'type'        => 'debit',
+                            'adc_id' => $user->id,
+                            'amount' => -$currentBalance,
+                            'type' => 'debit',
                             'description' => "Daily platform fee (partial) — ₹{$currentBalance} deducted on {$today}",
                         ]);
                     }
 
                     $deactivated++;
-                    Log::info("ADC #{$user->id} ({$user->name}) deactivated due to wallet exhaustion.");
                 } else {
                     // Normal deduction
                     $profile->update(['wallet_balance' => round($newBalance, 2)]);
 
                     AdcWallet::create([
-                        'adc_id'      => $user->id,
-                        'amount'      => -$dailyCharge,
-                        'type'        => 'debit',
+                        'adc_id' => $user->id,
+                        'amount' => -$dailyCharge,
+                        'type' => 'debit',
                         'description' => "Daily platform fee — ₹{$dailyCharge} deducted on {$today}",
                     ]);
 
@@ -113,7 +112,6 @@ class ChargeAdcDailyFee extends Command
                 $processed++;
             } catch (\Throwable $e) {
                 DB::rollBack();
-                Log::error("ADC daily charge failed for ADC #{$user->id}: " . $e->getMessage());
                 $this->error("Failed for ADC #{$user->id}: " . $e->getMessage());
             }
         }
