@@ -18,7 +18,8 @@ class PurchaseOrderController extends Controller
     public function index(Request $request)
     {
         $sellerId = auth('vendor')->id();
-        $query = PurchaseOrder::where('seller_id', $sellerId)->forSellerVisibility();
+        $query = PurchaseOrder::where('seller_id', $sellerId);
+        // $query = PurchaseOrder::where('seller_id', $sellerId)->forSellerVisibility();
 
         if ($request->filled('status')) {
             $status = $request->status;
@@ -61,7 +62,7 @@ class PurchaseOrderController extends Controller
     {
         $sellerId = auth('vendor')->id();
         $query = PurchaseOrder::where('seller_id', $sellerId)
-            ->forSellerVisibility()
+            // ->forSellerVisibility()
             ->where('status', 'Pending');
 
         [$purchaseOrders, $sort, $order, $search] = $this->applyFiltersAndGet($request, $query);
@@ -73,6 +74,7 @@ class PurchaseOrderController extends Controller
     {
         $sellerId = auth('vendor')->id();
         $query = PurchaseOrder::where('seller_id', $sellerId)
+            ->forSellerVisibility()
             ->whereIn('status', ['Accepted', 'Processing'])
             ->where(function ($q) {
                 $q->whereNull('seller_payment_status')
@@ -89,6 +91,7 @@ class PurchaseOrderController extends Controller
     {
         $sellerId = auth('vendor')->id();
         $query = PurchaseOrder::where('seller_id', $sellerId)
+            ->forSellerVisibility()
             ->whereIn('status', ['Pending', 'Accepted', 'Processing'])
             ->where('seller_payment_status', 'Paid')
             ->where(function ($q) {
@@ -106,6 +109,7 @@ class PurchaseOrderController extends Controller
     {
         $sellerId = auth('vendor')->id();
         $query = PurchaseOrder::where('seller_id', $sellerId)
+            ->forSellerVisibility()
             ->where('payment_verification_status', 'Verified')
             ->where('dispatch_status', 'Pending');
 
@@ -119,6 +123,7 @@ class PurchaseOrderController extends Controller
         $sellerId = auth('vendor')->id();
         $query = PurchaseOrder::with('invoice')
             ->where('seller_id', $sellerId)
+            ->forSellerVisibility()
             ->where('dispatch_status', 'Dispatched')
             ->where('status', '!=', 'Received');
 
@@ -132,6 +137,7 @@ class PurchaseOrderController extends Controller
         $sellerId = auth('vendor')->id();
         $query = PurchaseOrder::with('invoice')
             ->where('seller_id', $sellerId)
+            ->forSellerVisibility()
             ->where('status', 'Received');
 
         [$purchaseOrders, $sort, $order, $search] = $this->applyFiltersAndGet($request, $query);
@@ -143,8 +149,9 @@ class PurchaseOrderController extends Controller
     {
         $sellerId = auth('vendor')->id();
 
-        // Ensure this PO belongs to this seller
+        // Ensure this PO belongs to this seller and is visible
         $purchaseOrder = PurchaseOrder::where('seller_id', $sellerId)
+            ->forSellerVisibility()
             ->with(['ddc.profile', 'pickupStore'])
             ->findOrFail($id);
 

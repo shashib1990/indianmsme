@@ -20,7 +20,8 @@ class DashboardController extends Controller
         $profile = $vendor->sellerProfile;
 
         // Purchase Orders Stats
-        $poQuery = PurchaseOrder::where('seller_id', $vendorId)->forSellerVisibility();
+        // $poQuery = PurchaseOrder::where('seller_id', $vendorId)->forSellerVisibility();
+        $poQuery = PurchaseOrder::where('seller_id', $vendorId);
         $totalPos = (clone $poQuery)->count();
         $pendingPoCount = (clone $poQuery)->where('status', 'Pending')->count();
         $acceptedPoCount = (clone $poQuery)->where('status', 'Accepted')->count();

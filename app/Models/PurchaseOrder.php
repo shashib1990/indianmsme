@@ -22,6 +22,8 @@ class PurchaseOrder extends Model
         'ssi_percentage',
         'fulfillment_type',
         'adc_order_id',
+        'show_order',
+        'admin_approved',
         'total_amount',
         'accepted_amount',
         'seller_total_amount',
@@ -46,6 +48,7 @@ class PurchaseOrder extends Model
         'seller_total_amount' => 'decimal:2',
         'seller_accepted_amount' => 'decimal:2',
         'is_cashback_credited' => 'boolean',
+        'admin_approved' => 'boolean',
         'cashback_percentage' => 'decimal:2',
         'cashback_amount' => 'decimal:2',
         'status' => \App\Casts\EnumStringCast::class . ':' . \App\Enums\PurchaseOrderStatus::class,
@@ -197,30 +200,26 @@ class PurchaseOrder extends Model
     }
 
     /**
-     * Scope to filter purchase orders visible to seller according to ADC Profile show_order setting:
-     * Hide if:
-     * 1. PO is from ADC via Virtual DDC (fulfillment_type = 'virtual' OR adc_order_id IS NOT NULL with virtual_ddc_id IS NOT NULL)
-     * 2. Related ADC Profile show_order = 'No' (or pos_status = 'Inactive')
-     * 3. Purchase Order status = 'Pending'
+     * Scope to filter purchase orders visible to seller according to Admin Approval Toggle:
+     * Order is only visible if Admin approved (show_order = 'Yes' / admin_approved = true).
      */
     public function scopeForSellerVisibility($query)
     {
         return $query->where(function ($q) {
-            // Keep all orders that are NOT (ADC via Virtual DDC with Pending status and ADC show_order = 'No')
-            $q->where('purchase_orders.status', '!=', 'Pending')
-              ->orWhereNull('purchase_orders.adc_order_id')
-              ->orWhereDoesntHave('adcOrder', function ($aoq) {
-                  $aoq->where(function ($vq) {
-                      $vq->whereNotNull('virtual_ddc_id')
-                         ->orWhere('fulfillment_type', 'virtual');
-                  })->whereHas('adc.adcProfile', function ($apq) {
-                      $apq->where('show_order', 'No')
-                          ->orWhere(function ($spq) {
-                              $spq->whereNull('show_order')
-                                  ->where('pos_status', 'Inactive');
-                          });
-                  });
-              });
+            $q->where('purchase_orders.show_order', 'Yes')
+              ->orWhere('purchase_orders.admin_approved', true);
+        });
+    }
+
+    /**
+     * Scope to filter purchase orders visible to DDC according to Admin Approval Toggle:
+     * Order is only visible if Admin approved (show_order = 'Yes' / admin_approved = true).
+     */
+    public function scopeForDdcVisibility($query)
+    {
+        return $query->where(function ($q) {
+            $q->where('purchase_orders.show_order', 'Yes')
+              ->orWhere('purchase_orders.admin_approved', true);
         });
     }
 

@@ -200,7 +200,7 @@ Route::name('admin.')->group(function () {
         Route::post('external/adc/bulk', [ADCUsersController::class, 'bulk'])->name('external.adc.bulk')->middleware('permission:users.manage');
         Route::post('external/adc/{id}/reset-password', [ADCUsersController::class, 'resetPassword'])->name('external.adc.reset-password')->middleware('permission:users.manage');
         Route::post('external/adc/{id}/toggle-status', [ADCUsersController::class, 'toggleStatus'])->name('external.adc.toggle-status')->middleware('permission:users.manage');
-        Route::post('external/adc/{id}/toggle-pos-status', [ADCUsersController::class, 'togglePosStatus'])->name('external.adc.toggle-pos-status')->middleware('permission:users.manage');
+        // Route::post('external/adc/{id}/toggle-pos-status', [ADCUsersController::class, 'togglePosStatus'])->name('external.adc.toggle-pos-status')->middleware('permission:users.manage');
         Route::post('external/adc/{id}/kyc-status', [ADCUsersController::class, 'updateKycStatus'])->name('external.adc.kyc-status')->middleware('permission:users.manage');
 
         // ADC Wallet Requests (Physical DDC & Virtual DDC)
@@ -332,6 +332,7 @@ Route::name('admin.')->group(function () {
         Route::post('purchase-orders/{id}/invoice/transporter', [\App\Http\Controllers\InvoiceController::class, 'updateTransporter'])->name('purchase-orders.invoice.transporter')->middleware('permission:users.manage');
         Route::post('purchase-orders/{id}/cancel', [\App\Http\Controllers\Admin\PurchaseOrderController::class, 'cancel'])->name('purchase-orders.cancel')->middleware('permission:users.manage');
         Route::post('purchase-orders/{id}/complete', [\App\Http\Controllers\Admin\PurchaseOrderController::class, 'markCompleted'])->name('purchase-orders.complete')->middleware('permission:users.manage');
+        Route::post('purchase-orders/{id}/toggle-show-order', [\App\Http\Controllers\Admin\PurchaseOrderController::class, 'toggleShowOrder'])->name('purchase-orders.toggle-show-order')->middleware('permission:users.manage');
 
         // Debit Notes & Settlement Management (ADPL)
         Route::get('debit-notes', [\App\Http\Controllers\Admin\DebitNoteController::class, 'index'])->name('debit-notes.index')->middleware('permission:users.view');

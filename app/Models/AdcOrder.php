@@ -148,21 +148,17 @@ class AdcOrder extends Model
     }
 
     /**
-     * Scope to filter ADC orders visible to DDC according to ADC Profile show_order setting:
-     * Hide if:
-     * 1. ADC Profile setting is 'No'
-     * 2. adc_orders.status is 'Processing'
+     * Scope to filter ADC orders visible to DDC according to Admin Approval Toggle:
+     * Legacy ADC Profile Yes/No conditions removed. Visibility controlled by Admin Approval Toggle.
      */
     public function scopeForDdcVisibility($query)
     {
         return $query->where(function ($q) {
-            $q->where('adc_orders.status', '!=', 'Processing')
-              ->orWhereDoesntHave('adc.adcProfile', function ($apq) {
-                  $apq->where('show_order', 'No')
-                      ->orWhere(function ($spq) {
-                          $spq->whereNull('show_order')
-                              ->where('pos_status', 'Inactive');
-                      });
+            // Hide if order has purchase orders and none of them are approved by admin
+            $q->whereDoesntHave('purchaseOrders')
+              ->orWhereHas('purchaseOrders', function ($poq) {
+                  $poq->where('show_order', 'Yes')
+                      ->orWhere('admin_approved', true);
               });
         });
     }
