@@ -143,7 +143,7 @@
                                                 </td>
                                             @endif
                                             <td class="{{ $isPending ? 'ps-2' : 'ps-3' }}">
-                                                <div class="fw-semibold text-slate-800">{{ $item->product?->product_name }}
+                                                <div class="fw-semibold text-slate-800">{{ $item->product_name ?? $item->product?->product_name }}
                                                 </div>
                                                 <div class="text-muted small">UOM: {{ $item->unit_of_measure ?? ($item->product?->unit_of_measure ?? '—') }}</div>
                                                 @if($item->mfg_date || $item->expire_date)
@@ -420,7 +420,7 @@
                                                         @foreach($dispatchItems as $dItem)
                                                             <div class="mb-2 pb-2 border-bottom last-border-0">
                                                                 <div class="fw-semibold text-slate-800 small mb-1">
-                                                                    {{ $dItem->product?->product_name ?? $dItem->product_name }} <span class="text-muted font-normal">(Qty: {{ $dItem->quantity }})</span>
+                                                                    {{ $dItem->product_name ?? $dItem->product?->product_name }} <span class="text-muted font-normal">(Qty: {{ $dItem->quantity }})</span>
                                                                 </div>
                                                                 <div class="row g-2">
                                                                     <div class="col-6">
