@@ -909,13 +909,34 @@ class PosController extends Controller
             // Asynchronously dispatch TheekHai & Abhhyam notification in background so POS checkout response is instant (< 100ms)
             if (!empty($custMobile)) {
                 $orderId = (int) $posOrder->id;
-                $artisan = escapeshellarg(base_path('artisan'));
-                $php = escapeshellarg(PHP_BINARY ?: '/usr/bin/php');
-                $rootUrl = escapeshellarg(request()->root());
-                $logPath = escapeshellarg(storage_path('logs/whatsapp_cmd.log'));
-                $cmd = "{$php} {$artisan} pos:send-whatsapp {$orderId} --base-url={$rootUrl} > {$logPath} 2>&1 &";
-                \Illuminate\Support\Facades\Log::info("Dispatching POS WhatsApp/Abhhyam background command: {$cmd}");
-                @exec($cmd);
+                $rootUrl = request()->root();
+
+                try {
+                    $dispatchedViaCli = false;
+                    // If exec() is enabled on this server, spawn background CLI process for non-blocking execution
+                    if (function_exists('exec')) {
+                        try {
+                            $artisan = escapeshellarg(base_path('artisan'));
+                            $php = escapeshellarg(PHP_BINARY ?: '/usr/bin/php');
+                            $escRootUrl = escapeshellarg($rootUrl);
+                            $logPath = escapeshellarg(storage_path('logs/whatsapp_cmd.log'));
+                            $cmd = "{$php} {$artisan} pos:send-whatsapp {$orderId} --base-url={$escRootUrl} > {$logPath} 2>&1 &";
+                            \Illuminate\Support\Facades\Log::info("Dispatching POS WhatsApp/Abhhyam background command: {$cmd}");
+                            @\exec($cmd);
+                            $dispatchedViaCli = true;
+                        } catch (\Throwable $cliErr) {
+                            \Illuminate\Support\Facades\Log::warning("CLI background dispatch failed: " . $cliErr->getMessage());
+                        }
+                    }
+
+                    // Fallback when exec() is disabled on shared hosting (e.g. cPanel disable_functions):
+                    // Use Laravel dispatchAfterResponse to send HTTP response first (<100ms) then process in background
+                    if (!$dispatchedViaCli) {
+                        \App\Jobs\SendPosWhatsappJob::dispatchAfterResponse($orderId, $rootUrl);
+                    }
+                } catch (\Throwable $notifyEx) {
+                    \Illuminate\Support\Facades\Log::error("Failed to trigger background POS WhatsApp notification: " . $notifyEx->getMessage());
+                }
             }
 
             return response()->json([
@@ -925,8 +946,13 @@ class PosController extends Controller
                 'invoice_number' => $invoice->invoice_number,
                 'order_no' => $posOrder->order_no,
             ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
+        } catch (\Throwable $e) {
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
+            \Illuminate\Support\Facades\Log::error('ADC POS Checkout failed: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
             return response()->json(['status' => false, 'message' => 'Checkout failed: ' . $e->getMessage()], 400);
         }
     }
