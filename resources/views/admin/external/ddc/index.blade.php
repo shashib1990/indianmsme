@@ -3,6 +3,152 @@
 @section('title', 'Manage DDC')
 @section('page-title', 'Manage DDC')
 
+@push('styles')
+<style>
+    .imsme-metric-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 12px !important;
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        text-decoration: none !important;
+        color: #1e293b !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        min-height: 86px;
+        cursor: pointer;
+    }
+
+    .imsme-metric-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        border-radius: 4px 0 0 4px;
+        opacity: 0.85;
+        transition: width 0.2s ease;
+    }
+
+    .imsme-metric-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 24px -6px rgba(15, 23, 42, 0.12) !important;
+        border-color: #cbd5e1 !important;
+    }
+
+    .imsme-metric-card:hover::before {
+        width: 6px;
+    }
+
+    .imsme-metric-card .icon-wrapper {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-right: 14px;
+        flex-shrink: 0;
+        transition: transform 0.2s ease;
+    }
+
+    .imsme-metric-card:hover .icon-wrapper {
+        transform: scale(1.08);
+    }
+
+    .imsme-metric-card .card-data {
+        flex-grow: 1;
+        min-width: 0;
+    }
+
+    .imsme-metric-card .card-data .label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        margin-bottom: 2px;
+        line-height: 1.2;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .imsme-metric-card .card-data .value {
+        font-size: 1.45rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1.1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .imsme-metric-card .card-data .sub-value {
+        font-size: 0.72rem;
+        font-weight: 500;
+        color: #64748b;
+        margin-top: 3px;
+    }
+
+    .imsme-metric-card .arrow-hint {
+        font-size: 1rem;
+        color: #cbd5e1;
+        transition: all 0.2s ease;
+        margin-left: 6px;
+        opacity: 0.6;
+    }
+
+    .imsme-metric-card:hover .arrow-hint {
+        color: currentColor;
+        transform: translateX(3px);
+        opacity: 1;
+    }
+
+    .theme-amber::before { background: #f59e0b; }
+    .theme-amber .icon-wrapper { background: rgba(245, 158, 11, 0.12); color: #d97706; }
+    .theme-amber .arrow-hint { color: #d97706; }
+
+    .theme-emerald::before { background: #10b981; }
+    .theme-emerald .icon-wrapper { background: rgba(16, 185, 129, 0.12); color: #059669; }
+    .theme-emerald .arrow-hint { color: #059669; }
+
+    .theme-rose::before { background: #f43f5e; }
+    .theme-rose .icon-wrapper { background: rgba(244, 63, 94, 0.12); color: #e11d48; }
+    .theme-rose .arrow-hint { color: #e11d48; }
+
+    .imsme-metric-card.theme-amber.active-filter,
+    .imsme-metric-card.active-filter {
+        border-color: #f59e0b !important;
+        box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.35), 0 8px 16px -4px rgba(245, 158, 11, 0.2) !important;
+        background: linear-gradient(to bottom, #ffffff, #fffbeb);
+    }
+    .imsme-metric-card.theme-emerald.active-filter {
+        border-color: #10b981 !important;
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.35), 0 8px 16px -4px rgba(16, 185, 129, 0.2) !important;
+        background: linear-gradient(to bottom, #ffffff, #f0fdf4);
+    }
+    .imsme-metric-card.theme-rose.active-filter {
+        border-color: #f43f5e !important;
+        box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.35), 0 8px 16px -4px rgba(244, 63, 94, 0.2) !important;
+        background: linear-gradient(to bottom, #ffffff, #fff1f2);
+    }
+
+    [data-bs-theme="dark"] .imsme-metric-card {
+        background: #1e293b;
+        border-color: #334155 !important;
+        color: #f8fafc !important;
+    }
+    [data-bs-theme="dark"] .imsme-metric-card .card-data .label { color: #94a3b8; }
+    [data-bs-theme="dark"] .imsme-metric-card .card-data .value { color: #f1f5f9; }
+</style>
+@endpush
+
 @section('content')
     <!-- Common Page Action Header -->
     <x-admin.page-header title="Manage DDC"
@@ -38,6 +184,101 @@
             ]
         ]" />
 
+    <!-- Interactive DDC Partner Metrics Cards -->
+    <div class="row g-3 mb-3">
+        <!-- 1. All DDC Partners -->
+        <div class="col-lg-4 col-md-4 col-sm-12">
+            <a href="{{ route('admin.external.ddc.index', array_filter(array_merge(request()->except(['filter_status', 'page']), []))) }}" 
+               class="imsme-metric-card theme-amber {{ empty($filterStatus) ? 'active-filter' : '' }}">
+                <div class="icon-wrapper">
+                    <iconify-icon icon="solar:structure-bold-duotone"></iconify-icon>
+                </div>
+                <div class="card-data">
+                    <div class="label">
+                        <span>All DDC Partners</span>
+                        @if(empty($filterStatus))
+                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle py-0.5 px-1.5 fs-10 fw-bold">Active Filter</span>
+                        @else
+                            <iconify-icon icon="solar:alt-arrow-right-linear" class="arrow-hint"></iconify-icon>
+                        @endif
+                    </div>
+                    <div class="value">{{ number_format($totalDdcCount) }}</div>
+                    <div class="sub-value text-muted">Total registered District Development Coordinators</div>
+                </div>
+            </a>
+        </div>
+
+        <!-- 2. Active DDC Partners -->
+        <div class="col-lg-4 col-md-4 col-sm-12">
+            <a href="{{ route('admin.external.ddc.index', array_merge(request()->except('page'), ['filter_status' => 'active'])) }}" 
+               class="imsme-metric-card theme-emerald {{ $filterStatus === 'active' ? 'active-filter' : '' }}">
+                <div class="icon-wrapper">
+                    <iconify-icon icon="solar:check-circle-bold-duotone"></iconify-icon>
+                </div>
+                <div class="card-data">
+                    <div class="label">
+                        <span>Active DDC</span>
+                        @if($filterStatus === 'active')
+                            <span class="badge bg-success-subtle text-success border border-success-subtle py-0.5 px-1.5 fs-10 fw-bold">Active Filter</span>
+                        @else
+                            <iconify-icon icon="solar:alt-arrow-right-linear" class="arrow-hint"></iconify-icon>
+                        @endif
+                    </div>
+                    <div class="value text-success">{{ number_format($activeDdcCount) }}</div>
+                    <div class="sub-value text-muted">Active DDC accounts enabled in system</div>
+                </div>
+            </a>
+        </div>
+
+        <!-- 3. Inactive DDC Partners -->
+        <div class="col-lg-4 col-md-4 col-sm-12">
+            <a href="{{ route('admin.external.ddc.index', array_merge(request()->except('page'), ['filter_status' => 'inactive'])) }}" 
+               class="imsme-metric-card theme-rose {{ $filterStatus === 'inactive' ? 'active-filter' : '' }}">
+                <div class="icon-wrapper">
+                    <iconify-icon icon="solar:danger-triangle-bold-duotone"></iconify-icon>
+                </div>
+                <div class="card-data">
+                    <div class="label">
+                        <span>Inactive DDC</span>
+                        @if($filterStatus === 'inactive')
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle py-0.5 px-1.5 fs-10 fw-bold">Active Filter</span>
+                        @else
+                            <iconify-icon icon="solar:alt-arrow-right-linear" class="arrow-hint"></iconify-icon>
+                        @endif
+                    </div>
+                    <div class="value text-danger">{{ number_format($inactiveDdcCount) }}</div>
+                    <div class="sub-value text-muted">Deactivated or disabled DDC accounts</div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    @if($filterStatus === 'active')
+        <div class="alert alert-success border-0 shadow-sm mb-3 d-flex align-items-center justify-content-between py-2 px-3" style="border-radius: 8px;">
+            <div class="d-flex align-items-center gap-2">
+                <iconify-icon icon="solar:check-circle-bold-duotone" class="fs-18 text-success"></iconify-icon>
+                <span class="fs-13">
+                    Showing <strong>Active DDC Partners ({{ number_format($activeDdcCount) }})</strong>
+                </span>
+            </div>
+            <a href="{{ route('admin.external.ddc.index', array_filter(request()->except(['filter_status', 'page']))) }}" class="btn btn-sm btn-light fw-medium py-0.5 px-2 fs-11">
+                View All DDCs &times;
+            </a>
+        </div>
+    @elseif($filterStatus === 'inactive')
+        <div class="alert alert-danger border-0 shadow-sm mb-3 d-flex align-items-center justify-content-between py-2 px-3" style="border-radius: 8px;">
+            <div class="d-flex align-items-center gap-2">
+                <iconify-icon icon="solar:danger-triangle-bold-duotone" class="fs-18 text-danger"></iconify-icon>
+                <span class="fs-13">
+                    Showing <strong>Inactive DDC Partners ({{ number_format($inactiveDdcCount) }})</strong>
+                </span>
+            </div>
+            <a href="{{ route('admin.external.ddc.index', array_filter(request()->except(['filter_status', 'page']))) }}" class="btn btn-sm btn-light fw-medium py-0.5 px-2 fs-11">
+                View All DDCs &times;
+            </a>
+        </div>
+    @endif
+
     <!-- Reusable Table Filters -->
     <x-admin.table-filters action="{{ route('admin.external.ddc.index') }}" :search="$search"
         placeholder="Search name, email, phone, state..." :limit="$limit" :sort="$sort" :order="$order"
@@ -45,7 +286,16 @@
                     'delete' => 'Delete Selected',
                     'status_active' => 'Activate Selected',
                     'status_inactive' => 'Deactivate Selected'
-                ]" />
+                ]">
+        @if($filterStatus)
+            <input type="hidden" name="filter_status" value="{{ $filterStatus }}">
+        @endif
+        <select name="filter_status" class="form-select w-auto py-1.5" onchange="this.form.submit()">
+            <option value="">All Statuses</option>
+            <option value="active" {{ $filterStatus === 'active' ? 'selected' : '' }}>Active Only</option>
+            <option value="inactive" {{ $filterStatus === 'inactive' ? 'selected' : '' }}>Inactive Only</option>
+        </select>
+    </x-admin.table-filters>
 
     <div class="row mt-3">
         <div class="col-12">

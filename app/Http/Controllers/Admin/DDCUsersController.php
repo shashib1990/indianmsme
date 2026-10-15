@@ -18,12 +18,27 @@ class DDCUsersController extends Controller
 {
     public function index(Request $request)
     {
+        $filterStatus = $request->get('filter_status');
         $search = $request->get('search');
         $sort = $request->get('sort', 'created_at');
         $order = $request->get('order', 'desc');
         $limit = $request->get('limit', 15);
 
+        // Pre-calculate metric card counts
+        $totalDdcCount = DDC::count();
+        $activeDdcCount = DDC::where('users.status', '1')->count();
+        $inactiveDdcCount = max(0, $totalDdcCount - $activeDdcCount);
+
         $query = DDC::query()->withCount('assignedPincodes');
+
+        if ($filterStatus === 'active') {
+            $query->where('users.status', '1');
+        } elseif ($filterStatus === 'inactive') {
+            $query->where(function ($q) {
+                $q->where('users.status', '!=', '1')
+                  ->orWhereNull('users.status');
+            });
+        }
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -66,7 +81,17 @@ class DDCUsersController extends Controller
 
         $users = $query->orderBy($sort, $order)->paginate($limit)->withQueryString();
 
-        return view('admin.external.ddc.index', compact('users', 'search', 'sort', 'order', 'limit'));
+        return view('admin.external.ddc.index', compact(
+            'users', 
+            'search', 
+            'sort', 
+            'order', 
+            'limit', 
+            'totalDdcCount', 
+            'activeDdcCount', 
+            'inactiveDdcCount', 
+            'filterStatus'
+        ));
     }
 
     public function create()

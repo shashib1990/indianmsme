@@ -237,9 +237,9 @@
             </span>
             <div class="imsme-category-line"></div>
         </div>
-        <div class="row g-2">
-            {{-- MSME --}}
-            <div class="col-xl-2 col-lg-4 col-md-4 col-sm-6">
+        <div class="row g-2 mb-2">
+            {{-- MSME Sellers (All Registered) --}}
+            <div class="col-xl-3 col-lg-3 col-md-6 col-sm-6">
                 <a href="{{ route('admin.external.vendors.index') }}" class="imsme-metric-card theme-indigo">
                     <div class="icon-wrapper">
                         <iconify-icon icon="solar:users-group-two-rounded-bold-duotone"></iconify-icon>
@@ -250,7 +250,49 @@
                     </div>
                 </a>
             </div>
-            {{-- ADC --}}
+
+            {{-- Active Seller (Account Active + KYC Approved + Min 1 Product + Pickup Store) --}}
+            <div class="col-xl-3 col-lg-3 col-md-6 col-sm-6">
+                <a href="{{ route('admin.external.vendors.index', ['filter_status' => 'active']) }}" class="imsme-metric-card theme-emerald">
+                    <div class="icon-wrapper">
+                        <iconify-icon icon="solar:check-circle-bold-duotone"></iconify-icon>
+                    </div>
+                    <div class="card-data">
+                        <div class="label">Active Seller <iconify-icon icon="solar:alt-arrow-right-linear" class="arrow-hint"></iconify-icon></div>
+                        <div class="value text-success">{{ number_format($stats['active_sellers']) }}</div>
+                    </div>
+                </a>
+            </div>
+
+            {{-- Inactive Seller (Fails any 1 of 4 conditions) --}}
+            <div class="col-xl-3 col-lg-3 col-md-6 col-sm-6">
+                <a href="{{ route('admin.external.vendors.index', ['filter_status' => 'inactive']) }}" class="imsme-metric-card theme-rose">
+                    <div class="icon-wrapper">
+                        <iconify-icon icon="solar:danger-triangle-bold-duotone"></iconify-icon>
+                    </div>
+                    <div class="card-data">
+                        <div class="label">Inactive Seller <iconify-icon icon="solar:alt-arrow-right-linear" class="arrow-hint"></iconify-icon></div>
+                        <div class="value text-danger">{{ number_format($stats['inactive_sellers']) }}</div>
+                    </div>
+                </a>
+            </div>
+
+            {{-- Pickup Stores --}}
+            <div class="col-xl-3 col-lg-3 col-md-6 col-sm-6">
+                <a href="{{ route('admin.external.vendors.index') }}" class="imsme-metric-card theme-cyan">
+                    <div class="icon-wrapper">
+                        <iconify-icon icon="solar:shop-bold-duotone"></iconify-icon>
+                    </div>
+                    <div class="card-data">
+                        <div class="label">Pickup Stores <iconify-icon icon="solar:alt-arrow-right-linear" class="arrow-hint"></iconify-icon></div>
+                        <div class="value">{{ number_format($stats['total_pickup_stores']) }}</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-2">
+            {{-- ADC Partners (All) --}}
             <div class="col-xl-2 col-lg-4 col-md-4 col-sm-6">
                 <a href="{{ route('admin.external.adc.index') }}" class="imsme-metric-card theme-cyan">
                     <div class="icon-wrapper">
@@ -262,7 +304,34 @@
                     </div>
                 </a>
             </div>
-            {{-- DDC --}}
+
+            {{-- Active ADC --}}
+            <div class="col-xl-2 col-lg-4 col-md-4 col-sm-6">
+                <a href="{{ route('admin.external.adc.index', ['filter_status' => 'active']) }}" class="imsme-metric-card theme-emerald">
+                    <div class="icon-wrapper">
+                        <iconify-icon icon="solar:check-circle-bold-duotone"></iconify-icon>
+                    </div>
+                    <div class="card-data">
+                        <div class="label">Active ADC <iconify-icon icon="solar:alt-arrow-right-linear" class="arrow-hint"></iconify-icon></div>
+                        <div class="value text-success">{{ number_format($stats['active_adcs']) }}</div>
+                    </div>
+                </a>
+            </div>
+
+            {{-- Inactive ADC --}}
+            <div class="col-xl-2 col-lg-4 col-md-4 col-sm-6">
+                <a href="{{ route('admin.external.adc.index', ['filter_status' => 'inactive']) }}" class="imsme-metric-card theme-rose">
+                    <div class="icon-wrapper">
+                        <iconify-icon icon="solar:danger-triangle-bold-duotone"></iconify-icon>
+                    </div>
+                    <div class="card-data">
+                        <div class="label">Inactive ADC <iconify-icon icon="solar:alt-arrow-right-linear" class="arrow-hint"></iconify-icon></div>
+                        <div class="value text-danger">{{ number_format($stats['inactive_adcs']) }}</div>
+                    </div>
+                </a>
+            </div>
+
+            {{-- DDC Partners (All) --}}
             <div class="col-xl-2 col-lg-4 col-md-4 col-sm-6">
                 <a href="{{ route('admin.external.ddc.index') }}" class="imsme-metric-card theme-amber">
                     <div class="icon-wrapper">
@@ -274,39 +343,29 @@
                     </div>
                 </a>
             </div>
-            {{-- Verified MSME --}}
+
+            {{-- Active DDC --}}
             <div class="col-xl-2 col-lg-4 col-md-4 col-sm-6">
-                <a href="{{ route('admin.external.vendors.index', ['kyc_status' => 'approved']) }}" class="imsme-metric-card theme-emerald">
+                <a href="{{ route('admin.external.ddc.index', ['filter_status' => 'active']) }}" class="imsme-metric-card theme-emerald">
                     <div class="icon-wrapper">
-                        <iconify-icon icon="solar:shield-check-bold-duotone"></iconify-icon>
+                        <iconify-icon icon="solar:check-circle-bold-duotone"></iconify-icon>
                     </div>
                     <div class="card-data">
-                        <div class="label">Verified MSME <iconify-icon icon="solar:alt-arrow-right-linear" class="arrow-hint"></iconify-icon></div>
-                        <div class="value">{{ number_format($stats['verified_msme']) }}</div>
+                        <div class="label">Active DDC <iconify-icon icon="solar:alt-arrow-right-linear" class="arrow-hint"></iconify-icon></div>
+                        <div class="value text-success">{{ number_format($stats['active_ddcs']) }}</div>
                     </div>
                 </a>
             </div>
-            {{-- Pending MSME --}}
+
+            {{-- Inactive DDC --}}
             <div class="col-xl-2 col-lg-4 col-md-4 col-sm-6">
-                <a href="{{ route('admin.external.vendors.index', ['kyc_status' => 'pending']) }}" class="imsme-metric-card theme-rose">
+                <a href="{{ route('admin.external.ddc.index', ['filter_status' => 'inactive']) }}" class="imsme-metric-card theme-rose">
                     <div class="icon-wrapper">
-                        <iconify-icon icon="solar:user-block-bold-duotone"></iconify-icon>
+                        <iconify-icon icon="solar:danger-triangle-bold-duotone"></iconify-icon>
                     </div>
                     <div class="card-data">
-                        <div class="label">Pending MSME <iconify-icon icon="solar:alt-arrow-right-linear" class="arrow-hint"></iconify-icon></div>
-                        <div class="value">{{ number_format($stats['pending_msme']) }}</div>
-                    </div>
-                </a>
-            </div>
-            {{-- Product Active Sellers --}}
-            <div class="col-xl-2 col-lg-4 col-md-4 col-sm-6">
-                <a href="{{ route('admin.external.vendors.index', ['active_sellers' => 1]) }}" class="imsme-metric-card theme-indigo">
-                    <div class="icon-wrapper">
-                        <iconify-icon icon="solar:user-speak-bold-duotone"></iconify-icon>
-                    </div>
-                    <div class="card-data">
-                        <div class="label">Active Sellers <iconify-icon icon="solar:alt-arrow-right-linear" class="arrow-hint"></iconify-icon></div>
-                        <div class="value">{{ number_format($stats['product_active_sellers']) }}</div>
+                        <div class="label">Inactive DDC <iconify-icon icon="solar:alt-arrow-right-linear" class="arrow-hint"></iconify-icon></div>
+                        <div class="value text-danger">{{ number_format($stats['inactive_ddcs']) }}</div>
                     </div>
                 </a>
             </div>

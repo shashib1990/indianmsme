@@ -234,11 +234,11 @@
                         @if($filterStatus === 'active')
                             <span class="badge bg-success text-white py-0.5 px-1.5 fs-10 fw-bold">Active Filter</span>
                         @else
-                            <span class="badge bg-success-subtle text-success py-0.5 px-1.5 fs-10 fw-bold">4/4 Ready</span>
+                            <iconify-icon icon="solar:alt-arrow-right-linear" class="arrow-hint"></iconify-icon>
                         @endif
                     </div>
                     <div class="value text-success">{{ number_format($activeSellersCount) }}</div>
-                    <div class="sub-value text-muted">Account active, KYC verified, min 1 product & store</div>
+                    <div class="sub-value text-muted">Eligible sellers list</div>
                 </div>
             </a>
         </div>
@@ -272,7 +272,7 @@
             <div class="d-flex align-items-center gap-2">
                 <iconify-icon icon="solar:check-circle-bold-duotone" class="fs-18 text-success"></iconify-icon>
                 <span class="fs-13">
-                    Showing <strong>Active Sellers ({{ number_format($activeSellersCount) }})</strong>: Sellers whose account is active, KYC is approved, and who have created at least 1 product and 1 pickup store.
+                    Showing <strong>Active Sellers ({{ number_format($activeSellersCount) }})</strong>
                 </span>
             </div>
             <a href="{{ route('admin.external.vendors.index', array_filter(request()->except(['filter_status', 'page']))) }}" class="btn btn-sm btn-light fw-medium py-0.5 px-2 fs-11">
@@ -334,14 +334,14 @@
         @endif
         <select name="filter_status" class="form-select w-auto py-1.5" onchange="this.form.submit()">
             <option value="">All Readiness States</option>
-            <option value="active" {{ $filterStatus === 'active' ? 'selected' : '' }}>Active Sellers (4/4 Ready)</option>
-            <option value="inactive" {{ $filterStatus === 'inactive' ? 'selected' : '' }}>Inactive Sellers (Action Needed)</option>
+            <option value="active" {{ $filterStatus === 'active' ? 'selected' : '' }}>Active Sellers</option>
+            <option value="inactive" {{ $filterStatus === 'inactive' ? 'selected' : '' }}>Inactive Sellers</option>
         </select>
         <select name="kyc_status" class="form-select w-auto py-1.5" onchange="this.form.submit()">
             <option value="">All KYC Status</option>
-            <option value="APPROVED" {{ strtolower(request('kyc_status')) == 'approved' ? 'selected' : '' }}>Approved (Verified)</option>
-            <option value="PENDING" {{ in_array(strtolower(request('kyc_status')), ['pending', 'under_review']) ? 'selected' : '' }}>Pending / Review</option>
-            <option value="REJECTED" {{ strtolower(request('kyc_status')) == 'rejected' ? 'selected' : '' }}>Rejected</option>
+            <option value="APPROVED" {{ strtolower(request('kyc_status') ?? '') == 'approved' ? 'selected' : '' }}>Approved (Verified)</option>
+            <option value="PENDING" {{ in_array(strtolower(request('kyc_status') ?? ''), ['pending', 'under_review']) ? 'selected' : '' }}>Pending / Review</option>
+            <option value="REJECTED" {{ strtolower(request('kyc_status') ?? '') == 'rejected' ? 'selected' : '' }}>Rejected</option>
         </select>
         <select name="seller_type" class="form-select w-auto py-1.5" onchange="this.form.submit()">
             <option value="">All Seller Types</option>
@@ -493,12 +493,12 @@
                                             @endif
                                         </td>
 
-                                        <!-- Readiness & Missing Items (Core User Requirement) -->
+                                        <!-- Readiness & Missing Items -->
                                         <td>
                                             @if($user->is_seller_active)
-                                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 fs-11 fw-semibold d-inline-flex align-items-center gap-1 shadow-xs" title="Account Active, KYC Verified, Min 1 Product, Min 1 Store">
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1 fs-11 fw-semibold d-inline-flex align-items-center gap-1 shadow-xs">
                                                     <iconify-icon icon="solar:check-circle-bold-duotone" class="fs-13 text-success"></iconify-icon>
-                                                    Fully Active (4/4 Ready)
+                                                    Active
                                                 </span>
                                             @else
                                                 @php
@@ -511,7 +511,6 @@
                                                             <iconify-icon icon="solar:danger-triangle-bold" class="fs-11"></iconify-icon>
                                                             {{ $missingCount }} Missing
                                                         </span>
-                                                        <span class="text-muted fs-11 fw-medium">({{ 4 - $missingCount }}/4 completed)</span>
                                                     </div>
                                                     <div class="d-flex flex-wrap gap-1 mt-0.5">
                                                         @foreach($missing as $mItem)

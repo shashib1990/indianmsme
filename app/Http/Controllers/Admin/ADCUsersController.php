@@ -12,12 +12,27 @@ class ADCUsersController extends Controller
 {
     public function index(Request $request)
     {
+        $filterStatus = $request->get('filter_status');
         $search = $request->get('search');
         $sort = $request->get('sort', 'created_at');
         $order = $request->get('order', 'desc');
         $limit = $request->get('limit', 15);
 
+        // Pre-calculate metric card counts
+        $totalAdcCount = ADC::count();
+        $activeAdcCount = ADC::where('users.status', '1')->count();
+        $inactiveAdcCount = max(0, $totalAdcCount - $activeAdcCount);
+
         $query = ADC::with(['adcProfile', 'profile']);
+
+        if ($filterStatus === 'active') {
+            $query->where('users.status', '1');
+        } elseif ($filterStatus === 'inactive') {
+            $query->where(function ($q) {
+                $q->where('users.status', '!=', '1')
+                  ->orWhereNull('users.status');
+            });
+        }
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -78,7 +93,17 @@ class ADCUsersController extends Controller
 
         $users = $query->orderBy($sort, $order)->paginate($limit)->withQueryString();
 
-        return view('admin.external.adc.index', compact('users', 'search', 'sort', 'order', 'limit'));
+        return view('admin.external.adc.index', compact(
+            'users', 
+            'search', 
+            'sort', 
+            'order', 
+            'limit', 
+            'totalAdcCount', 
+            'activeAdcCount', 
+            'inactiveAdcCount', 
+            'filterStatus'
+        ));
     }
 
     public function getDetails($id)

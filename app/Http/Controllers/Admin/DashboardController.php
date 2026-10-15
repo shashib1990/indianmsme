@@ -38,9 +38,13 @@ class DashboardController extends Controller
         $totalVendors = Vendor::count();
         $pendingKycVendors = SellerProfile::where('kyc_status', 'pending')->count();
         $totalDdcs = DDC::count();
+        $activeDdcs = DDC::where('users.status', '1')->count();
+        $inactiveDdcs = max(0, $totalDdcs - $activeDdcs);
         $virtualDdcs = DdcProfile::where('type', 'virtual')->count();
         $physicalDdcs = DdcProfile::where('type', 'physical')->count();
         $totalAdcs = ADC::count();
+        $activeAdcs = ADC::where('users.status', '1')->count();
+        $inactiveAdcs = max(0, $totalAdcs - $activeAdcs);
         $totalPickupStores = PickupStore::count();
         
         // Products & Catalog
@@ -170,15 +174,26 @@ class DashboardController extends Controller
 
         $totalVendors = Vendor::where($mainVendorQuery)->count();
 
+        $activeSellersCount = Vendor::where($mainVendorQuery)
+            ->where('users.status', '1')
+            ->whereHas('profile', function ($qp) {
+                $qp->whereIn('kyc_status', ['APPROVED', 'approved']);
+            })
+            ->has('products')
+            ->has('pickupStores')
+            ->count();
+
+        $inactiveSellersCount = max(0, $totalVendors - $activeSellersCount);
+
         $verifiedMsmeCount = Vendor::where($mainVendorQuery)
             ->whereHas('profile', function ($qp) {
                 $qp->whereIn('kyc_status', ['APPROVED', 'approved'])
                    ->where(function ($lq) {
-                       $lq->whereNotNull('state_id')
-                          ->orWhereNotNull('district_id')
-                          ->orWhereNotNull('pincode')
-                          ->orWhereNotNull('state')
-                          ->orWhereNotNull('district');
+                        $lq->whereNotNull('state_id')
+                           ->orWhereNotNull('district_id')
+                           ->orWhereNotNull('pincode')
+                           ->orWhereNotNull('state')
+                           ->orWhereNotNull('district');
                    });
             })
             ->whereHas('products', function ($q) {
@@ -215,11 +230,17 @@ class DashboardController extends Controller
             'msme' => $totalVendors,
             'total_vendors' => $totalVendors,
             'vendors' => $totalVendors,
+            'active_sellers' => $activeSellersCount,
+            'inactive_sellers' => $inactiveSellersCount,
             'adc' => $totalAdcs,
             'total_adcs' => $totalAdcs,
+            'active_adcs' => $activeAdcs,
+            'inactive_adcs' => $inactiveAdcs,
             'adcs' => $totalAdcs,
             'ddc' => $totalDdcs,
             'total_ddcs' => $totalDdcs,
+            'active_ddcs' => $activeDdcs,
+            'inactive_ddcs' => $inactiveDdcs,
             'ddcs' => $totalDdcs,
             'verified_msme' => $verifiedMsmeCount,
             'pending_msme' => $pendingMsmeCount,

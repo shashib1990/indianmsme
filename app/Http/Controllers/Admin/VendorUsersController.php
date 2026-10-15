@@ -207,6 +207,7 @@ class VendorUsersController extends Controller
             'filterStatus',
             'totalSellersCount',
             'activeSellersCount',
+            'inactiveSellersCount'
         ));
     }
 
