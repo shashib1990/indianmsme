@@ -327,6 +327,11 @@ class User extends Authenticatable
         return $this->hasMany(Product::class, 'seller_id');
     }
 
+    public function pickupStores()
+    {
+        return $this->hasMany(PickupStore::class, 'owner_id');
+    }
+
     public function scopeServiceableByPincode($query, $pincode)
     {
         if (!$pincode) {

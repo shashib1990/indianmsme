@@ -1,7 +1,159 @@
 @extends('layouts.admin')
 
-@section('title', 'Vendor Users')
-@section('page-title', 'Vendor Users')
+@section('title', 'MSME Sellers')
+@section('page-title', 'MSME Sellers')
+
+@push('styles')
+<style>
+    /* Metric Cards System matching Dashboard Aesthetics */
+    .imsme-metric-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 12px !important;
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        text-decoration: none !important;
+        color: #1e293b !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        min-height: 86px;
+        cursor: pointer;
+    }
+
+    .imsme-metric-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        border-radius: 4px 0 0 4px;
+        opacity: 0.85;
+        transition: width 0.2s ease;
+    }
+
+    .imsme-metric-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 24px -6px rgba(15, 23, 42, 0.12) !important;
+        border-color: #cbd5e1 !important;
+    }
+
+    .imsme-metric-card:hover::before {
+        width: 6px;
+    }
+
+    .imsme-metric-card .icon-wrapper {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-right: 14px;
+        flex-shrink: 0;
+        transition: transform 0.2s ease;
+    }
+
+    .imsme-metric-card:hover .icon-wrapper {
+        transform: scale(1.08);
+    }
+
+    .imsme-metric-card .card-data {
+        flex-grow: 1;
+        min-width: 0;
+    }
+
+    .imsme-metric-card .card-data .label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        margin-bottom: 2px;
+        line-height: 1.2;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .imsme-metric-card .card-data .value {
+        font-size: 1.45rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1.1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .imsme-metric-card .card-data .sub-value {
+        font-size: 0.72rem;
+        font-weight: 500;
+        color: #64748b;
+        margin-top: 3px;
+    }
+
+    .imsme-metric-card .arrow-hint {
+        font-size: 1rem;
+        color: #cbd5e1;
+        transition: all 0.2s ease;
+        margin-left: 6px;
+        opacity: 0.6;
+    }
+
+    .imsme-metric-card:hover .arrow-hint {
+        color: currentColor;
+        transform: translateX(3px);
+        opacity: 1;
+    }
+
+    /* Category Themes */
+    .theme-indigo::before { background: #6366f1; }
+    .theme-indigo .icon-wrapper { background: rgba(99, 102, 241, 0.12); color: #6366f1; }
+    .theme-indigo .arrow-hint { color: #6366f1; }
+
+    .theme-emerald::before { background: #10b981; }
+    .theme-emerald .icon-wrapper { background: rgba(16, 185, 129, 0.12); color: #059669; }
+    .theme-emerald .arrow-hint { color: #059669; }
+
+    .theme-rose::before { background: #f43f5e; }
+    .theme-rose .icon-wrapper { background: rgba(244, 63, 94, 0.12); color: #e11d48; }
+    .theme-rose .arrow-hint { color: #e11d48; }
+
+    /* Active Selected Card Rings */
+    .imsme-metric-card.active-filter {
+        border-color: #6366f1 !important;
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.35), 0 8px 16px -4px rgba(99, 102, 241, 0.2) !important;
+        background: linear-gradient(to bottom, #ffffff, #fafbff);
+    }
+    .imsme-metric-card.theme-emerald.active-filter {
+        border-color: #10b981 !important;
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.35), 0 8px 16px -4px rgba(16, 185, 129, 0.2) !important;
+        background: linear-gradient(to bottom, #ffffff, #f0fdf4);
+    }
+    .imsme-metric-card.theme-rose.active-filter {
+        border-color: #f43f5e !important;
+        box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.35), 0 8px 16px -4px rgba(244, 63, 94, 0.2) !important;
+        background: linear-gradient(to bottom, #ffffff, #fff1f2);
+    }
+
+    [data-bs-theme="dark"] .imsme-metric-card {
+        background: #1e293b;
+        border-color: #334155 !important;
+        color: #f8fafc !important;
+    }
+    [data-bs-theme="dark"] .imsme-metric-card .card-data .label {
+        color: #94a3b8;
+    }
+    [data-bs-theme="dark"] .imsme-metric-card .card-data .value {
+        color: #f1f5f9;
+    }
+</style>
+@endpush
 
 @section('content')
     @if($parentSeller)
@@ -12,6 +164,131 @@
             </div>
             <a href="{{ route('admin.external.vendors.index') }}" class="btn btn-sm btn-info text-white fw-medium d-flex align-items-center gap-1">
                 <iconify-icon icon="solar:arrow-left-bold-duotone" class="fs-14"></iconify-icon> Back to Main Sellers
+            </a>
+        </div>
+    @endif
+
+    <!-- Common Page Action Header -->
+    <x-admin.page-header 
+        title="MSME Sellers" 
+        subtitle="Manage registered MSME seller partners, track verification compliance, catalog readiness, and pickup store coverage."
+        :actions="[
+            [
+                'label' => 'DDC Users',
+                'icon' => 'solar:user-id-bold-duotone',
+                'url' => route('admin.external.ddc.index'),
+                'permission' => 'users.view',
+                'btnClass' => 'btn-outline-primary'
+            ],
+            [
+                'label' => 'ADC Users',
+                'icon' => 'solar:user-speak-rounded-bold-duotone',
+                'url' => route('admin.external.adc.index'),
+                'permission' => 'users.view',
+                'btnClass' => 'btn-outline-warning'
+            ],
+            [
+                'label' => 'Export CSV',
+                'icon' => 'solar:document-text-bold-duotone',
+                'onclick' => 'triggerExport(\'csv\')',
+                'permission' => 'users.view',
+                'btnClass' => 'btn-outline-secondary'
+            ]
+        ]"
+    />
+
+    <!-- Interactive Seller Readiness Metrics Cards -->
+    <div class="row g-3 mb-3">
+        <!-- 1. All MSME Sellers (Sab Sellers) -->
+        <div class="col-lg-4 col-md-4 col-sm-12">
+            <a href="{{ route('admin.external.vendors.index', array_filter(array_merge(request()->except(['filter_status', 'page']), []))) }}" 
+               class="imsme-metric-card theme-indigo {{ empty($filterStatus) ? 'active-filter' : '' }}">
+                <div class="icon-wrapper">
+                    <iconify-icon icon="solar:users-group-two-rounded-bold-duotone"></iconify-icon>
+                </div>
+                <div class="card-data">
+                    <div class="label">
+                        <span>All MSME Sellers</span>
+                        @if(empty($filterStatus))
+                            <span class="badge bg-indigo-subtle text-primary border border-primary-subtle py-0.5 px-1.5 fs-10 fw-bold">Active Filter</span>
+                        @else
+                            <iconify-icon icon="solar:alt-arrow-right-linear" class="arrow-hint"></iconify-icon>
+                        @endif
+                    </div>
+                    <div class="value">{{ number_format($totalSellersCount) }}</div>
+                    <div class="sub-value text-muted">All registered sellers list (click to view)</div>
+                </div>
+            </a>
+        </div>
+
+        <!-- 2. Active Sellers (Account Active + KYC Verified + Min 1 Product + Pickup Store) -->
+        <div class="col-lg-4 col-md-4 col-sm-12">
+            <a href="{{ route('admin.external.vendors.index', array_filter(array_merge(request()->except(['filter_status', 'page']), ['filter_status' => 'active']))) }}" 
+               class="imsme-metric-card theme-emerald {{ $filterStatus === 'active' ? 'active-filter' : '' }}">
+                <div class="icon-wrapper">
+                    <iconify-icon icon="solar:check-circle-bold-duotone"></iconify-icon>
+                </div>
+                <div class="card-data">
+                    <div class="label">
+                        <span>Active Sellers</span>
+                        @if($filterStatus === 'active')
+                            <span class="badge bg-success text-white py-0.5 px-1.5 fs-10 fw-bold">Active Filter</span>
+                        @else
+                            <span class="badge bg-success-subtle text-success py-0.5 px-1.5 fs-10 fw-bold">4/4 Ready</span>
+                        @endif
+                    </div>
+                    <div class="value text-success">{{ number_format($activeSellersCount) }}</div>
+                    <div class="sub-value text-muted">Account active, KYC verified, min 1 product & store</div>
+                </div>
+            </a>
+        </div>
+
+        <!-- 3. Inactive Sellers (Missing 1 or more requirements) -->
+        <div class="col-lg-4 col-md-4 col-sm-12">
+            <a href="{{ route('admin.external.vendors.index', array_filter(array_merge(request()->except(['filter_status', 'page']), ['filter_status' => 'inactive']))) }}" 
+               class="imsme-metric-card theme-rose {{ $filterStatus === 'inactive' ? 'active-filter' : '' }}">
+                <div class="icon-wrapper">
+                    <iconify-icon icon="solar:danger-triangle-bold-duotone"></iconify-icon>
+                </div>
+                <div class="card-data">
+                    <div class="label">
+                        <span>Inactive Sellers</span>
+                        @if($filterStatus === 'inactive')
+                            <span class="badge bg-danger text-white py-0.5 px-1.5 fs-10 fw-bold">Active Filter</span>
+                        @else
+                            <span class="badge bg-danger-subtle text-danger py-0.5 px-1.5 fs-10 fw-bold">Action Needed</span>
+                        @endif
+                    </div>
+                    <div class="value text-danger">{{ number_format($inactiveSellersCount) }}</div>
+                    <div class="sub-value text-muted">Missing account, KYC, product, or pickup store</div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Active Filter Notice Banner -->
+    @if($filterStatus === 'active')
+        <div class="alert alert-success border-0 shadow-sm mb-3 d-flex align-items-center justify-content-between py-2 px-3" style="border-radius: 8px;">
+            <div class="d-flex align-items-center gap-2">
+                <iconify-icon icon="solar:check-circle-bold-duotone" class="fs-18 text-success"></iconify-icon>
+                <span class="fs-13">
+                    Showing <strong>Active Sellers ({{ number_format($activeSellersCount) }})</strong>: Sellers whose account is active, KYC is approved, and who have created at least 1 product and 1 pickup store.
+                </span>
+            </div>
+            <a href="{{ route('admin.external.vendors.index', array_filter(request()->except(['filter_status', 'page']))) }}" class="btn btn-sm btn-light fw-medium py-0.5 px-2 fs-11">
+                View All Sellers &times;
+            </a>
+        </div>
+    @elseif($filterStatus === 'inactive')
+        <div class="alert alert-danger border-0 shadow-sm mb-3 d-flex align-items-center justify-content-between py-2 px-3" style="border-radius: 8px;">
+            <div class="d-flex align-items-center gap-2">
+                <iconify-icon icon="solar:danger-triangle-bold-duotone" class="fs-18 text-danger"></iconify-icon>
+                <span class="fs-13">
+                    Showing <strong>Inactive Sellers ({{ number_format($inactiveSellersCount) }})</strong>: Sellers missing one or more readiness criteria. Inspect the <strong>Readiness & Missing Items</strong> column to see what needs action.
+                </span>
+            </div>
+            <a href="{{ route('admin.external.vendors.index', array_filter(request()->except(['filter_status', 'page']))) }}" class="btn btn-sm btn-light fw-medium py-0.5 px-2 fs-11">
+                View All Sellers &times;
             </a>
         </div>
     @endif
@@ -38,35 +315,6 @@
         </div>
     @endif
 
-    <!-- Common Page Action Header -->
-    <x-admin.page-header 
-        title="Vendor Users" 
-        subtitle="Manage Vendor Coordinator accounts, reset credentials, and impersonate sessions."
-        :actions="[
-            [
-                'label' => 'DDC Users',
-                'icon' => 'solar:user-id-bold-duotone',
-                'url' => route('admin.external.ddc.index'),
-                'permission' => 'users.view',
-                'btnClass' => 'btn-outline-primary'
-            ],
-            [
-                'label' => 'ADC Users',
-                'icon' => 'solar:user-speak-rounded-bold-duotone',
-                'url' => route('admin.external.adc.index'),
-                'permission' => 'users.view',
-                'btnClass' => 'btn-outline-warning'
-            ],
-            [
-                'label' => 'Export CSV',
-                'icon' => 'solar:document-text-bold-duotone',
-                'onclick' => 'triggerExport(\'csv\')',
-                'permission' => 'users.view',
-                'btnClass' => 'btn-outline-secondary'
-            ]
-        ]"
-    />
-
     <!-- Reusable Table Filters -->
     <x-admin.table-filters 
         action="{{ route('admin.external.vendors.index') }}" 
@@ -81,6 +329,14 @@
             'status_inactive' => 'Deactivate Selected'
         ]"
     >
+        @if($filterStatus)
+            <input type="hidden" name="filter_status" value="{{ $filterStatus }}">
+        @endif
+        <select name="filter_status" class="form-select w-auto py-1.5" onchange="this.form.submit()">
+            <option value="">All Readiness States</option>
+            <option value="active" {{ $filterStatus === 'active' ? 'selected' : '' }}>Active Sellers (4/4 Ready)</option>
+            <option value="inactive" {{ $filterStatus === 'inactive' ? 'selected' : '' }}>Inactive Sellers (Action Needed)</option>
+        </select>
         <select name="kyc_status" class="form-select w-auto py-1.5" onchange="this.form.submit()">
             <option value="">All KYC Status</option>
             <option value="APPROVED" {{ strtolower(request('kyc_status')) == 'approved' ? 'selected' : '' }}>Approved (Verified)</option>
@@ -113,16 +369,17 @@
                                             <input type="checkbox" class="form-check-input" id="selectAllCheckbox">
                                         </div>
                                     </th>
-                                    <th class="ps-2" style="width: 60px;">#</th>
+                                    <th class="ps-2" style="width: 50px;">#</th>
                                     <x-admin.table-header field="company_name" :sort="$sort" :order="$order">Company / Vendor Name</x-admin.table-header>
                                     <th>Seller Code</th>
-                                    <x-admin.table-header field="email" :sort="$sort" :order="$order">Email</x-admin.table-header>
-                                    <th>Phone</th>
+                                    <x-admin.table-header field="email" :sort="$sort" :order="$order">Contact Info</x-admin.table-header>
                                     <th>Seller Type</th>
-                                    <th>GST Number</th>
-                                    <x-admin.table-header field="is_active" :sort="$sort" :order="$order">Status</x-admin.table-header>
+                                    <th>Catalog & Store</th>
+                                    <th>KYC Status</th>
+                                    <x-admin.table-header field="is_active" :sort="$sort" :order="$order">Account</x-admin.table-header>
+                                    <th>Readiness & Missing Items</th>
                                     <x-admin.table-header field="created_at" :sort="$sort" :order="$order">Joined</x-admin.table-header>
-                                    <th class="text-end pe-3" style="width: 130px;">Actions</th>
+                                    <th class="text-end pe-3" style="width: 140px;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -161,8 +418,12 @@
                                                 <span class="text-muted">—</span>
                                             @endif
                                         </td>
-                                        <td>{{ $user->email }}</td>
-                                        <td>{{ $user->phone ?? ($user->mobile ?? '—') }}</td>
+                                        <td>
+                                            <div>
+                                                <div class="text-slate-800 fs-12">{{ $user->email }}</div>
+                                                <div class="text-muted small">{{ $user->phone ?? ($user->mobile ?? '—') }}</div>
+                                            </div>
+                                        </td>
                                         <td>
                                             @php
                                                 $sType = $user->profile?->seller_type ?: ($user->seller_type ?: null);
@@ -182,20 +443,88 @@
                                                 </span>
                                             @endif
                                         </td>
+
+                                        <!-- Catalog & Store Count -->
                                         <td>
-                                            @if($user->gst_number || ($user->profile->gst_number ?? null))
-                                                <code class="small text-secondary">{{ $user->gst_number ?? $user->profile->gst_number }}</code>
+                                            <div class="d-flex flex-column gap-1">
+                                                <span class="badge {{ $user->products_count > 0 ? 'bg-primary-subtle text-primary border border-primary-subtle' : 'bg-light text-muted border' }} fs-11 fw-semibold py-0.5 px-1.5 align-self-start" title="Catalog Products">
+                                                    <iconify-icon icon="solar:box-bold" class="fs-11 align-middle"></iconify-icon> {{ $user->products_count }} {{ Str::plural('Product', $user->products_count) }}
+                                                </span>
+                                                <span class="badge {{ $user->pickup_stores_count > 0 ? 'bg-info-subtle text-info border border-info-subtle' : 'bg-light text-muted border' }} fs-11 fw-semibold py-0.5 px-1.5 align-self-start" title="Pickup Stores">
+                                                    <iconify-icon icon="solar:shop-bold" class="fs-11 align-middle"></iconify-icon> {{ $user->pickup_stores_count }} {{ Str::plural('Store', $user->pickup_stores_count) }}
+                                                </span>
+                                            </div>
+                                        </td>
+
+                                        <!-- KYC Status -->
+                                        <td>
+                                            @php
+                                                $kStatus = strtoupper($user->profile?->kyc_status ?? 'PENDING');
+                                            @endphp
+                                            @if($kStatus === 'APPROVED')
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 fs-11 fw-semibold d-inline-flex align-items-center gap-1">
+                                                    <iconify-icon icon="solar:shield-check-bold" class="fs-12"></iconify-icon> Verified
+                                                </span>
+                                            @elseif(in_array($kStatus, ['PENDING', 'UNDER_REVIEW']))
+                                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1 fs-11 fw-semibold d-inline-flex align-items-center gap-1">
+                                                    <iconify-icon icon="solar:shield-warning-bold" class="fs-12"></iconify-icon> Pending
+                                                </span>
+                                            @elseif($kStatus === 'REJECTED')
+                                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 fs-11 fw-semibold d-inline-flex align-items-center gap-1">
+                                                    <iconify-icon icon="solar:shield-cross-bold" class="fs-12"></iconify-icon> Rejected
+                                                </span>
                                             @else
-                                                <span class="text-muted">—</span>
+                                                <span class="badge bg-secondary-subtle text-secondary px-2 py-1 fs-11">
+                                                    Unverified
+                                                </span>
                                             @endif
                                         </td>
+
+                                        <!-- Account Status -->
                                         <td>
                                             @if($user->status === '1')
-                                                <span class="badge bg-success-subtle text-success px-2 py-1 fs-12">Active</span>
+                                                <span class="badge bg-success-subtle text-success px-2 py-1 fs-11 fw-semibold d-inline-flex align-items-center gap-1">
+                                                    <i class="bx bxs-circle fs-8 text-success"></i> Active
+                                                </span>
                                             @else
-                                                <span class="badge bg-danger-subtle text-danger px-2 py-1 fs-12">Inactive</span>
+                                                <span class="badge bg-danger-subtle text-danger px-2 py-1 fs-11 fw-semibold d-inline-flex align-items-center gap-1">
+                                                    <i class="bx bxs-circle fs-8 text-danger"></i> Inactive
+                                                </span>
                                             @endif
                                         </td>
+
+                                        <!-- Readiness & Missing Items (Core User Requirement) -->
+                                        <td>
+                                            @if($user->is_seller_active)
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 fs-11 fw-semibold d-inline-flex align-items-center gap-1 shadow-xs" title="Account Active, KYC Verified, Min 1 Product, Min 1 Store">
+                                                    <iconify-icon icon="solar:check-circle-bold-duotone" class="fs-13 text-success"></iconify-icon>
+                                                    Fully Active (4/4 Ready)
+                                                </span>
+                                            @else
+                                                @php
+                                                    $missing = $user->missing_requirements;
+                                                    $missingCount = count($missing);
+                                                @endphp
+                                                <div class="d-flex flex-column gap-1" style="min-width: 185px;">
+                                                    <div class="d-flex align-items-center gap-1">
+                                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-1.5 py-0.5 fs-10 fw-bold d-inline-flex align-items-center gap-1">
+                                                            <iconify-icon icon="solar:danger-triangle-bold" class="fs-11"></iconify-icon>
+                                                            {{ $missingCount }} Missing
+                                                        </span>
+                                                        <span class="text-muted fs-11 fw-medium">({{ 4 - $missingCount }}/4 completed)</span>
+                                                    </div>
+                                                    <div class="d-flex flex-wrap gap-1 mt-0.5">
+                                                        @foreach($missing as $mItem)
+                                                            <span class="badge {{ $mItem['class'] }} px-1.5 py-0.5 fs-10 fw-medium d-inline-flex align-items-center gap-1" title="{{ $mItem['label'] }}">
+                                                                <iconify-icon icon="{{ $mItem['icon'] }}" class="fs-10"></iconify-icon>
+                                                                {{ $mItem['label'] }}
+                                                            </span>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        </td>
+
                                         <td class="text-muted small">{{ $user->created_at->format('d M Y') }}</td>
                                         <td class="text-end pe-3">
                                             <div class="d-inline-flex gap-1">
@@ -251,9 +580,9 @@
                                 @empty
                                     <x-admin.empty-state 
                                         icon="solar:shop-bold-duotone" 
-                                        title="No Vendors Found" 
-                                        description="We couldn't find any vendor users matching your search." 
-                                        colspan="10" 
+                                        title="No Sellers Found" 
+                                        description="We couldn't find any MSME sellers matching the selected criteria." 
+                                        colspan="12" 
                                     />
                                 @endforelse
                             </tbody>

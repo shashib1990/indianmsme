@@ -16,12 +16,42 @@ class VendorUsersController extends Controller
         $order = $request->get('order', 'desc');
         $limit = $request->get('limit', 15);
         $parentId = $request->get('parent_id');
+        $filterStatus = $request->get('filter_status');
         $parentSeller = null;
 
-        $query = Vendor::query()->withCount('subSellers');
-
+        // Base query for stats (scoped to parent or main sellers)
+        $statsBaseQuery = Vendor::query();
         if ($parentId) {
             $parentSeller = \App\Models\User::findOrFail($parentId);
+            $statsBaseQuery->whereHas('profile', function ($qp) use ($parentId) {
+                $qp->where('parent_id', $parentId);
+            });
+        } else {
+            $statsBaseQuery->where(function ($q) {
+                $q->whereDoesntHave('profile')
+                  ->orWhereHas('profile', function ($qp) {
+                      $qp->whereNull('parent_id');
+                  });
+            });
+        }
+
+        $totalSellersCount = (clone $statsBaseQuery)->count();
+        $activeSellersCount = (clone $statsBaseQuery)
+            ->where('users.status', '1')
+            ->whereHas('profile', function ($qp) {
+                $qp->whereIn('kyc_status', ['APPROVED', 'approved']);
+            })
+            ->has('products')
+            ->has('pickupStores')
+            ->count();
+        $inactiveSellersCount = max(0, $totalSellersCount - $activeSellersCount);
+
+        // Main table query
+        $query = Vendor::query()
+            ->with(['profile'])
+            ->withCount(['subSellers', 'products', 'pickupStores']);
+
+        if ($parentId) {
             $query->whereHas('profile', function ($qp) use ($parentId) {
                 $qp->where('parent_id', $parentId);
             });
@@ -34,17 +64,36 @@ class VendorUsersController extends Controller
             });
         }
 
+        // Active vs Inactive Seller Card Filter
+        if ($filterStatus === 'active') {
+            $query->where('users.status', '1')
+                ->whereHas('profile', function ($qp) {
+                    $qp->whereIn('kyc_status', ['APPROVED', 'approved']);
+                })
+                ->has('products')
+                ->has('pickupStores');
+        } elseif ($filterStatus === 'inactive') {
+            $query->where(function ($q) {
+                $q->where('users.status', '!=', '1')
+                  ->orWhereDoesntHave('profile', function ($qp) {
+                      $qp->whereIn('kyc_status', ['APPROVED', 'approved']);
+                  })
+                  ->orDoesntHave('products')
+                  ->orDoesntHave('pickupStores');
+            });
+        }
+
         if ($request->filled('kyc_status')) {
             $kycStatus = $request->kyc_status;
             if (strtolower($kycStatus) === 'approved') {
                 $query->whereHas('profile', function ($qp) {
                     $qp->whereIn('kyc_status', ['APPROVED', 'approved'])
                        ->where(function ($lq) {
-                           $lq->whereNotNull('state_id')
-                              ->orWhereNotNull('district_id')
-                              ->orWhereNotNull('pincode')
-                              ->orWhereNotNull('state')
-                              ->orWhereNotNull('district');
+                            $lq->whereNotNull('state_id')
+                               ->orWhereNotNull('district_id')
+                               ->orWhereNotNull('pincode')
+                               ->orWhereNotNull('state')
+                               ->orWhereNotNull('district');
                        });
                 })->whereHas('products', function ($q) {
                     $q->where('status', 'Approved');
@@ -104,8 +153,24 @@ class VendorUsersController extends Controller
             return response()->streamDownload(function () use ($records) {
                 $file = fopen('php://output', 'w');
                 fputs($file, "\xEF\xBB\xBF");
-                fputcsv($file, ['ID', 'Name', 'Email', 'Phone', 'Company Name', 'Seller Type', 'GST Number', 'Status', 'Created At']);
+                fputcsv($file, [
+                    'ID',
+                    'Name',
+                    'Email',
+                    'Phone',
+                    'Company Name',
+                    'Seller Type',
+                    'GST Number',
+                    'Account Status',
+                    'KYC Status',
+                    'Products Count',
+                    'Pickup Stores Count',
+                    'Seller Status',
+                    'Missing Requirements',
+                    'Created At'
+                ]);
                 foreach ($records as $row) {
+                    $missing = collect($row->missing_requirements)->pluck('label')->implode(', ');
                     fputcsv($file, [
                         $row->id,
                         $row->name,
@@ -114,7 +179,12 @@ class VendorUsersController extends Controller
                         $row->company_name ?? ($row->profile?->company_name ?? '—'),
                         $row->profile?->seller_type ?? '—',
                         $row->gst_number ?? ($row->profile?->gst_number ?? '—'),
-                        $row->status === '1' ? 'Active' : 'Inactive',
+                        $row->is_account_active ? 'Active (1)' : 'Inactive (0)',
+                        $row->profile?->kyc_status ?: 'Unverified',
+                        $row->products_count ?? $row->products()->count(),
+                        $row->pickup_stores_count ?? $row->pickupStores()->count(),
+                        $row->is_seller_active ? 'Active' : 'Inactive',
+                        $missing ?: 'None (All Compliant)',
                         $row->created_at->format('Y-m-d H:i:s')
                     ]);
                 }
@@ -125,7 +195,19 @@ class VendorUsersController extends Controller
         $users = $query->orderBy($sort, $order)->paginate($limit)->withQueryString();
         $sellerType = $request->get('seller_type');
 
-        return view('admin.external.vendors.index', compact('users', 'search', 'sort', 'order', 'limit', 'parentSeller', 'parentId', 'sellerType'));
+        return view('admin.external.vendors.index', compact(
+            'users',
+            'search',
+            'sort',
+            'order',
+            'limit',
+            'parentSeller',
+            'parentId',
+            'sellerType',
+            'filterStatus',
+            'totalSellersCount',
+            'activeSellersCount',
+        ));
     }
 
     public function resetPassword(Request $request, int $id)
