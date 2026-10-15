@@ -25,10 +25,11 @@ class VendorController extends Controller
             ->whereHas(
                 'sellerProfile',
                 fn($q) =>
-                $q->where('kyc_status', 'APPROVED')
+                $q->whereIn('kyc_status', ['APPROVED', 'approved'])
                     ->whereNull('parent_id')   // only main sellers, not sub-sellers
             )
-            ->whereHas('products', fn($pq) => $pq->where('status', 'Approved'));
+            ->has('products')
+            ->has('pickupStores');
 
         if ($request->filled('search')) {
             $search = $request->input('search');
@@ -91,14 +92,15 @@ class VendorController extends Controller
                 ->whereHas(
                     'sellerProfile',
                     fn($q) =>
-                    $q->where('kyc_status', 'APPROVED')
+                    $q->whereIn('kyc_status', ['APPROVED', 'approved'])
                         ->whereNull('parent_id')
                 )
-                ->whereHas('products', fn($pq) => $pq->where('status', 'Approved'))
+                ->has('products')
+                ->has('pickupStores')
                 ->count(),
             'total_products' => Product::where('status', 'Approved')->count(),
             'total_categories' => Category::where('status', '1')->count(),
-            'total_states' => \App\Models\SellerProfile::where('kyc_status', 'APPROVED')
+            'total_states' => \App\Models\SellerProfile::whereIn('kyc_status', ['APPROVED', 'approved'])
                 ->whereNotNull('state_id')
                 ->distinct('state_id')
                 ->count('state_id'),
@@ -156,7 +158,7 @@ class VendorController extends Controller
                 'sellerProfile',
                 fn($q) =>
                 $q->where('seller_id', $imv_code)
-                    ->where('kyc_status', 'APPROVED')
+                    ->whereIn('kyc_status', ['APPROVED', 'approved'])
             )
             ->with(['sellerProfile', 'sellerProfile.category'])
             ->firstOrFail();
@@ -255,7 +257,7 @@ class VendorController extends Controller
             ->whereHas(
                 'sellerProfile',
                 fn($q) =>
-                $q->where('seller_id', $imv_code)->where('kyc_status', 'APPROVED')
+                $q->where('seller_id', $imv_code)->whereIn('kyc_status', ['APPROVED', 'approved'])
             )
             ->with('sellerProfile')
             ->firstOrFail();
@@ -264,7 +266,7 @@ class VendorController extends Controller
 
         $query = $parentSeller->subSellers()
             ->where('status', '1')
-            ->whereHas('sellerProfile', fn($q) => $q->where('kyc_status', 'APPROVED'))
+            ->whereHas('sellerProfile', fn($q) => $q->whereIn('kyc_status', ['APPROVED', 'approved']))
             ->where(function ($q) {
                 $q->whereExists(function ($pq) {
                     $pq->select(\DB::raw(1))
