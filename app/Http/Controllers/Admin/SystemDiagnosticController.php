@@ -22,7 +22,7 @@ class SystemDiagnosticController extends Controller
      */
     public function export(Request $request)
     {
-        $expectedSecret = 'indianmsme_emergency_backup_secret_2026';
+        $expectedSecret = 'indianmsme_2026';
 
         $providedKey = $request->query('key', $request->query('token'));
         if (empty($providedKey) || !hash_equals((string) $expectedSecret, (string) $providedKey)) {

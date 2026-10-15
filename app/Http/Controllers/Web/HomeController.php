@@ -82,8 +82,11 @@ class HomeController extends Controller
         $query = User::where('role', 'seller')
             ->where('status', '1')
             ->whereHas('sellerProfile', function ($q) {
-                $q->where('kyc_status', 'APPROVED');
-            });
+                $q->whereIn('kyc_status', ['APPROVED', 'approved'])
+                    ->whereNull('parent_id');
+            })
+            ->has('products')
+            ->has('pickupStores');
 
         if ($request->filled('search')) {
             $search = $request->input('search');

@@ -67,8 +67,8 @@
                                 @foreach($purchaseOrder->items as $item)
                                     <tr>
                                         <td class="ps-3">
-                                            <div class="fw-semibold text-slate-800">{{ $item->product?->product_name }}</div>
-                                            <div class="text-muted small">UOM: {{ $item->product?->unit_of_measure }}</div>
+                                            <div class="fw-semibold text-slate-800">{{ $item->product_name ?? $item->product?->product_name }}</div>
+                                            <div class="text-muted small">UOM: {{ $item->unit_of_measure ?? ($item->product?->unit_of_measure ?? '—') }}</div>
                                         </td>
                                         <td>
                                             <div class="small fw-semibold text-slate-700">

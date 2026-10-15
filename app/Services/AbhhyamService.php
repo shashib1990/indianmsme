@@ -40,13 +40,13 @@ class AbhhyamService
             if (!$profile && $user->id) {
                 $profile = \App\Models\AdcProfile::where('user_id', $user->id)->first();
             }
-            $adcCodeVal  = $user->adc_code ?: ($profile?->adc_code ?? ($user->tempProfileData['adc_code'] ?? ''));
-            $stateId     = $user->state_id ?: ($profile?->state_id ?? ($user->tempProfileData['state_id'] ?? null));
-            $districtId  = $user->district_id ?: ($profile?->district_id ?? ($user->tempProfileData['district_id'] ?? null));
-            $rawState    = $user->state ?: ($profile?->state ?? ($user->tempProfileData['state'] ?? ''));
+            $adcCodeVal = $user->adc_code ?: ($profile?->adc_code ?? ($user->tempProfileData['adc_code'] ?? ''));
+            $stateId = $user->state_id ?: ($profile?->state_id ?? ($user->tempProfileData['state_id'] ?? null));
+            $districtId = $user->district_id ?: ($profile?->district_id ?? ($user->tempProfileData['district_id'] ?? null));
+            $rawState = $user->state ?: ($profile?->state ?? ($user->tempProfileData['state'] ?? ''));
             $rawDistrict = $user->district ?: ($profile?->district ?? ($user->tempProfileData['district'] ?? ''));
-            $pincode     = $user->pincode ?: ($profile?->pincode ?? ($user->tempProfileData['pincode'] ?? ''));
-            $address     = $user->address ?: ($profile?->address ?? ($user->tempProfileData['address'] ?? ''));
+            $pincode = $user->pincode ?: ($profile?->pincode ?? ($user->tempProfileData['pincode'] ?? ''));
+            $address = $user->address ?: ($profile?->address ?? ($user->tempProfileData['address'] ?? ''));
             $advisorCode = $user->advisor_code ?: ($profile?->advisor_code ?? ($user->tempProfileData['advisor_code'] ?? ''));
 
             // Resolve State (prefer state code e.g. UP, fallback to state name)
@@ -74,28 +74,28 @@ class AbhhyamService
             }
 
             $payload = [
-                'adc_code'     => (string) ($adcCodeVal ?? ''),
-                'name'         => (string) ($user->name ?? ''),
-                'email'        => (string) ($user->email ?? ''),
-                'mobile'       => (string) ($user->mobile ?? ''),
-                'state'        => (string) ($stateVal ?? ''),
-                'district'     => (string) ($districtVal ?? ''),
-                'pincode'      => (string) ($pincode ?? ''),
-                'address'      => (string) ($address ?? ''),
+                'adc_code' => (string) ($adcCodeVal ?? ''),
+                'name' => (string) ($user->name ?? ''),
+                'email' => (string) ($user->email ?? ''),
+                'mobile' => (string) ($user->mobile ?? ''),
+                'state' => (string) ($stateVal ?? ''),
+                'district' => (string) ($districtVal ?? ''),
+                'pincode' => (string) ($pincode ?? ''),
+                'address' => (string) ($address ?? ''),
                 'advisor_code' => (string) ($advisorCode ?? ''),
             ];
             $userId = $user->id;
         } else {
             $data = (array) $userOrData;
             $payload = [
-                'adc_code'     => (string) ($data['adc_code'] ?? ''),
-                'name'         => (string) ($data['name'] ?? ''),
-                'email'        => (string) ($data['email'] ?? ''),
-                'mobile'       => (string) ($data['mobile'] ?? ''),
-                'state'        => (string) ($data['state'] ?? ''),
-                'district'     => (string) ($data['district'] ?? ''),
-                'pincode'      => (string) ($data['pincode'] ?? ''),
-                'address'      => (string) ($data['address'] ?? ''),
+                'adc_code' => (string) ($data['adc_code'] ?? ''),
+                'name' => (string) ($data['name'] ?? ''),
+                'email' => (string) ($data['email'] ?? ''),
+                'mobile' => (string) ($data['mobile'] ?? ''),
+                'state' => (string) ($data['state'] ?? ''),
+                'district' => (string) ($data['district'] ?? ''),
+                'pincode' => (string) ($data['pincode'] ?? ''),
+                'address' => (string) ($data['address'] ?? ''),
                 'advisor_code' => (string) ($data['advisor_code'] ?? ''),
             ];
             $userId = $data['id'] ?? ($data['adc_code'] ?? 'N/A');
@@ -103,7 +103,7 @@ class AbhhyamService
 
         Log::info('Initiating Abhhyam Register ADC API call', [
             'user_id' => $userId,
-            'url'     => $apiUrl,
+            'url' => $apiUrl,
             'payload' => $payload,
         ]);
 
@@ -114,33 +114,33 @@ class AbhhyamService
             if ($response->successful()) {
                 $json = $response->json();
                 Log::info('Abhhyam Register ADC API Call Success', [
-                    'user_id'  => $userId,
-                    'status'   => $response->status(),
+                    'user_id' => $userId,
+                    'status' => $response->status(),
                     'response' => $json ?? $response->body(),
                 ]);
 
                 return [
                     'success' => true,
                     'message' => 'ADC registered on Abhhyam API successfully.',
-                    'data'    => $json ?? $response->body(),
+                    'data' => $json ?? $response->body(),
                 ];
             }
 
             Log::error('Abhhyam Register ADC API HTTP Error', [
                 'user_id' => $userId,
-                'status'  => $response->status(),
-                'body'    => $response->body(),
+                'status' => $response->status(),
+                'body' => $response->body(),
             ]);
 
             return [
                 'success' => false,
                 'message' => 'Abhhyam API returned HTTP status ' . $response->status(),
-                'data'    => $response->body(),
+                'data' => $response->body(),
             ];
         } catch (\Exception $e) {
             Log::error('Abhhyam Register ADC API Exception', [
                 'user_id' => $userId,
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
 
             return [
@@ -163,8 +163,8 @@ class AbhhyamService
         $apiUrl = config('services.abhhyam.register_customer_url', 'https://api.abhhyam.com/api/v2/adp/register_customer');
 
         if (is_object($customerOrData)) {
-            $name   = $customerOrData->name ?? '';
-            $email  = $customerOrData->email ?? '';
+            $name = $customerOrData->name ?? '';
+            $email = $customerOrData->email ?? '';
             $mobile = $customerOrData->mobile ?? '';
             $custId = $customerOrData->id ?? 'N/A';
 
@@ -176,9 +176,9 @@ class AbhhyamService
                 }
             }
         } else {
-            $data   = (array) $customerOrData;
-            $name   = $data['name'] ?? '';
-            $email  = $data['email'] ?? '';
+            $data = (array) $customerOrData;
+            $name = $data['name'] ?? '';
+            $email = $data['email'] ?? '';
             $mobile = $data['mobile'] ?? '';
             $custId = $data['id'] ?? 'N/A';
             if (empty($type)) {
@@ -197,16 +197,16 @@ class AbhhyamService
         }
 
         $payload = [
-            'name'   => (string) ($name ?? ''),
-            'email'  => (string) ($email ?? ''),
+            'name' => (string) ($name ?? ''),
+            'email' => (string) ($email ?? ''),
             'mobile' => (string) ($mobile ?? ''),
-            'type'   => (string) $customerType,
+            'type' => (string) $customerType,
         ];
 
         Log::info('Initiating Abhhyam Register Customer API call', [
             'customer_id' => $custId,
-            'url'         => $apiUrl,
-            'payload'     => $payload,
+            'url' => $apiUrl,
+            'payload' => $payload,
         ]);
 
         try {
@@ -216,32 +216,32 @@ class AbhhyamService
                 $json = $response->json();
                 Log::info('Abhhyam Register Customer API Call Success', [
                     'customer_id' => $custId,
-                    'status'      => $response->status(),
-                    'response'    => $json ?? $response->body(),
+                    'status' => $response->status(),
+                    'response' => $json ?? $response->body(),
                 ]);
 
                 return [
                     'success' => true,
                     'message' => 'Customer registered on Abhhyam API successfully.',
-                    'data'    => $json ?? $response->body(),
+                    'data' => $json ?? $response->body(),
                 ];
             }
 
             Log::error('Abhhyam Register Customer API HTTP Error', [
                 'customer_id' => $custId,
-                'status'      => $response->status(),
-                'body'        => $response->body(),
+                'status' => $response->status(),
+                'body' => $response->body(),
             ]);
 
             return [
                 'success' => false,
                 'message' => 'Abhhyam API returned HTTP status ' . $response->status(),
-                'data'    => $response->body(),
+                'data' => $response->body(),
             ];
         } catch (\Exception $e) {
             Log::error('Abhhyam Register Customer API Exception', [
                 'customer_id' => $custId,
-                'error'       => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
 
             return [
@@ -268,8 +268,8 @@ class AbhhyamService
         if (empty($amaCode) || strtoupper($amaCode) === 'UNKNOWN') {
             Log::warning('Abhhyam Update AMA Incentive skipped: Invalid or UNKNOWN ama_code.', [
                 'ama_code' => $amaCode,
-                'amount'   => $amount,
-                'remarks'  => $remarks,
+                'amount' => $amount,
+                'remarks' => $remarks,
             ]);
             return [
                 'success' => false,
@@ -279,12 +279,12 @@ class AbhhyamService
 
         $payload = [
             'ama_code' => $amaCode,
-            'amount'   => (string) $amount,
-            'remarks'  => (string) $remarks,
+            'amount' => (string) $amount,
+            'remarks' => (string) $remarks,
         ];
 
         Log::info('Initiating Abhhyam Update AMA Incentive API call', [
-            'url'     => $apiUrl,
+            'url' => $apiUrl,
             'payload' => $payload,
         ]);
 
@@ -295,32 +295,32 @@ class AbhhyamService
                 $json = $response->json();
                 Log::info('Abhhyam Update AMA Incentive API Call Success', [
                     'ama_code' => $amaCode,
-                    'status'   => $response->status(),
+                    'status' => $response->status(),
                     'response' => $json ?? $response->body(),
                 ]);
 
                 return [
                     'success' => true,
                     'message' => 'AMA Incentive updated on Abhhyam API successfully.',
-                    'data'    => $json ?? $response->body(),
+                    'data' => $json ?? $response->body(),
                 ];
             }
 
             Log::error('Abhhyam Update AMA Incentive API HTTP Error', [
                 'ama_code' => $amaCode,
-                'status'   => $response->status(),
-                'body'     => $response->body(),
+                'status' => $response->status(),
+                'body' => $response->body(),
             ]);
 
             return [
                 'success' => false,
                 'message' => 'Abhhyam API returned HTTP status ' . $response->status(),
-                'data'    => $response->body(),
+                'data' => $response->body(),
             ];
         } catch (\Exception $e) {
             Log::error('Abhhyam Update AMA Incentive API Exception', [
                 'ama_code' => $amaCode,
-                'error'    => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
 
             return [

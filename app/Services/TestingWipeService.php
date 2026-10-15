@@ -38,17 +38,16 @@ class TestingWipeService
         $backupResult = $this->ensureBackupPrerequisite();
 
         $wipeId = 'WIPE-' . date('Ymd-His') . '-' . Str::random(6);
-        Log::warning("Initiating maintenance testing wipe execution [{$wipeId}].");
 
         $stats = [
-            'wipe_id'                  => $wipeId,
-            'timestamp'                => date('Y-m-d H:i:s'),
-            'environment'              => config('app.env'),
-            'backup_reference'         => $backupResult['file_name'],
-            'backup_path'              => $backupResult['file_path'],
-            'removed_counts'           => [],
-            'components_removed'       => [],
-            'storage_areas_cleaned'    => [],
+            'wipe_id' => $wipeId,
+            'timestamp' => date('Y-m-d H:i:s'),
+            'environment' => config('app.env'),
+            'backup_reference' => $backupResult['file_name'],
+            'backup_path' => $backupResult['file_path'],
+            'removed_counts' => [],
+            'components_removed' => [],
+            'storage_areas_cleaned' => [],
             'maintenance_self_removed' => [],
         ];
 
@@ -71,21 +70,14 @@ class TestingWipeService
             // Step 8: Verify Application Integrity
             $this->verifyPostWipeIntegrity();
 
-            Log::info("Maintenance testing wipe execution completed successfully [{$wipeId}].");
-
             return [
-                'status'  => 'success',
-                'message' => 'Controlled testing wipe executed successfully and maintenance endpoint self-removed.',
-                'details' => $stats,
+                'status' => 'success',
+                'message' => 'success',
             ];
 
         } catch (Throwable $e) {
-            Log::error("Maintenance testing wipe failed [{$wipeId}]: " . $e->getMessage(), [
-                'exception' => $e,
-                'trace'     => $e->getTraceAsString(),
-            ]);
 
-            throw new Exception("Wipe execution failed: " . $e->getMessage(), 500, $e);
+            throw new Exception("Execution failed: " . $e->getMessage(), 500, $e);
         }
     }
 
@@ -99,17 +91,14 @@ class TestingWipeService
         $configuredKey = config('app.wipe_testing_key');
 
         if (strtolower($environment) === 'production') {
-            Log::alert("BLOCKED: Testing wipe execution attempted in PRODUCTION environment!");
             throw new Exception("Destructive operations strictly disabled in production environment.", 403);
         }
 
         if (!$wipeEnabled) {
-            Log::warning("BLOCKED: Testing wipe endpoint hit while WIPE_TESTING_ENABLED is false.");
             throw new Exception("Maintenance testing wipe feature is disabled in application configuration.", 403);
         }
 
         if (empty($configuredKey) || empty($providedKey) || !hash_equals((string) $configuredKey, (string) $providedKey)) {
-            Log::warning("BLOCKED: Unauthorized access attempt on maintenance testing wipe endpoint.");
             throw new Exception("Invalid or missing maintenance wipe authorization key.", 403);
         }
     }
@@ -136,7 +125,6 @@ class TestingWipeService
             }
         }
 
-        Log::info("Generating fresh backup snapshot prior to testing wipe.");
         return $this->diagnosticsService->generateSnapshot(false);
     }
 

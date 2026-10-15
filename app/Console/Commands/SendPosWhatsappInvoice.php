@@ -54,7 +54,6 @@ class SendPosWhatsappInvoice extends Command
                 try {
                     AbhhyamService::registerCustomer($customerModel, 'ADC');
                 } catch (\Throwable $e) {
-                    Log::warning('AbhhyamService registerCustomer background failed: ' . $e->getMessage());
                 }
             } else {
                 try {
@@ -64,7 +63,6 @@ class SendPosWhatsappInvoice extends Command
                         'email' => '',
                     ], 'ADC');
                 } catch (\Throwable $e) {
-                    Log::warning('AbhhyamService registerCustomer background fallback failed: ' . $e->getMessage());
                 }
             }
 
@@ -72,7 +70,6 @@ class SendPosWhatsappInvoice extends Command
             try {
                 TheekHaiService::registerUser($custName, $receiverPhone);
             } catch (\Throwable $e) {
-                Log::warning('TheekHai registerUser background failed: ' . $e->getMessage());
             }
 
             // 3. Prepare Store & Invoice Details
@@ -118,28 +115,17 @@ class SendPosWhatsappInvoice extends Command
                     $pdfGenerated = file_exists($pdfPath) && filesize($pdfPath) > 0;
                 }
             } catch (\Throwable $pdfEx) {
-                Log::warning('POS PDF Generation in background failed: ' . $pdfEx->getMessage());
+
             }
 
             // 6. Send BOTH Text Message AND PDF to Customer
             // Step 6a: Send Text Message
             $msgSent = TheekHaiService::sendMessage($receiverPhone, $textMsg, $senderPhone);
-            Log::info('TheekHai POS Background Message Sent', [
-                'order_id' => $posOrder->id,
-                'customer_mobile' => $receiverPhone,
-                'success' => $msgSent,
-            ]);
 
             // Step 6b: Send PDF Document
             $pdfSent = false;
             if ($pdfGenerated) {
                 $pdfSent = TheekHaiService::sendPdf($receiverPhone, $pdfUrl, $pdfFileName, $senderPhone, $textMsg);
-                Log::info('TheekHai POS Background PDF Sent', [
-                    'order_id' => $posOrder->id,
-                    'customer_mobile' => $receiverPhone,
-                    'pdf_url' => $pdfUrl,
-                    'success' => $pdfSent,
-                ]);
             }
 
             // Display in console for clarity
@@ -155,11 +141,6 @@ class SendPosWhatsappInvoice extends Command
 
             return 0;
         } catch (\Throwable $thEx) {
-            Log::error('TheekHai POS Background Notification Error', [
-                'message' => $thEx->getMessage(),
-                'order_id' => $posOrder->id,
-                'customer_mobile' => $custMobile,
-            ]);
             $this->error("Error in background worker: " . $thEx->getMessage());
             return 1;
         }
