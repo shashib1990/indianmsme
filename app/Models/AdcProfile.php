@@ -35,6 +35,8 @@ class AdcProfile extends Model
         'franchise_deposit_receipt',
         'kyc_status',
         'kyc_remarks',
+        'pos_status',
+        'show_order',
         'address',
         'state',
         'district',

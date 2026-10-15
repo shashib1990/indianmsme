@@ -101,6 +101,7 @@ class AdcOrderController extends Controller
 
         // Orders List Query
         $ordersQuery = AdcOrder::with(['adc.adcProfile', 'items.product', 'selectedDdc', 'virtualDdc', 'assignedDdc'])
+            ->forDdcVisibility()
             ->where(function ($q) use ($ddcId, $areaAdcUserIds) {
                 $q->where('selected_ddc_id', $ddcId)
                   ->orWhere('virtual_ddc_id', $ddcId)
@@ -145,6 +146,13 @@ class AdcOrderController extends Controller
             ->leftJoin('users as adc_users', 'adc_orders.adc_id', '=', 'adc_users.id')
             ->leftJoin('adc_profiles', 'adc_users.id', '=', 'adc_profiles.user_id')
             ->leftJoin('products', 'adc_order_items.product_id', '=', 'products.id')
+            ->where(function ($q) {
+                $q->where('adc_orders.status', '!=', 'Processing')
+                  ->orWhere(function ($sq) {
+                      $sq->whereNull('adc_profiles.show_order')
+                         ->orWhere('adc_profiles.show_order', '!=', 'No');
+                  });
+            })
             ->where(function ($q) use ($ddcId, $areaAdcUserIds) {
                 $q->where('adc_orders.selected_ddc_id', $ddcId)
                   ->orWhere('adc_orders.virtual_ddc_id', $ddcId)
