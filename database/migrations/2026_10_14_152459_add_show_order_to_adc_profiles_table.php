@@ -13,7 +13,10 @@ return new class extends Migration
     {
         Schema::table('adc_profiles', function (Blueprint $table) {
             if (!Schema::hasColumn('adc_profiles', 'show_order')) {
-                $table->enum('show_order', ['Yes', 'No'])->default('Yes')->after('pos_status');
+                $table->enum('show_order', ['Yes', 'No'])->default('Yes');
+            }
+            if (!Schema::hasColumn('adc_profiles', 'pos_status')) {
+                $table->enum('pos_status', ['Active', 'Inactive'])->default('Active');
             }
         });
     }
@@ -26,6 +29,9 @@ return new class extends Migration
         Schema::table('adc_profiles', function (Blueprint $table) {
             if (Schema::hasColumn('adc_profiles', 'show_order')) {
                 $table->dropColumn('show_order');
+            }
+            if (Schema::hasColumn('adc_profiles', 'pos_status')) {
+                $table->dropColumn('pos_status');
             }
         });
     }
