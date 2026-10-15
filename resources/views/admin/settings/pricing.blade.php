@@ -13,17 +13,15 @@
                     <h5 class="card-title fw-bold text-slate-800 mb-0">Margin & MBP Configuration</h5>
                 </div>
                 <div class="card-body p-4">
-                    <!-- Warning / Informative Alert -->
+                    <!-- Informative Alert -->
                     <div
-                        class="alert alert-warning border-0 bg-warning-subtle text-warning-emphasis d-flex align-items-start gap-2 mb-4 p-3 rounded">
+                        class="alert alert-info border-0 bg-info-subtle text-info-emphasis d-flex align-items-start gap-2 mb-4 p-3 rounded">
                         <iconify-icon icon="solar:info-circle-bold-duotone"
-                            class="fs-22 text-warning mt-0.5"></iconify-icon>
+                            class="fs-22 text-info mt-0.5"></iconify-icon>
                         <div>
-                            <h6 class="fw-bold mb-1">Important System Notice</h6>
+                            <h6 class="fw-bold mb-1">System Margin Configuration</h6>
                             <p class="mb-0 small">
-                                Updating these settings will trigger an <strong>automatic bulk recalculation</strong> of the
-                                pricing fields (Base Cost, Margin Amounts, GST, ADC Purchase Price, etc.) for all products
-                                in the database. Depending on the catalog size, this may take a moment.
+                                These margin settings will be saved directly into the system settings configuration. Updating these values will <strong>not</strong> alter or recalculate existing products in the products table.
                             </p>
                         </div>
                     </div>
@@ -80,10 +78,14 @@
                         <hr class="my-4 border-slate-100">
 
                         <!-- Actions -->
-                        <div class="d-flex justify-content-end gap-2">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <a href="{{ route('admin.products.all') }}" class="btn btn-outline-secondary px-3 py-2 d-inline-flex align-items-center gap-1.5 fs-13">
+                                <iconify-icon icon="solar:box-minimalistic-bold-duotone" class="fs-18 text-primary"></iconify-icon>
+                                Manage Product-Level Margins (Export/Upload)
+                            </a>
                             <button type="submit" class="btn btn-primary px-4 py-2 d-inline-flex align-items-center gap-1">
                                 <iconify-icon icon="solar:diskette-bold-duotone" class="fs-18"></iconify-icon>
-                                Save & Recalculate
+                                Save Margin Settings
                             </button>
                         </div>
                     </form>

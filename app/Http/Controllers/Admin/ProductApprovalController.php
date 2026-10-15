@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductAuditLog;
+use App\Exports\ProductMarginsExport;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -616,6 +618,235 @@ class ProductApprovalController extends Controller
                 return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
             }
             return redirect()->back()->with('error', 'Bulk update failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Dedicated endpoint to export products margin configuration template file for upload.
+     */
+    public function exportMargins(Request $request)
+    {
+        $sellerId = $request->get('seller_id');
+        $status = $request->get('status');
+        $search = $request->get('search');
+        $sort = $request->get('sort', 'id');
+        $order = $request->get('order', 'asc');
+
+        $query = Product::query()->with(['seller.sellerProfile']);
+
+        if ($sellerId) {
+            $selectedSeller = \App\Models\Vendor::with('sellerProfile')->find($sellerId);
+            if ($selectedSeller && $selectedSeller->sellerProfile?->parent_id) {
+                $query->where(function ($q) use ($sellerId) {
+                    $q->where('seller_id', $sellerId)
+                      ->orWhereHas('subSellerAssignments', function ($sq) use ($sellerId) {
+                          $sq->where('sub_seller_id', $sellerId);
+                      });
+                });
+            } else {
+                $query->where('seller_id', $sellerId);
+            }
+        }
+
+        if ($status && $status !== 'all') {
+            if ($status === 'Rejected') {
+                $query->whereIn('status', ['Rejected', 'Inactive']);
+            } else {
+                $query->where('status', $status);
+            }
+        }
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('product_name', 'like', "%{$search}%")
+                  ->orWhere('barcode', 'like', "%{$search}%")
+                  ->orWhere('product_code', 'like', "%{$search}%")
+                  ->orWhereHas('seller', function ($sq) use ($search) {
+                      $sq->where('name', 'like', "%{$search}%")
+                        ->orWhereHas('sellerProfile', function ($spq) use ($search) {
+                            $spq->where('company_name', 'like', "%{$search}%")
+                               ->orWhere('seller_id', 'like', "%{$search}%");
+                        });
+                  });
+            });
+        }
+
+        $format = strtolower($request->get('format', 'xlsx'));
+        $filename = 'products_margins_template_' . date('Y-m-d_His') . '.' . ($format === 'csv' ? 'csv' : 'xlsx');
+        $exportQuery = $query->orderBy($sort, $order);
+
+        if ($format === 'csv') {
+            return Excel::download(new ProductMarginsExport($exportQuery), $filename, \Maatwebsite\Excel\Excel::CSV);
+        }
+        return Excel::download(new ProductMarginsExport($exportQuery), $filename);
+    }
+
+    /**
+     * Upload and update margins via Excel (.xlsx, .xls) or CSV file.
+     * Uses Product ID as unique identifier.
+     * Reference columns (Product Name, Product Code, Seller Name, IMV Code) are NOT modified.
+     * Recalculates product pricing using existing PricingService logic.
+     */
+    public function uploadMargins(Request $request)
+    {
+        $request->validate([
+            'margin_file' => 'required|file|mimes:xlsx,xls,csv,txt|max:20480',
+        ], [
+            'margin_file.required' => 'Please select an Excel or CSV file to upload.',
+            'margin_file.mimes'    => 'Uploaded file must be a valid .xlsx, .xls, or .csv document.',
+        ]);
+
+        try {
+            $file = $request->file('margin_file');
+            $sheetData = Excel::toArray([], $file);
+            $rows = $sheetData[0] ?? [];
+
+            if (empty($rows) || count($rows) < 2) {
+                return redirect()->back()->with('error', 'The uploaded file is empty or missing data rows.');
+            }
+
+            // Identify header row
+            $headerRow = array_map(function ($h) {
+                return strtolower(trim((string)$h));
+            }, $rows[0]);
+
+            // Locate required columns by header name or fallback to template index
+            $colProductId = null;
+            $colAdminMargin = null;
+            $colDdcMargin = null;
+
+            foreach ($headerRow as $idx => $header) {
+                $clean = preg_replace('/[^a-z0-9]/', '', $header);
+                if (in_array($clean, ['productid', 'id']) || str_contains($clean, 'productid')) {
+                    if ($colProductId === null) $colProductId = $idx;
+                } elseif (str_contains($clean, 'adminmargin') || ($clean === 'admin')) {
+                    if ($colAdminMargin === null) $colAdminMargin = $idx;
+                } elseif (str_contains($clean, 'ddcmargin') || ($clean === 'ddc')) {
+                    if ($colDdcMargin === null) $colDdcMargin = $idx;
+                }
+            }
+
+            // Fallback for standard templates: 9-column template (0: ID, 7: Admin, 8: DDC) or 7-column (0: ID, 5: Admin, 6: DDC)
+            if ($colProductId === null) $colProductId = 0;
+            if ($colAdminMargin === null) $colAdminMargin = count($headerRow) >= 9 ? 7 : 5;
+            if ($colDdcMargin === null) $colDdcMargin = count($headerRow) >= 9 ? 8 : 6;
+
+            $totalRows = 0;
+            $updatedCount = 0;
+            $unchangedCount = 0;
+            $errors = [];
+
+            DB::beginTransaction();
+
+            for ($i = 1; $i < count($rows); $i++) {
+                $row = $rows[$i];
+                $excelRowNum = $i + 1; // 1-indexed for spreadsheet users
+
+                // Skip completely empty rows
+                if (empty(array_filter($row, fn($cell) => $cell !== null && trim((string)$cell) !== ''))) {
+                    continue;
+                }
+
+                $totalRows++;
+
+                $productIdRaw = trim((string)($row[$colProductId] ?? ''));
+                $adminMarginRaw = trim((string)($row[$colAdminMargin] ?? ''));
+                $ddcMarginRaw = trim((string)($row[$colDdcMargin] ?? ''));
+
+                if ($productIdRaw === '' || !is_numeric($productIdRaw)) {
+                    $errors[] = "Row {$excelRowNum}: Invalid or missing Product ID ('{$productIdRaw}').";
+                    continue;
+                }
+
+                $productId = (int)$productIdRaw;
+                $product = Product::with('subSellerAssignments')->find($productId);
+
+                if (!$product) {
+                    $errors[] = "Row {$excelRowNum}: Product ID #{$productId} does not exist in the database.";
+                    continue;
+                }
+
+                // Margin validation
+                if ($adminMarginRaw === '' || !is_numeric($adminMarginRaw)) {
+                    $errors[] = "Row {$excelRowNum} (Product #{$productId}): Admin Margin must be a valid numeric percentage.";
+                    continue;
+                }
+
+                if ($ddcMarginRaw === '' || !is_numeric($ddcMarginRaw)) {
+                    $errors[] = "Row {$excelRowNum} (Product #{$productId}): DDC Margin must be a valid numeric percentage.";
+                    continue;
+                }
+
+                $adminMargin = round((float)$adminMarginRaw, 2);
+                $ddcMargin   = round((float)$ddcMarginRaw, 2);
+
+                if ($adminMargin < 0 || $adminMargin > 100) {
+                    $errors[] = "Row {$excelRowNum} (Product #{$productId}): Admin Margin ({$adminMargin}%) must be between 0% and 100%.";
+                    continue;
+                }
+
+                if ($ddcMargin < 0 || $ddcMargin > 100) {
+                    $errors[] = "Row {$excelRowNum} (Product #{$productId}): DDC Margin ({$ddcMargin}%) must be between 0% and 100%.";
+                    continue;
+                }
+
+                // Check if margin values actually changed
+                $curAdmin = $product->admin_margin_percentage !== null ? round((float)$product->admin_margin_percentage, 2) : null;
+                $curDdc   = $product->ddc_margin_percentage !== null ? round((float)$product->ddc_margin_percentage, 2) : null;
+
+                if ($curAdmin === $adminMargin && $curDdc === $ddcMargin) {
+                    $unchangedCount++;
+                    continue;
+                }
+
+                // Update margins ONLY (reference columns Product Name, Code, Seller Name, IMV Code are NOT modified)
+                $product->admin_margin_percentage = $adminMargin;
+                $product->ddc_margin_percentage   = $ddcMargin;
+
+                // Recalculate applicable product prices using existing pricing logic
+                $pricing = \App\Services\PricingService::calculate(
+                    (float) $product->seller_price_incl_gst,
+                    (float) $product->gst_rate,
+                    (float) $product->mrp,
+                    $adminMargin,
+                    $ddcMargin,
+                    $product->mbp_percentage
+                );
+
+                foreach ($pricing as $key => $val) {
+                    $product->$key = $val;
+                }
+
+                $product->save();
+
+                // Recalculate sub-seller assignments if any exist
+                if ($product->subSellerAssignments && $product->subSellerAssignments->isNotEmpty()) {
+                    foreach ($product->subSellerAssignments as $assignment) {
+                        $assignment->recalculatePricing();
+                    }
+                }
+
+                $updatedCount++;
+            }
+
+            DB::commit();
+
+            $summary = [
+                'total_rows'      => $totalRows,
+                'updated_count'   => $updatedCount,
+                'unchanged_count' => $unchangedCount,
+                'errors_count'    => count($errors),
+                'errors'          => array_slice($errors, 0, 15),
+                'has_more_errors' => count($errors) > 15 ? count($errors) - 15 : 0,
+            ];
+
+            return redirect()->route('admin.products.all')
+                ->with('margin_upload_summary', $summary)
+                ->with('success', "Margins upload processed: {$updatedCount} products updated, {$unchangedCount} unchanged" . (count($errors) > 0 ? ", " . count($errors) . " errors." : "."));
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Failed to process margins file: ' . $e->getMessage());
         }
     }
 }

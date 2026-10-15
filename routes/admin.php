@@ -254,6 +254,8 @@ Route::name('admin.')->group(function () {
         Route::prefix('products')->name('products.')->group(function () {
             Route::get('/', [ProductApprovalController::class, 'allProducts'])->name('index')->middleware('permission:users.view');
             Route::get('/all', [ProductApprovalController::class, 'allProducts'])->name('all')->middleware('permission:users.view');
+            Route::get('/export-margins', [ProductApprovalController::class, 'exportMargins'])->name('export-margins')->middleware('permission:users.view');
+            Route::post('/upload-margins', [ProductApprovalController::class, 'uploadMargins'])->name('upload-margins')->middleware('permission:users.manage');
             Route::post('/{id}/update-margins', [ProductApprovalController::class, 'updateMargins'])->name('update-margins')->middleware('permission:users.manage');
             Route::post('/bulk-update-margins', [ProductApprovalController::class, 'bulkUpdateMargins'])->name('bulk-update-margins')->middleware('permission:users.manage');
         });

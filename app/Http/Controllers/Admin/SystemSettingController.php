@@ -43,32 +43,10 @@ class SystemSettingController extends Controller
             SystemSetting::setVal('mbp_percentage', $mbp);
             SystemSetting::setVal('fsi_percentage', $fsi);
 
-            // Trigger recalculation for all products
-            Product::chunk(100, function ($products) use ($adminMargin, $ddcMargin, $mbp) {
-                foreach ($products as $product) {
-                    $pricing = ProductController::calculatePricingData(
-                        $product->seller_price_incl_gst,
-                        $product->gst_rate,
-                        $product->mrp,
-                        $adminMargin,
-                        $ddcMargin,
-                        $mbp
-                    );
-                    $product->update($pricing);
-                }
-            });
-
-            // Trigger recalculation for all sub-seller products
-            \App\Models\SubSellerProduct::with('product')->chunk(100, function ($subSellerProducts) {
-                foreach ($subSellerProducts as $subSellerProduct) {
-                    $subSellerProduct->recalculatePricing();
-                }
-            });
-
             DB::commit();
 
             return redirect()->route('admin.settings.pricing.index')
-                ->with('success', 'Pricing settings updated and all products recalculated successfully.');
+                ->with('success', 'Pricing margin settings updated successfully.');
 
         } catch (\Exception $e) {
             DB::rollBack();

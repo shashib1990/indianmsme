@@ -104,6 +104,65 @@
         </div>
     </div>
 
+    <!-- Upload Result Summary Banner -->
+    @if(session('margin_upload_summary'))
+        @php $sum = session('margin_upload_summary'); @endphp
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; border-left: 4px solid #3b82f6 !important;">
+            <div class="card-body p-3">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <iconify-icon icon="solar:check-read-bold-duotone" class="fs-22 text-primary"></iconify-icon>
+                        <h6 class="fw-bold mb-0 text-slate-800">Margin Excel Upload Summary</h6>
+                    </div>
+                    <button type="button" class="btn-close fs-12" data-bs-dismiss="alert" aria-label="Close" onclick="this.closest('.card').remove()"></button>
+                </div>
+                <div class="row g-2 text-center my-1">
+                    <div class="col-sm-3 col-6">
+                        <div class="p-2 bg-light rounded">
+                            <span class="d-block text-muted fs-11 text-uppercase fw-semibold">Total Rows</span>
+                            <span class="fs-18 fw-bold text-slate-800">{{ number_format($sum['total_rows']) }}</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 col-6">
+                        <div class="p-2 bg-success-subtle rounded">
+                            <span class="d-block text-success fs-11 text-uppercase fw-semibold">Updated</span>
+                            <span class="fs-18 fw-bold text-success">{{ number_format($sum['updated_count']) }}</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 col-6">
+                        <div class="p-2 bg-secondary-subtle rounded">
+                            <span class="d-block text-secondary fs-11 text-uppercase fw-semibold">Unchanged</span>
+                            <span class="fs-18 fw-bold text-secondary">{{ number_format($sum['unchanged_count']) }}</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 col-6">
+                        <div class="p-2 {{ $sum['errors_count'] > 0 ? 'bg-danger-subtle' : 'bg-light' }} rounded">
+                            <span class="d-block {{ $sum['errors_count'] > 0 ? 'text-danger' : 'text-muted' }} fs-11 text-uppercase fw-semibold">Errors</span>
+                            <span class="fs-18 fw-bold {{ $sum['errors_count'] > 0 ? 'text-danger' : 'text-muted' }}">{{ number_format($sum['errors_count']) }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                @if(!empty($sum['errors']))
+                    <div class="mt-3 p-2.5 bg-danger-subtle text-danger rounded fs-12">
+                        <div class="fw-bold mb-1 d-flex align-items-center gap-1">
+                            <iconify-icon icon="solar:danger-triangle-bold-duotone"></iconify-icon>
+                            Errors encountered during upload (first {{ count($sum['errors']) }} shown):
+                        </div>
+                        <ul class="mb-0 ps-3">
+                            @foreach($sum['errors'] as $err)
+                                <li>{{ $err }}</li>
+                            @endforeach
+                        </ul>
+                        @if(!empty($sum['has_more_errors']))
+                            <div class="mt-1 text-muted fst-italic">...and {{ $sum['has_more_errors'] }} more error rows.</div>
+                        @endif
+                    </div>
+                @endif
+            </div>
+        </div>
+    @endif
+
     <!-- Bulk Margins Action & Product List Card -->
     <div class="card shadow-sm border-0 mb-4" style="border-radius: 12px;">
         <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
@@ -117,6 +176,13 @@
                     <iconify-icon icon="solar:export-bold-duotone" class="fs-16"></iconify-icon>
                     Export CSV
                 </a>
+
+                <!-- Upload Margins Button -->
+                <button type="button" class="btn btn-sm btn-primary fw-semibold d-flex align-items-center gap-1 shadow-sm" data-bs-toggle="modal" data-bs-target="#uploadMarginsModal">
+                    <iconify-icon icon="solar:upload-track-bold-duotone" class="fs-16"></iconify-icon>
+                    Upload Margins
+                </button>
+
                 <button type="button" id="bulkSaveBtn" class="btn btn-sm btn-success fw-semibold d-none align-items-center gap-1 shadow-sm" onclick="submitBulkMargins()">
                     <iconify-icon icon="solar:diskette-bold-duotone" class="fs-16"></iconify-icon>
                     Save Selected Margins (<span id="selectedCount">0</span>)
@@ -136,6 +202,7 @@
                         <th style="width: 50px;">#</th>
                         <th>Product Details</th>
                         <th>Seller / Vendor</th>
+                        <th>MRP</th>
                         <th>Seller Price (Incl GST)</th>
                         <th style="min-width: 110px;">Admin Margin (%)</th>
                         <th>DDC Purchase Price</th>
@@ -229,11 +296,16 @@
                                 </div>
                             </td>
 
+                            <!-- MRP -->
+                            <td>
+                                <span class="fw-bold text-dark fs-13">₹{{ number_format($mrp, 2) }}</span>
+                            </td>
+
                             <!-- Price & GST -->
                             <td>
                                 <div class="d-flex flex-column">
-                                    <span class="fw-bold text-dark fs-13">₹{{ number_format($sellerPrice, 2) }}</span>
-                                    <span class="badge bg-light text-muted border fs-10 w-fit">GST: {{ $gstRate }}%</span>
+                                    <span class="fw-bold text-primary fs-13">₹{{ number_format($sellerPrice, 2) }}</span>
+                                    <span class="badge bg-light text-muted border fs-10 w-fit mt-0.5">GST: {{ $gstRate }}%</span>
                                 </div>
                             </td>
 
@@ -321,6 +393,73 @@
                 {{ $products->links() }}
             </div>
         @endif
+    <!-- Upload Margins Modal -->
+    <div class="modal fade" id="uploadMarginsModal" tabindex="-1" aria-labelledby="uploadMarginsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow" style="border-radius: 12px;">
+                <form action="{{ route('admin.products.upload-margins') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-header bg-light py-3 border-bottom">
+                        <div class="d-flex align-items-center gap-2">
+                            <iconify-icon icon="solar:upload-track-bold-duotone" class="text-primary fs-22"></iconify-icon>
+                            <h5 class="modal-title fw-bold text-slate-800" id="uploadMarginsModalLabel">Upload Product Margins (Excel / CSV)</h5>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body p-4">
+                        <!-- Instructions Alert -->
+                        <div class="alert alert-info border-0 bg-info-subtle text-info-emphasis d-flex align-items-start gap-2 mb-3 p-3 rounded">
+                            <iconify-icon icon="solar:info-circle-bold-duotone" class="fs-22 text-info mt-0.5 flex-shrink-0"></iconify-icon>
+                            <div class="fs-13">
+                                <h6 class="fw-bold mb-1">Upload Instructions & Template Columns</h6>
+                                <p class="mb-1">
+                                    The uploaded file can be the exported Excel/CSV template with the following columns:
+                                </p>
+                                <ol class="mb-2 ps-3 fw-medium">
+                                    <li><code>Product ID</code> <span class="badge bg-primary text-white fs-10">Unique Key</span></li>
+                                    <li><code>Product Name</code> <span class="text-muted small">(Reference only)</span></li>
+                                    <li><code>Product Code</code> <span class="text-muted small">(Reference only)</span></li>
+                                    <li><code>Seller Name</code> <span class="text-muted small">(Reference only)</span></li>
+                                    <li><code>IMV Code</code> <span class="text-muted small">(Reference only)</span></li>
+                                    <li><code>MRP</code> <span class="text-muted small">(Reference only)</span></li>
+                                    <li><code>Seller Price (Incl GST)</code> <span class="text-muted small">(Reference only)</span></li>
+                                    <li><code>Admin Margin</code> <span class="badge bg-success text-white fs-10">Updated in DB (%)</span></li>
+                                    <li><code>DDC Margin</code> <span class="badge bg-success text-white fs-10">Updated in DB (%)</span></li>
+                                </ol>
+                                <ul class="mb-0 ps-3 small text-muted">
+                                    <li><strong>Product ID</strong> is used as the unique identifier to match each product.</li>
+                                    <li>Product Name, Code, Seller Name, IMV Code, MRP, and Seller Price are for reference only and will <strong>not</strong> be modified.</li>
+                                    <li>Only <strong>Admin Margin</strong> and <strong>DDC Margin</strong> will be updated in the database.</li>
+                                    <li>Applicable product prices (Base Cost, DDC Purchase Price, ADC Purchase Price, etc.) will be <strong>automatically recalculated</strong> upon update.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- File Input -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-slate-700">Select Excel / CSV File <span class="text-danger">*</span></label>
+                            <input type="file" name="margin_file" class="form-control" accept=".xlsx,.xls,.csv" required>
+                            <small class="text-muted d-block mt-1">Accepted formats: <code>.xlsx</code>, <code>.xls</code>, <code>.csv</code> (Max size: 20MB)</small>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer bg-light py-2.5 border-top d-flex justify-content-between align-items-center">
+                        <a href="{{ route('admin.products.export-margins', request()->query()) }}" class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1">
+                            <iconify-icon icon="solar:download-minimalistic-bold-duotone" class="fs-16"></iconify-icon>
+                            Download Current Excel Template
+                        </a>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1 px-3">
+                                <iconify-icon icon="solar:check-circle-bold-duotone" class="fs-16"></iconify-icon>
+                                Upload & Update Margins
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
 @endsection
