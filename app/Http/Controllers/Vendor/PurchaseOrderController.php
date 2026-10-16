@@ -18,8 +18,7 @@ class PurchaseOrderController extends Controller
     public function index(Request $request)
     {
         $sellerId = auth('vendor')->id();
-        $query = PurchaseOrder::where('seller_id', $sellerId);
-        // $query = PurchaseOrder::where('seller_id', $sellerId)->forSellerVisibility();
+        $query = PurchaseOrder::where('seller_id', $sellerId)->forSellerVisibility();
 
         if ($request->filled('status')) {
             $status = $request->status;
@@ -62,7 +61,7 @@ class PurchaseOrderController extends Controller
     {
         $sellerId = auth('vendor')->id();
         $query = PurchaseOrder::where('seller_id', $sellerId)
-            // ->forSellerVisibility()
+            ->forSellerVisibility()
             ->where('status', 'Pending');
 
         [$purchaseOrders, $sort, $order, $search] = $this->applyFiltersAndGet($request, $query);

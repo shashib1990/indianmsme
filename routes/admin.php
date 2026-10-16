@@ -200,7 +200,7 @@ Route::name('admin.')->group(function () {
         Route::post('external/adc/bulk', [ADCUsersController::class, 'bulk'])->name('external.adc.bulk')->middleware('permission:users.manage');
         Route::post('external/adc/{id}/reset-password', [ADCUsersController::class, 'resetPassword'])->name('external.adc.reset-password')->middleware('permission:users.manage');
         Route::post('external/adc/{id}/toggle-status', [ADCUsersController::class, 'toggleStatus'])->name('external.adc.toggle-status')->middleware('permission:users.manage');
-        // Route::post('external/adc/{id}/toggle-pos-status', [ADCUsersController::class, 'togglePosStatus'])->name('external.adc.toggle-pos-status')->middleware('permission:users.manage');
+        Route::post('external/adc/{id}/toggle-pos-status', [ADCUsersController::class, 'togglePosStatus'])->name('external.adc.toggle-pos-status')->middleware('permission:users.manage');
         Route::post('external/adc/{id}/kyc-status', [ADCUsersController::class, 'updateKycStatus'])->name('external.adc.kyc-status')->middleware('permission:users.manage');
 
         // ADC Wallet Requests (Physical DDC & Virtual DDC)
@@ -299,6 +299,10 @@ Route::name('admin.')->group(function () {
         // System Settings / Admin Bank Details & QR Code
         Route::get('settings/bank', [SystemSettingController::class, 'bankIndex'])->name('settings.bank.index');
         Route::post('settings/bank', [SystemSettingController::class, 'bankUpdate'])->name('settings.bank.update');
+
+        // System Settings / ASWT Bank Details & QR Code
+        Route::get('settings/aswt-bank', [SystemSettingController::class, 'aswtBankIndex'])->name('settings.aswt-bank.index');
+        Route::post('settings/aswt-bank', [SystemSettingController::class, 'aswtBankUpdate'])->name('settings.aswt-bank.update');
 
         // System Settings / ADPL Head Office Details
         Route::get('settings/adpl-office', [SystemSettingController::class, 'adplOfficeIndex'])->name('settings.adpl-office.index');

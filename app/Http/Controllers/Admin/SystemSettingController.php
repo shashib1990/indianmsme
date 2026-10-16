@@ -197,6 +197,63 @@ class SystemSettingController extends Controller
         }
     }
 
+    public function aswtBankIndex()
+    {
+        $bankName = SystemSetting::getVal('aswt_bank_name', '');
+        $accountName = SystemSetting::getVal('aswt_account_name', '');
+        $accountNumber = SystemSetting::getVal('aswt_account_number', '');
+        $ifscCode = SystemSetting::getVal('aswt_ifsc_code', '');
+        $bankBranch = SystemSetting::getVal('aswt_bank_branch', '');
+        $upiId = SystemSetting::getVal('aswt_upi_id', '');
+        $qrCode = SystemSetting::getVal('aswt_qr_code');
+
+        return view('admin.settings.aswt_bank', compact(
+            'bankName',
+            'accountName',
+            'accountNumber',
+            'ifscCode',
+            'bankBranch',
+            'upiId',
+            'qrCode'
+        ));
+    }
+
+    public function aswtBankUpdate(Request $request)
+    {
+        $request->validate([
+            'aswt_bank_name' => 'nullable|string|max:255',
+            'aswt_account_name' => 'nullable|string|max:255',
+            'aswt_account_number' => 'nullable|string|max:255',
+            'aswt_ifsc_code' => 'nullable|string|max:255',
+            'aswt_bank_branch' => 'nullable|string|max:255',
+            'aswt_upi_id' => 'nullable|string|max:255',
+            'aswt_qr_code' => 'nullable|image|mimes:png,jpg,jpeg,webp,svg|max:5120',
+        ]);
+
+        try {
+            SystemSetting::setVal('aswt_bank_name', $request->input('aswt_bank_name', ''));
+            SystemSetting::setVal('aswt_account_name', $request->input('aswt_account_name', ''));
+            SystemSetting::setVal('aswt_account_number', $request->input('aswt_account_number', ''));
+            SystemSetting::setVal('aswt_ifsc_code', strtoupper($request->input('aswt_ifsc_code', '')));
+            SystemSetting::setVal('aswt_bank_branch', $request->input('aswt_bank_branch', ''));
+            SystemSetting::setVal('aswt_upi_id', $request->input('aswt_upi_id', ''));
+
+            if ($request->has('remove_qr_code') && $request->input('remove_qr_code') == '1') {
+                SystemSetting::setVal('aswt_qr_code', '');
+            } elseif ($request->hasFile('aswt_qr_code')) {
+                $file = $request->file('aswt_qr_code');
+                $url = $this->uploadFileToService($file, 'bank');
+                SystemSetting::setVal('aswt_qr_code', $url);
+            }
+
+            return redirect()->route('admin.settings.aswt-bank.index')
+                ->with('success', 'ASWT Bank Details and QR Code updated successfully.');
+
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', 'Error updating ASWT bank details: ' . $e->getMessage());
+        }
+    }
+
     public function adplOfficeIndex()
     {
         $companyName = SystemSetting::getVal('adpl_company_name', '');

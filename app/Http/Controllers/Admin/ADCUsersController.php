@@ -392,30 +392,30 @@ class ADCUsersController extends Controller
         return back()->with('success', "ADC user {$status} successfully.");
     }
 
-    // public function togglePosStatus(Request $request, int $id)
-    // {
-    //     $user = ADC::findOrFail($id);
-    //     $profile = $user->adcProfile ?: $user->adcProfile()->create([]);
+    public function togglePosStatus(Request $request, int $id)
+    {
+        $user = ADC::findOrFail($id);
+        $profile = $user->adcProfile ?: $user->adcProfile()->create([]);
 
-    //     $currentShowOrder = strtolower($profile->show_order ?? 'yes');
-    //     $newShowOrder = ($currentShowOrder === 'yes') ? 'No' : 'Yes';
-    //     $newPosStatus = ($newShowOrder === 'Yes') ? 'Active' : 'Inactive';
+        $currentShowOrder = strtolower($profile->show_order ?? 'yes');
+        $newShowOrder = ($currentShowOrder === 'yes') ? 'No' : 'Yes';
+        $newPosStatus = ($newShowOrder === 'Yes') ? 'Active' : 'Inactive';
 
-    //     $profile->update([
-    //         'show_order' => $newShowOrder,
-    //         'pos_status' => $newPosStatus,
-    //     ]);
+        $profile->update([
+            'show_order' => $newShowOrder,
+            'pos_status' => $newPosStatus,
+        ]);
 
-    //     if ($request->ajax() || $request->wantsJson()) {
-    //         return response()->json([
-    //             'success' => true,
-    //             'status' => $newShowOrder,
-    //             'message' => "Show Order changed to {$newShowOrder} for {$user->name}.",
-    //         ]);
-    //     }
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'status' => $newShowOrder,
+                'message' => "Show Order changed to {$newShowOrder} for {$user->name}.",
+            ]);
+        }
 
-    //     return back()->with('success', "Show Order for {$user->name} set to {$newShowOrder}.");
-    // }
+        return back()->with('success', "Show Order for {$user->name} set to {$newShowOrder}.");
+    }
 
     public function bulk(Request $request)
     {

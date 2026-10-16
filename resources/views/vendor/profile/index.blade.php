@@ -399,21 +399,21 @@
                                     <div class="row g-3 mb-4 p-3 rounded-3 bg-white border">
                                         <div class="col-md-7 border-end">
                                             <h6 class="fw-bold text-dark fs-13 mb-2">Official Bank Details:</h6>
-                                            <div class="fs-12 mb-1.5"><strong>Bank Name:</strong> {{ $adminBankName }}</div>
-                                            <div class="fs-12 mb-1.5"><strong>Account Holder Name:</strong> {{ $adminAccountName }}</div>
-                                            <div class="fs-12 mb-1.5"><strong>Account Number:</strong> <code class="fw-bold text-primary fs-13">{{ $adminAccountNumber }}</code></div>
-                                            <div class="fs-12 mb-1.5"><strong>IFSC Code:</strong> <code class="fw-bold text-primary fs-13">{{ $adminIfscCode }}</code></div>
-                                            @if($adminBankBranch)
-                                                <div class="fs-12 mb-1.5"><strong>Branch:</strong> {{ $adminBankBranch }}</div>
+                                            <div class="fs-12 mb-1.5"><strong>Bank Name:</strong> {{ $aswtBankName }}</div>
+                                            <div class="fs-12 mb-1.5"><strong>Account Holder Name:</strong> {{ $aswtAccountName }}</div>
+                                            <div class="fs-12 mb-1.5"><strong>Account Number:</strong> <code class="fw-bold text-primary fs-13">{{ $aswtAccountNumber }}</code></div>
+                                            <div class="fs-12 mb-1.5"><strong>IFSC Code:</strong> <code class="fw-bold text-primary fs-13">{{ $aswtIfscCode }}</code></div>
+                                            @if($aswtBankBranch)
+                                                <div class="fs-12 mb-1.5"><strong>Branch:</strong> {{ $aswtBankBranch }}</div>
                                             @endif
-                                            @if($adminUpiId)
-                                                <div class="fs-12 mb-0"><strong>UPI ID:</strong> <code class="fw-bold text-success fs-13">{{ $adminUpiId }}</code></div>
+                                            @if($aswtUpiId)
+                                                <div class="fs-12 mb-0"><strong>UPI ID:</strong> <code class="fw-bold text-success fs-13">{{ $aswtUpiId }}</code></div>
                                             @endif
                                         </div>
                                         <div class="col-md-5 text-center d-flex flex-column align-items-center justify-content-center">
                                             <div class="mb-1 text-muted small fw-semibold">Scan QR Code to Pay</div>
-                                            @if($adminQrCode)
-                                                <img src="{{ $adminQrCode }}" alt="Payment QR Code" class="img-fluid border rounded bg-white shadow-sm p-1 mb-1" style="max-height: 140px; object-fit: contain;">
+                                            @if($aswtQrCode)
+                                                <img src="{{ $aswtQrCode }}" alt="Payment QR Code" class="img-fluid border rounded bg-white shadow-sm p-1 mb-1" style="max-height: 140px; object-fit: contain;">
                                             @else
                                                 <img src="{{ asset('assets/images/ddc_payment_qr.png') }}" alt="Payment QR Code" class="img-fluid border rounded bg-white shadow-sm p-1 mb-1" style="max-height: 140px; object-fit: contain;">
                                             @endif
