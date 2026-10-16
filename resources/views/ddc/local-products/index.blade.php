@@ -17,6 +17,9 @@
                             <p class="text-muted small mb-0">Manage independent regional products for your DDC center. Products created here are stored as Draft until Stocked In.</p>
                         </div>
                         <div class="col-md-6 text-md-end d-flex align-items-center justify-content-md-end gap-2 flex-wrap">
+                            <button type="button" class="btn btn-outline-primary btn-sm fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#bulkUploadModal">
+                                <iconify-icon icon="solar:upload-track-bold-duotone" class="align-middle me-1 fs-18"></iconify-icon> Bulk Upload
+                            </button>
                             <a href="{{ route('ddc.local-products.comparison') }}" class="btn btn-outline-info btn-sm fw-semibold">
                                 <iconify-icon icon="solar:scale-bold-duotone" class="align-middle me-1 fs-18"></iconify-icon> Price Analytics
                             </a>
@@ -198,6 +201,199 @@
                 </div>
             @endif
         </div>
+    <!-- Bulk Upload Modal -->
+    <div class="modal fade" id="bulkUploadModal" tabindex="-1" aria-labelledby="bulkUploadModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header text-white px-4 py-3" style="background: linear-gradient(135deg, #4338ca 0%, #312e81 100%);">
+                    <div class="d-flex align-items-center gap-2">
+                        <iconify-icon icon="solar:upload-track-bold-duotone" class="fs-24"></iconify-icon>
+                        <h5 class="modal-title fw-bold text-white mb-0" id="bulkUploadModalLabel">Bulk Upload Regional Products &amp; Stock</h5>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('ddc.local-products.bulk-upload') }}" method="POST" enctype="multipart/form-data" id="bulkUploadForm">
+                    @csrf
+                    <div class="modal-body p-4">
+                        <!-- Top Action & Sample Download Box -->
+                        <div class="alert alert-light border border-primary-subtle rounded-3 p-3 mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <div>
+                                <div class="fw-bold text-slate-800 fs-13 mb-0.5">Need the official Excel template?</div>
+                                <div class="text-muted small">Download the structured Excel template (.xlsx) with built-in dropdowns for <strong>Category</strong>, <strong>Brand</strong>, <strong>Unit of Measure</strong>, and <strong>POS Status</strong>.</div>
+                            </div>
+                            <div>
+                                <a href="{{ route('ddc.local-products.sample-template') }}" class="btn btn-sm btn-success fw-semibold shadow-sm px-3 py-2 d-inline-flex align-items-center gap-1.5 rounded-pill">
+                                    <iconify-icon icon="solar:file-download-bold-duotone" class="fs-18"></iconify-icon>
+                                    Download Excel Template (.xlsx)
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- File Input Box -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-slate-700 fs-13">
+                                Select Excel File (.xlsx) <span class="text-danger">*</span>
+                            </label>
+                            <input type="file" name="file" id="bulkProductFile" class="form-control form-control-lg fs-13" accept=".xlsx,.xls" required>
+                            <div class="form-text text-muted fs-11 mt-1">
+                                Supported formats: <strong>.xlsx, .xls</strong> only (Max file size: 10MB). Plain CSV is disabled.
+                            </div>
+                        </div>
+
+                        <!-- Column Guidelines Reference Card -->
+                        <div class="card border border-slate-200 bg-slate-50 rounded-3 mb-2">
+                            <div class="card-header bg-transparent border-bottom py-2 px-3 d-flex align-items-center justify-content-between flex-wrap gap-1">
+                                <span class="fw-bold fs-12 text-slate-700">
+                                    <iconify-icon icon="solar:document-text-bold-duotone" class="align-middle me-1 text-primary"></iconify-icon>
+                                    Unified Column Reference Guide (Product + Inventory Stock)
+                                </span>
+                                <span class="badge bg-primary-subtle text-primary fs-10 fw-bold">12 Required &bull; 5 Optional</span>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                                    <table class="table table-sm table-bordered mb-0 fs-11 text-slate-700">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th style="width: 24%;">Column Name</th>
+                                                <th style="width: 14%;">Requirement</th>
+                                                <th>Description &amp; Dropdowns</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="table-light"><td colspan="3" class="fw-bold text-primary py-1"><iconify-icon icon="solar:box-bold-duotone" class="align-middle me-1"></iconify-icon> Section A: Regional Product Master</td></tr>
+                                            <tr>
+                                                <td class="fw-bold">Product Name</td>
+                                                <td><span class="badge bg-danger-subtle text-danger">Required</span></td>
+                                                <td>e.g. <em>Fresh Farm Cow Milk 1L</em>, <em>Organic Atta 10Kg</em></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">Category</td>
+                                                <td><span class="badge bg-danger-subtle text-danger">Required</span></td>
+                                                <td><strong>Excel Dropdown:</strong> Select an active category from the system list.</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">Barcode</td>
+                                                <td><span class="badge bg-secondary-subtle text-secondary">Optional</span></td>
+                                                <td>Optional barcode for POS scanner.</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">Brand</td>
+                                                <td><span class="badge bg-danger-subtle text-danger">Required</span></td>
+                                                <td><strong>Excel Dropdown:</strong> Choose from dropdown or type brand name.</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">Unit of Measure</td>
+                                                <td><span class="badge bg-danger-subtle text-danger">Required</span></td>
+                                                <td><strong>Excel Dropdown:</strong> Select standard unit (<em>Piece, Box, Kg, Litre, Gram</em>, etc.).</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">GST Rate (%)</td>
+                                                <td><span class="badge bg-danger-subtle text-danger">Required</span></td>
+                                                <td>GST tax percentage (e.g. <em>0, 5, 12, 18, 28</em>).</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">HSN Code</td>
+                                                <td><span class="badge bg-danger-subtle text-danger">Required</span></td>
+                                                <td>Standard HSN Code (e.g. <em>0401, 1101, 1514</em>).</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">Local Product Code</td>
+                                                <td><span class="badge bg-secondary-subtle text-secondary">Optional</span></td>
+                                                <td>Leave blank to auto-generate (e.g. <strong>LCL000001</strong>).</td>
+                                            </tr>
+
+                                            <tr class="table-light"><td colspan="3" class="fw-bold text-success py-1"><iconify-icon icon="solar:layers-bold-duotone" class="align-middle me-1"></iconify-icon> Section B: Inventory Stock &amp; Pricing (Immediate Stock-In)</td></tr>
+                                            <tr>
+                                                <td class="fw-bold">Quantity</td>
+                                                <td><span class="badge bg-danger-subtle text-danger">Required</span></td>
+                                                <td>Opening stock quantity (&ge; 0). Stock is added directly to DDC Inventory!</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">MRP</td>
+                                                <td><span class="badge bg-danger-subtle text-danger">Required</span></td>
+                                                <td>Maximum Retail Price (&gt; 0, e.g. <em>66.00</em>).</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">Purchase Price</td>
+                                                <td><span class="badge bg-danger-subtle text-danger">Required</span></td>
+                                                <td>Purchase / Inward Cost Price (&gt; 0, e.g. <em>56.00</em>).</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">MSP</td>
+                                                <td><span class="badge bg-danger-subtle text-danger">Required</span></td>
+                                                <td>Minimum Selling Price to ADC (&gt; 0, Purchase &le; MSP &le; CSP).</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">CSP</td>
+                                                <td><span class="badge bg-danger-subtle text-danger">Required</span></td>
+                                                <td>Canteen/Retail Selling Price (&gt; 0, MSP &le; CSP &le; MRP).</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">Batch Number</td>
+                                                <td><span class="badge bg-secondary-subtle text-secondary">Optional</span></td>
+                                                <td>Batch identifier (auto-generated if left blank).</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">Mfg Date</td>
+                                                <td><span class="badge bg-secondary-subtle text-secondary">Optional</span></td>
+                                                <td>Manufacturing date (YYYY-MM-DD or DD-MM-YYYY).</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">Expire Date</td>
+                                                <td><span class="badge bg-secondary-subtle text-secondary">Optional</span></td>
+                                                <td>Expiry date (YYYY-MM-DD or DD-MM-YYYY).</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">POS Status</td>
+                                                <td><span class="badge bg-danger-subtle text-danger">Required</span></td>
+                                                <td><strong>Excel Dropdown:</strong> Choose <em>Active</em> or <em>Inactive</em> for POS billing.</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Info Tip -->
+                        <div class="text-muted fs-11 mt-2">
+                            <iconify-icon icon="solar:info-circle-bold-duotone" class="text-primary me-1 align-middle"></iconify-icon>
+                            <strong>Auto Stock In:</strong> Uploading this Excel will create/update your Regional Products in Master AND immediately stock them in your DDC Inventory in a single step!
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light px-4 py-3">
+                        <button type="button" class="btn btn-light fw-semibold" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary fw-semibold px-4 shadow-sm" id="btnUploadSubmit">
+                            <iconify-icon icon="solar:upload-track-bold-duotone" class="align-middle me-1"></iconify-icon>
+                            Upload &amp; Stock In
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('open_bulk_upload') === '1') {
+            var modalEl = document.getElementById('bulkUploadModal');
+            if (modalEl) {
+                var modal = new bootstrap.Modal(modalEl);
+                modal.show();
+            }
+        }
+
+        var form = document.getElementById('bulkUploadForm');
+        var btn = document.getElementById('btnUploadSubmit');
+        if (form && btn) {
+            form.addEventListener('submit', function () {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Uploading & Processing...';
+            });
+        }
+    });
+</script>
+@endpush

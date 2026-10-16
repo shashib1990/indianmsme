@@ -365,6 +365,9 @@
                             <span class="badge bg-primary-subtle text-primary fs-12 px-3 py-2 rounded-pill">
                                 <iconify-icon icon="solar:layers-bold-duotone" class="align-middle me-1 fs-14"></iconify-icon> {{ $inventories->total() }} Batch{{ $inventories->total() !== 1 ? 'es' : '' }} in Stock
                             </span>
+                            <a href="{{ route('ddc.local-products.index') }}?open_bulk_upload=1" class="btn btn-sm btn-outline-primary px-3 py-2 rounded-pill fw-semibold shadow-sm d-inline-flex align-items-center gap-1" title="Bulk Upload Regional Products & Stock">
+                                <iconify-icon icon="solar:upload-track-bold-duotone" class="fs-16"></iconify-icon> Bulk Upload Stock
+                            </a>
                             <a href="{{ route('ddc.inventory.export', request()->query()) }}" class="btn btn-sm btn-success px-3 py-2 rounded-pill fw-semibold shadow-sm d-inline-flex align-items-center gap-1" id="exportInventoryBtn" title="Export Inventory to CSV">
                                 <iconify-icon icon="solar:file-download-bold-duotone" class="fs-16"></iconify-icon> Export CSV
                             </a>
@@ -494,8 +497,8 @@
                                 };
 
                                 $daysLeft = $inv->expire_date ? (int) floor(now()->startOfDay()->diffInDays($inv->expire_date->startOfDay(), false)) : null;
-                                $isExpired = $daysLeft !== null && $daysLeft < 0;
-                                $isNearExpiry = $daysLeft !== null && $daysLeft >= 0 && $daysLeft <= 30;
+                                $isExpired = $daysLeft !== null && $daysLeft <= 0;
+                                $isNearExpiry = $daysLeft !== null && $daysLeft > 0 && $daysLeft <= 30;
                                 $expiryClass = $isExpired ? 'badge-expiry-danger' : ($isNearExpiry ? 'badge-expiry-warn' : 'badge-expiry-ok');
 
                                 $imgSrc = null;
@@ -781,6 +784,23 @@
                                     cspMarginBadge.textContent = parseFloat(data.inventory.csp_margin).toFixed(2) + '%';
                                 }
                             }
+                            if (data.is_expired) {
+                                if (window.Swal) {
+                                    Swal.fire({
+                                        icon: 'warning',
+                                        title: 'Product Expired & Quarantined',
+                                        text: data.message || "This product has reached its expiration date and has been moved from Active Inventory to the Expired Products quarantine list.",
+                                        timer: 3500,
+                                        showConfirmButton: false
+                                    });
+                                }
+                                row.style.transition = 'all 0.5s ease';
+                                row.style.opacity = '0';
+                                row.style.backgroundColor = '#fee2e2';
+                                setTimeout(() => row.remove(), 500);
+                                return;
+                            }
+
                             if (data.expiry_class !== undefined) {
                                 const expiryCell = row.querySelector('.col-expiry-status');
                                 if (expiryCell) {

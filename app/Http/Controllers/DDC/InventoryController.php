@@ -27,7 +27,7 @@ class InventoryController extends Controller
             ->where('ddc_id', $ddc->id)
             ->where(function ($q) use ($today) {
                 $q->whereNull('expire_date')
-                  ->orWhere('expire_date', '>=', $today);
+                  ->orWhereDate('expire_date', '>', $today);
             });
 
         if ($source !== 'ALL') {
@@ -50,16 +50,16 @@ class InventoryController extends Controller
         $expiryFilter = $request->get('expiry_filter');
         if ($expiryFilter === '1M') {
             $query->whereNotNull('expire_date')
-                ->where('expire_date', '>=', $today)
-                ->where('expire_date', '<=', now()->addDays(30)->toDateString());
+                ->whereDate('expire_date', '>', $today)
+                ->whereDate('expire_date', '<=', now()->addDays(30)->toDateString());
         } elseif ($expiryFilter === '3M') {
             $query->whereNotNull('expire_date')
-                ->where('expire_date', '>', now()->addDays(30)->toDateString())
-                ->where('expire_date', '<=', now()->addDays(90)->toDateString());
+                ->whereDate('expire_date', '>', now()->addDays(30)->toDateString())
+                ->whereDate('expire_date', '<=', now()->addDays(90)->toDateString());
         } elseif ($expiryFilter === '6M') {
             $query->whereNotNull('expire_date')
-                ->where('expire_date', '>', now()->addDays(90)->toDateString())
-                ->where('expire_date', '<=', now()->addDays(180)->toDateString());
+                ->whereDate('expire_date', '>', now()->addDays(90)->toDateString())
+                ->whereDate('expire_date', '<=', now()->addDays(180)->toDateString());
         }
 
         return $query;
@@ -236,7 +236,7 @@ class InventoryController extends Controller
         $query = DdcInventory::with(['product', 'localProduct'])
             ->where('ddc_id', $ddc->id)
             ->whereNotNull('expire_date')
-            ->where('expire_date', '<', $today);
+            ->whereDate('expire_date', '<=', $today);
 
         if ($source !== 'ALL') {
             $query->where('inventory_source', $source);
@@ -256,17 +256,17 @@ class InventoryController extends Controller
 
         $totalExpiredCount = DdcInventory::where('ddc_id', $ddc->id)
             ->whereNotNull('expire_date')
-            ->where('expire_date', '<', $today)
+            ->whereDate('expire_date', '<=', $today)
             ->count();
 
         $totalExpiredQuantity = (float) (DdcInventory::where('ddc_id', $ddc->id)
             ->whereNotNull('expire_date')
-            ->where('expire_date', '<', $today)
+            ->whereDate('expire_date', '<=', $today)
             ->sum('quantity') ?? 0);
 
         $totalExpiredValue = (float) (DdcInventory::where('ddc_id', $ddc->id)
             ->whereNotNull('expire_date')
-            ->where('expire_date', '<', $today)
+            ->whereDate('expire_date', '<=', $today)
             ->selectRaw('SUM(quantity * mrp) as total_val')
             ->value('total_val') ?? 0);
 
@@ -293,6 +293,10 @@ class InventoryController extends Controller
         if ($targetStatus === 'Active') {
             // Validation before enabling POS
             $errors = [];
+
+            if ($inv->expire_date && Carbon::parse($inv->expire_date)->startOfDay()->lte(now()->startOfDay())) {
+                $errors[] = 'Cannot enable POS for expired product (Expired on ' . Carbon::parse($inv->expire_date)->format('d M Y') . '). It has been quarantined.';
+            }
 
             if ($inv->quantity <= 0) {
                 $errors[] = 'Quantity must be greater than 0.';
@@ -387,6 +391,9 @@ class InventoryController extends Controller
         }
         if (array_key_exists('expire_date', $validated)) {
             $inv->expire_date = $validated['expire_date'];
+            if ($inv->expire_date && Carbon::parse($inv->expire_date)->startOfDay()->lte(now()->startOfDay())) {
+                $inv->pos_status = 'Inactive';
+            }
         }
 
         // Recalculate Margins based on updated MSP & CSP
@@ -413,8 +420,8 @@ class InventoryController extends Controller
         $freshInv = $inv->fresh();
         $expireDate = $freshInv->expire_date ? Carbon::parse($freshInv->expire_date)->startOfDay() : null;
         $daysLeft = $expireDate ? (int) floor($today->diffInDays($expireDate, false)) : null;
-        $isExpired = $daysLeft !== null && $daysLeft < 0;
-        $isNearExpiry = $daysLeft !== null && $daysLeft >= 0 && $daysLeft <= 30;
+        $isExpired = $daysLeft !== null && $daysLeft <= 0;
+        $isNearExpiry = $daysLeft !== null && $daysLeft > 0 && $daysLeft <= 30;
 
         $expiryClass = $isExpired ? 'badge-expiry-danger' : ($isNearExpiry ? 'badge-expiry-warn' : 'badge-expiry-ok');
 
@@ -425,14 +432,17 @@ class InventoryController extends Controller
             $expiryIcon = 'solar:danger-circle-bold';
         } elseif ($isNearExpiry) {
             $expiryIcon = 'solar:clock-circle-bold';
-            if ($daysLeft == 0) $expiryLabel = 'Today';
-            elseif ($daysLeft == 1) $expiryLabel = '1 Day Left';
+            if ($daysLeft == 1) $expiryLabel = '1 Day Left';
             else $expiryLabel = $daysLeft . ' Days Left';
         }
 
+        $respMessage = $isExpired
+            ? "Product '{$freshInv->product_name}' has expired and has been moved from Active Inventory to the Expired Products quarantine list."
+            : 'Inventory updated successfully.';
+
         return response()->json([
             'success'        => true,
-            'message'        => 'Inventory updated successfully.',
+            'message'        => $respMessage,
             'inventory'      => $freshInv,
             'is_expired'     => $isExpired,
             'is_near_expiry' => $isNearExpiry,
@@ -451,7 +461,12 @@ class InventoryController extends Controller
             $source = 'ALL';
         }
 
+        $today = now()->toDateString();
         $baseQuery = DdcInventory::where('ddc_id', $ddc->id)
+            ->where(function ($q) use ($today) {
+                $q->whereNull('expire_date')
+                  ->orWhereDate('expire_date', '>', $today);
+            })
             ->where(function ($q) {
                 $q->whereNull('barcode')
                   ->orWhere('barcode', '')
@@ -467,6 +482,10 @@ class InventoryController extends Controller
 
         $query = DdcInventory::with(['product', 'localProduct'])
             ->where('ddc_id', $ddc->id)
+            ->where(function ($q) use ($today) {
+                $q->whereNull('expire_date')
+                  ->orWhereDate('expire_date', '>', $today);
+            })
             ->where(function ($q) {
                 $q->whereNull('barcode')
                   ->orWhere('barcode', '')

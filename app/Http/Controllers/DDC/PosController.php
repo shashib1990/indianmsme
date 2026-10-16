@@ -67,20 +67,12 @@ class PosController extends Controller
         $today = date('Y-m-d');
 
         $query = DdcInventory::where('ddc_id', $ddcId)
-            ->where(function ($q) {
-                $q->where(function ($msme) {
-                    $msme->where('inventory_source', 'MSME')
-                        ->orWhereNull('inventory_source');
-                })->orWhere(function ($local) {
-                    $local->where('inventory_source', 'LOCAL')
-                        ->where('pos_status', 'Active');
-                });
-            })
+            ->where('pos_status', 'Active')
             // Enforce available quantity > 0 (quantity - reserved_quantity) and NOT expired for ALL searches & listings
             ->whereRaw('(quantity - COALESCE(reserved_quantity, 0)) > 0')
             ->where(function ($q) use ($today) {
                 $q->whereNull('expire_date')
-                    ->orWhereDate('expire_date', '>=', $today);
+                    ->orWhereDate('expire_date', '>', $today);
             })
             ->with(['product', 'localProduct']);
 
@@ -352,7 +344,7 @@ class PosController extends Controller
                 }
 
                 // 2. Product Expiry Validation Check
-                if (!empty($inventory->expire_date) && strtotime($inventory->expire_date) < strtotime($today)) {
+                if (!empty($inventory->expire_date) && strtotime($inventory->expire_date) <= strtotime($today)) {
                     $expFormatted = \Carbon\Carbon::parse($inventory->expire_date)->format('d M Y');
                     throw new \Exception("Product '{$inventory->product_name}' (Batch: " . ($inventory->batch_number ?: 'N/A') . ") expired on {$expFormatted} and cannot be checked out!");
                 }
@@ -660,10 +652,11 @@ class PosController extends Controller
 
         $inventories = DdcInventory::where('ddc_id', $ddcId)
             ->whereIn('id', $inventoryIds)
+            ->where('pos_status', 'Active')
             ->whereRaw('(quantity - COALESCE(reserved_quantity, 0)) > 0')
             ->where(function ($q) use ($today) {
                 $q->whereNull('expire_date')
-                    ->orWhereDate('expire_date', '>=', $today);
+                    ->orWhereDate('expire_date', '>', $today);
             })
             ->get()
             ->keyBy('id');

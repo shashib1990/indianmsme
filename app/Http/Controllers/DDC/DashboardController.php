@@ -50,17 +50,28 @@ class DashboardController extends Controller
         $totalSalesAmount = $posSalesAmount + $adcSalesAmount;
         $totalPosSalesCount = DdcPosOrder::where('ddc_id', $ddcId)->count();
 
-        // 4. Total Stock / Inventory
+        $todayStr = Carbon::today()->toDateString();
+
+        // 4. Total Stock / Inventory (Active non-expired)
         $totalStockItems = DdcInventory::where('ddc_id', $ddcId)
             ->where('quantity', '>', 0)
+            ->where(function ($q) use ($todayStr) {
+                $q->whereNull('expire_date')->orWhereDate('expire_date', '>', $todayStr);
+            })
             ->count();
 
         $totalStockQuantity = DdcInventory::where('ddc_id', $ddcId)
             ->where('quantity', '>', 0)
+            ->where(function ($q) use ($todayStr) {
+                $q->whereNull('expire_date')->orWhereDate('expire_date', '>', $todayStr);
+            })
             ->sum('quantity');
 
         $totalStockValue = DdcInventory::where('ddc_id', $ddcId)
             ->where('quantity', '>', 0)
+            ->where(function ($q) use ($todayStr) {
+                $q->whereNull('expire_date')->orWhereDate('expire_date', '>', $todayStr);
+            })
             ->sum(DB::raw('quantity * mrp'));
 
         // 5. Total Canteens (ADC Retail Stores mapped to this DDC via pincode only)
@@ -94,25 +105,25 @@ class DashboardController extends Controller
 
         $expiredCount = DdcInventory::where('ddc_id', $ddcId)
             ->whereNotNull('expire_date')
-            ->where('expire_date', '<', $today)
+            ->whereDate('expire_date', '<=', $todayStr)
             ->count();
 
         $nearExpiry1MonthCount = DdcInventory::where('ddc_id', $ddcId)
             ->whereNotNull('expire_date')
-            ->where('expire_date', '>=', $today)
-            ->where('expire_date', '<=', $today->copy()->addDays(30))
+            ->whereDate('expire_date', '>', $todayStr)
+            ->whereDate('expire_date', '<=', $today->copy()->addDays(30)->toDateString())
             ->count();
 
         $nearExpiry3MonthsCount = DdcInventory::where('ddc_id', $ddcId)
             ->whereNotNull('expire_date')
-            ->where('expire_date', '>', $today->copy()->addDays(30))
-            ->where('expire_date', '<=', $today->copy()->addDays(90))
+            ->whereDate('expire_date', '>', $today->copy()->addDays(30)->toDateString())
+            ->whereDate('expire_date', '<=', $today->copy()->addDays(90)->toDateString())
             ->count();
 
         $nearExpiry6MonthsCount = DdcInventory::where('ddc_id', $ddcId)
             ->whereNotNull('expire_date')
-            ->where('expire_date', '>', $today->copy()->addDays(90))
-            ->where('expire_date', '<=', $today->copy()->addDays(180))
+            ->whereDate('expire_date', '>', $today->copy()->addDays(90)->toDateString())
+            ->whereDate('expire_date', '<=', $today->copy()->addDays(180)->toDateString())
             ->count();
 
         // 8. Purchase Orders Breakdown

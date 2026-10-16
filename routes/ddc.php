@@ -134,6 +134,8 @@ Route::name('ddc.')->group(function () {
         Route::get('/local-products/category-hsn', [\App\Http\Controllers\DDC\LocalProductController::class, 'getCategoryHsn'])->name('local-products.category-hsn');
         Route::get('/local-products-comparison', [\App\Http\Controllers\DDC\LocalProductController::class, 'comparison'])->name('local-products.comparison');
         Route::post('/local-products/brands/quick-store', [\App\Http\Controllers\DDC\LocalProductController::class, 'quickStoreBrand'])->name('local-products.brands.quick-store');
+        Route::get('/local-products/sample-template', [\App\Http\Controllers\DDC\LocalProductController::class, 'sampleTemplate'])->name('local-products.sample-template');
+        Route::post('/local-products/bulk-upload', [\App\Http\Controllers\DDC\LocalProductController::class, 'bulkUpload'])->name('local-products.bulk-upload');
         Route::resource('local-products', \App\Http\Controllers\DDC\LocalProductController::class);
 
         Route::resource('local-purchases', \App\Http\Controllers\DDC\LocalPurchaseController::class)->only(['index', 'create', 'store', 'show']);
