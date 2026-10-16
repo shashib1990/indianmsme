@@ -77,6 +77,8 @@ Route::name('adc.')->group(function () {
         Route::post('/inventory/{id}/toggle-pos', [\App\Http\Controllers\ADC\InventoryController::class, 'togglePosStatus'])->name('inventory.toggle-pos');
 
         // ── Local Product & Purchase Module ──
+        Route::get('/local-products/sample-template', [\App\Http\Controllers\ADC\LocalProductController::class, 'sampleTemplate'])->name('local-products.sample-template');
+        Route::post('/local-products/bulk-upload', [\App\Http\Controllers\ADC\LocalProductController::class, 'bulkUpload'])->name('local-products.bulk-upload');
         Route::get('/local-products/search-suggestions', [\App\Http\Controllers\ADC\LocalProductController::class, 'searchSuggestions'])->name('local-products.search-suggestions');
         Route::get('/local-products/category-hsn', [\App\Http\Controllers\ADC\LocalProductController::class, 'getCategoryHsn'])->name('local-products.category-hsn');
         Route::get('/local-products-comparison', [\App\Http\Controllers\ADC\LocalProductController::class, 'comparison'])->name('local-products.comparison');
