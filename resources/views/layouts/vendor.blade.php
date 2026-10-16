@@ -1302,25 +1302,25 @@
             $ddcSubStatus = $sellerProfile?->ddc_subscription_status ?? 'none';
             $isDdcSubscribed = ($ddcSubStatus === 'approved');
 
-            // Fetch Admin Official Bank Details & QR Code
-            $adminBankName      = \App\Models\SystemSetting::getVal('admin_bank_name', 'HDFC Bank');
-            $adminAccountName   = \App\Models\SystemSetting::getVal('admin_account_name', 'ASC DISTRIBUTOR PVT LTD');
-            $adminAccountNumber = \App\Models\SystemSetting::getVal('admin_account_number', '50200089652670');
-            $adminIfscCode      = \App\Models\SystemSetting::getVal('admin_ifsc_code', 'HDFC0000886');
-            $adminBankBranch    = \App\Models\SystemSetting::getVal('admin_bank_branch', 'Naraina Plaza, Sec A, Rohini, Delhi');
-            $adminUpiId         = \App\Models\SystemSetting::getVal('admin_upi_id', 'ascdistributor@hdfcbank');
+            // Fetch ASWT Official Bank Details & QR Code for DDC Subscription
+            $aswtBankName      = \App\Models\SystemSetting::getVal('aswt_bank_name', 'State Bank of India');
+            $aswtAccountName   = \App\Models\SystemSetting::getVal('aswt_account_name', 'ASC DISTRIBUTOR PRIVATE LIMITED');
+            $aswtAccountNumber = \App\Models\SystemSetting::getVal('aswt_account_number', '43753668461');
+            $aswtIfscCode      = \App\Models\SystemSetting::getVal('aswt_ifsc_code', 'SBIN0070613');
+            $aswtBankBranch    = \App\Models\SystemSetting::getVal('aswt_bank_branch', 'SECTOR EIGHT, ROHINI BRANCH');
+            $aswtUpiId         = \App\Models\SystemSetting::getVal('aswt_upi_id', 'ascto@sbi');
 
-            $adminQrCodeRaw = \App\Models\SystemSetting::getVal('admin_qr_code');
-            if ($adminQrCodeRaw) {
-                if (filter_var($adminQrCodeRaw, FILTER_VALIDATE_URL)) {
-                    $adminQrCode = $adminQrCodeRaw;
-                } elseif (str_starts_with($adminQrCodeRaw, 'storage/')) {
-                    $adminQrCode = asset($adminQrCodeRaw);
+            $aswtQrCodeRaw = \App\Models\SystemSetting::getVal('aswt_qr_code');
+            if ($aswtQrCodeRaw) {
+                if (filter_var($aswtQrCodeRaw, FILTER_VALIDATE_URL)) {
+                    $aswtQrCode = $aswtQrCodeRaw;
+                } elseif (str_starts_with($aswtQrCodeRaw, 'storage/')) {
+                    $aswtQrCode = asset($aswtQrCodeRaw);
                 } else {
-                    $adminQrCode = asset('storage/' . $adminQrCodeRaw);
+                    $aswtQrCode = asset('storage/' . $aswtQrCodeRaw);
                 }
             } else {
-                $adminQrCode = asset('admin-assets/images/qr-code.png');
+                $aswtQrCode = asset('admin-assets/images/qr-code.png');
             }
         @endphp
         <!-- DDC Subscription Modal -->
@@ -1437,20 +1437,20 @@
                                 <div class="row g-3 mb-4 p-3 rounded-3 bg-light border">
                                     <div class="col-md-7 border-end">
                                         <h6 class="fw-bold text-dark fs-13 mb-2">Official Bank Details:</h6>
-                                        <div class="fs-12 mb-1.5"><strong>Bank Name:</strong> {{ $adminBankName }}</div>
-                                        <div class="fs-12 mb-1.5"><strong>Account Holder Name:</strong> {{ $adminAccountName }}</div>
-                                        <div class="fs-12 mb-1.5"><strong>Account Number:</strong> <code class="fw-bold text-primary fs-13">{{ $adminAccountNumber }}</code></div>
-                                        <div class="fs-12 mb-1.5"><strong>IFSC Code:</strong> <code class="fw-bold text-primary fs-13">{{ $adminIfscCode }}</code></div>
-                                        @if($adminBankBranch)
-                                            <div class="fs-12 mb-1.5"><strong>Branch:</strong> {{ $adminBankBranch }}</div>
+                                        <div class="fs-12 mb-1.5"><strong>Bank Name:</strong> {{ $aswtBankName }}</div>
+                                        <div class="fs-12 mb-1.5"><strong>Account Holder Name:</strong> {{ $aswtAccountName }}</div>
+                                        <div class="fs-12 mb-1.5"><strong>Account Number:</strong> <code class="fw-bold text-primary fs-13">{{ $aswtAccountNumber }}</code></div>
+                                        <div class="fs-12 mb-1.5"><strong>IFSC Code:</strong> <code class="fw-bold text-primary fs-13">{{ $aswtIfscCode }}</code></div>
+                                        @if($aswtBankBranch)
+                                            <div class="fs-12 mb-1.5"><strong>Branch:</strong> {{ $aswtBankBranch }}</div>
                                         @endif
-                                        @if($adminUpiId)
-                                            <div class="fs-12 mb-0"><strong>UPI ID:</strong> <code class="fw-bold text-success fs-13">{{ $adminUpiId }}</code></div>
+                                        @if($aswtUpiId)
+                                            <div class="fs-12 mb-0"><strong>UPI ID:</strong> <code class="fw-bold text-success fs-13">{{ $aswtUpiId }}</code></div>
                                         @endif
                                     </div>
                                     <div class="col-md-5 text-center d-flex flex-column align-items-center justify-content-center">
                                         <div class="mb-1 text-muted small fw-semibold">Scan QR Code to Pay</div>
-                                        <img src="{{ $adminQrCode }}" alt="Payment QR Code" class="img-fluid border rounded bg-white shadow-sm p-1 mb-1" style="max-height: 140px; object-fit: contain;">
+                                        <img src="{{ $aswtQrCode }}" alt="Payment QR Code" class="img-fluid border rounded bg-white shadow-sm p-1 mb-1" style="max-height: 140px; object-fit: contain;">
                                         <div class="fw-bold text-success fs-15 mt-1">Amount: ₹10,000</div>
                                     </div>
                                 </div>

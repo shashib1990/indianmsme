@@ -287,6 +287,8 @@ class CheckoutController extends Controller
                         'ama_code'                     => $request->advisor_code,
                         'fulfillment_type'             => 'virtual',
                         'adc_order_id'                 => $virtOrder->id,
+                        'show_order'                   => 'No',
+                        'admin_approved'               => false,
                         'total_amount'                 => $groupTotal,
                         'accepted_amount'              => 0.00,
                         'seller_total_amount'          => $groupSellerTotal,

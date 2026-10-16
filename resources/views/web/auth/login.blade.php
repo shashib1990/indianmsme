@@ -693,12 +693,12 @@
             </svg>
           </div>
           <div class="al-brand-text">
-            <span class="al-brand-title">ABHYAM</span>
-            <span class="al-brand-sub">DISTRICT CENTER</span>
+            <span class="al-brand-title">ABHHYAM</span>
+            <span class="al-brand-sub">DELIVERY CENTER</span>
           </div>
         </div>
 
-        <h1 class="al-hero-title">Welcome to<br>Abhyam District Center</h1>
+        <h1 class="al-hero-title">Welcome to<br>Abhi Aya Delivery Center</h1>
         <p class="al-hero-subtitle">
           Login or create your ADC account to access your dashboard and manage your operations.
         </p>

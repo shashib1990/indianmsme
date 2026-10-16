@@ -156,6 +156,12 @@ class AdcOrder extends Model
     public function scopeForDdcVisibility($query)
     {
         return $query->where(function ($q) {
+            // 1. If Admin PO switch is 'No' on this order's PO, hide from DDC
+            $q->whereDoesntHave('purchaseOrders', function ($poq) {
+                $poq->where('show_order', 'No');
+            });
+        })->where(function ($q) {
+            // 2. ADC Profile setting No + Processing status condition
             $q->where('adc_orders.status', '!=', 'Processing')
               ->orWhereDoesntHave('adc.adcProfile', function ($apq) {
                   $apq->where('show_order', 'No')

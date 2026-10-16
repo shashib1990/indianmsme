@@ -22,6 +22,8 @@ class PurchaseOrder extends Model
         'ssi_percentage',
         'fulfillment_type',
         'adc_order_id',
+        'show_order',
+        'admin_approved',
         'total_amount',
         'accepted_amount',
         'seller_total_amount',
@@ -46,6 +48,7 @@ class PurchaseOrder extends Model
         'seller_total_amount' => 'decimal:2',
         'seller_accepted_amount' => 'decimal:2',
         'is_cashback_credited' => 'boolean',
+        'admin_approved' => 'boolean',
         'cashback_percentage' => 'decimal:2',
         'cashback_amount' => 'decimal:2',
         'status' => \App\Casts\EnumStringCast::class . ':' . \App\Enums\PurchaseOrderStatus::class,
@@ -206,6 +209,12 @@ class PurchaseOrder extends Model
     public function scopeForSellerVisibility($query)
     {
         return $query->where(function ($q) {
+            // Admin All Orders switch: if explicitly No, hide from Seller
+            $q->where(function ($aq) {
+                $aq->where('purchase_orders.show_order', '!=', 'No')
+                   ->orWhereNull('purchase_orders.show_order');
+            });
+        })->where(function ($q) {
             // Keep all orders that are NOT (ADC via Virtual DDC with Pending status and ADC show_order = 'No')
             $q->where('purchase_orders.status', '!=', 'Pending')
               ->orWhereNull('purchase_orders.adc_order_id')
@@ -221,6 +230,18 @@ class PurchaseOrder extends Model
                           });
                   });
               });
+        });
+    }
+
+    /**
+     * Scope to filter purchase orders visible to DDC according to Admin All Orders switch:
+     * If Admin sets show_order = 'No' on this PO, hide from DDC.
+     */
+    public function scopeForDdcVisibility($query)
+    {
+        return $query->where(function ($q) {
+            $q->where('purchase_orders.show_order', '!=', 'No')
+              ->orWhereNull('purchase_orders.show_order');
         });
     }
 

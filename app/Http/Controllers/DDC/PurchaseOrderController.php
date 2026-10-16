@@ -72,7 +72,9 @@ class PurchaseOrderController extends Controller
     private function getOrdersByStatus(Request $request, $status = null, $pageTitle = 'Purchase Orders', $statusTitle = 'All Orders')
     {
         $ddc = auth('ddc')->user();
-        $query = PurchaseOrder::with(['invoice', 'seller', 'debitNote', 'items'])->where('ddc_id', $ddc->id);
+        $query = PurchaseOrder::with(['invoice', 'seller', 'debitNote', 'items'])
+            ->where('ddc_id', $ddc->id)
+            ->forDdcVisibility();
 
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
@@ -110,6 +112,7 @@ class PurchaseOrderController extends Controller
         $purchaseOrders = $query->orderBy($sort, $order)->paginate(15)->withQueryString();
 
         $statusCounts = PurchaseOrder::where('ddc_id', $ddc->id)
+            ->forDdcVisibility()
             ->select('status', DB::raw('count(*) as count'))
             ->groupBy('status')
             ->pluck('count', 'status')
@@ -956,6 +959,8 @@ class PurchaseOrderController extends Controller
                     'ssi_applicable' => false,
                     'ssi_type' => null,
                     'ssi_percentage' => null,
+                    'show_order' => 'No',
+                    'admin_approved' => false,
                     'total_amount' => $totalAmount,
                     'accepted_amount' => 0.00,
                     'seller_total_amount' => $sellerTotalAmount,
@@ -994,7 +999,9 @@ class PurchaseOrderController extends Controller
 
     public function show($id)
     {
-        $purchaseOrder = PurchaseOrder::with(['items.product', 'items.seller', 'invoice'])->findOrFail($id);
+        $purchaseOrder = PurchaseOrder::forDdcVisibility()
+            ->with(['items.product', 'items.seller', 'invoice'])
+            ->findOrFail($id);
         if ($purchaseOrder->ddc_id !== auth('ddc')->id()) {
             abort(403, 'Unauthorized.');
         }

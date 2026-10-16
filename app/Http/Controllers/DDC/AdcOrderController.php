@@ -146,6 +146,12 @@ class AdcOrderController extends Controller
             ->leftJoin('users as adc_users', 'adc_orders.adc_id', '=', 'adc_users.id')
             ->leftJoin('adc_profiles', 'adc_users.id', '=', 'adc_profiles.user_id')
             ->leftJoin('products', 'adc_order_items.product_id', '=', 'products.id')
+            ->whereNotExists(function ($sq) {
+                $sq->select(DB::raw(1))
+                   ->from('purchase_orders')
+                   ->whereColumn('purchase_orders.adc_order_id', 'adc_orders.id')
+                   ->where('purchase_orders.show_order', 'No');
+            })
             ->where(function ($q) {
                 $q->where('adc_orders.status', '!=', 'Processing')
                   ->orWhere(function ($sq) {

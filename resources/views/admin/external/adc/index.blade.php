@@ -466,7 +466,7 @@
                                     </tr>
                                 @empty
                                     <x-admin.empty-state icon="solar:user-speak-rounded-bold-duotone" title="No ADC Users Found"
-                                        description="We couldn't find any ADC users matching your search." colspan="16" />
+                                        description="We couldn't find any ADC users matching your search." colspan="15" />
                                 @endforelse
                             </tbody>
                         </table>

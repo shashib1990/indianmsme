@@ -76,7 +76,8 @@
                                 <table class="table table-hover table-centered mb-0 align-middle">
                                     <thead class="bg-light bg-opacity-50 border-top border-bottom">
                                             <tr>
-                                                <x-admin.table-header field="po_number" :sort="$sort" :order="$order" class="ps-3">PO Number</x-admin.table-header>
+                                                <th class="ps-3 text-center" style="width: 130px;">Show Order</th>
+                                                <x-admin.table-header field="po_number" :sort="$sort" :order="$order">PO Number</x-admin.table-header>
                                                 <th>Invoice No.</th>
                                                 <x-admin.table-header field="created_at" :sort="$sort" :order="$order">Date</x-admin.table-header>
                                                 <th>DDC Coordinator</th>
@@ -92,8 +93,30 @@
                                         </thead>
                                 <tbody>
                                     @forelse($purchaseOrders as $po)
+                                        @php
+                                            $showOrderVal = $po->show_order ?? ($po->admin_approved ? 'Yes' : 'No');
+                                            $orderIsActive = (strtolower($showOrderVal) === 'yes' || (bool)$po->admin_approved);
+                                        @endphp
                                         <tr>
-                                            <td class="ps-3 fw-bold text-slate-800">
+                                            <td class="ps-3 text-center">
+                                                <div class="d-inline-flex align-items-center gap-1">
+                                                    <div class="form-check form-switch m-0 d-inline-block">
+                                                        <input class="form-check-input po-show-order-toggle" 
+                                                               type="checkbox" 
+                                                               role="switch"
+                                                               id="poSwitch{{ $po->id }}"
+                                                               data-po-id="{{ $po->id }}"
+                                                               data-url="{{ route('admin.purchase-orders.toggle-show-order', $po->id) }}"
+                                                               {{ $orderIsActive ? 'checked' : '' }}
+                                                               style="cursor: pointer; width: 2.5em; height: 1.35em;">
+                                                    </div>
+                                                    <span class="badge {{ $orderIsActive ? 'bg-success text-white' : 'bg-danger text-white' }} px-2 py-1 fs-11 fw-semibold po-show-badge"
+                                                          id="poBadge{{ $po->id }}">
+                                                        {{ $orderIsActive ? 'YES' : 'NO' }}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td class="fw-bold text-slate-800">
                                                 #{{ $po->po_number }}
                                                 @if($po->adcOrder)
                                                     <div class="mt-1">
@@ -226,7 +249,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="12" class="text-center py-4 text-muted small">No Purchase Orders found matching filters.</td>
+                                        <td colspan="13" class="text-center py-4 text-muted small">No Purchase Orders found matching filters.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -244,3 +267,61 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+<script>
+    $(document).ready(function () {
+        $(document).on('change', '.po-show-order-toggle', function () {
+            const switchEl = this;
+            const poId = $(this).data('po-id');
+            const toggleUrl = $(this).data('url');
+            const isChecked = switchEl.checked;
+            const badgeEl = $('#poBadge' + poId);
+
+            switchEl.disabled = true;
+
+            $.ajax({
+                url: toggleUrl,
+                type: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                dataType: 'json',
+                success: function (res) {
+                    switchEl.disabled = false;
+                    if (res.success) {
+                        const newStatus = (res.status || '').toLowerCase();
+                        if (newStatus === 'yes' || newStatus === 'active') {
+                            switchEl.checked = true;
+                            badgeEl.removeClass('bg-danger').addClass('bg-success').text('YES');
+                        } else {
+                            switchEl.checked = false;
+                            badgeEl.removeClass('bg-success').addClass('bg-danger').text('NO');
+                        }
+
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'success',
+                                title: res.message || 'Order visibility updated successfully',
+                                showConfirmButton: false,
+                                timer: 2500
+                            });
+                        }
+                    } else {
+                        switchEl.checked = !isChecked;
+                        alert(res.message || 'Failed to update order visibility.');
+                    }
+                },
+                error: function (xhr) {
+                    switchEl.disabled = false;
+                    switchEl.checked = !isChecked;
+                    const msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Error updating order visibility.';
+                    alert(msg);
+                }
+            });
+        });
+    });
+</script>
+@endpush

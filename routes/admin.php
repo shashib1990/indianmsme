@@ -302,6 +302,10 @@ Route::name('admin.')->group(function () {
         Route::get('settings/bank', [SystemSettingController::class, 'bankIndex'])->name('settings.bank.index');
         Route::post('settings/bank', [SystemSettingController::class, 'bankUpdate'])->name('settings.bank.update');
 
+        // System Settings / ASWT Bank Details & QR Code
+        Route::get('settings/aswt-bank', [SystemSettingController::class, 'aswtBankIndex'])->name('settings.aswt-bank.index');
+        Route::post('settings/aswt-bank', [SystemSettingController::class, 'aswtBankUpdate'])->name('settings.aswt-bank.update');
+
         // System Settings / ADPL Head Office Details
         Route::get('settings/adpl-office', [SystemSettingController::class, 'adplOfficeIndex'])->name('settings.adpl-office.index');
         Route::post('settings/adpl-office', [SystemSettingController::class, 'adplOfficeUpdate'])->name('settings.adpl-office.update');
@@ -334,6 +338,7 @@ Route::name('admin.')->group(function () {
         Route::post('purchase-orders/{id}/invoice/transporter', [\App\Http\Controllers\InvoiceController::class, 'updateTransporter'])->name('purchase-orders.invoice.transporter')->middleware('permission:users.manage');
         Route::post('purchase-orders/{id}/cancel', [\App\Http\Controllers\Admin\PurchaseOrderController::class, 'cancel'])->name('purchase-orders.cancel')->middleware('permission:users.manage');
         Route::post('purchase-orders/{id}/complete', [\App\Http\Controllers\Admin\PurchaseOrderController::class, 'markCompleted'])->name('purchase-orders.complete')->middleware('permission:users.manage');
+        Route::post('purchase-orders/{id}/toggle-show-order', [\App\Http\Controllers\Admin\PurchaseOrderController::class, 'toggleShowOrder'])->name('purchase-orders.toggle-show-order')->middleware('permission:users.manage');
 
         // Debit Notes & Settlement Management (ADPL)
         Route::get('debit-notes', [\App\Http\Controllers\Admin\DebitNoteController::class, 'index'])->name('debit-notes.index')->middleware('permission:users.view');

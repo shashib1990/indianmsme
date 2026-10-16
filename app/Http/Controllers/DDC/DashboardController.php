@@ -128,14 +128,17 @@ class DashboardController extends Controller
 
         // 8. Purchase Orders Breakdown
         $pendingPosCount = PurchaseOrder::where('ddc_id', $ddcId)
+            ->forDdcVisibility()
             ->whereIn('status', ['Pending', 'Accepted', 'Processing', 'Dispatched'])
             ->count();
 
         $completedPosCount = PurchaseOrder::where('ddc_id', $ddcId)
+            ->forDdcVisibility()
             ->whereIn('status', ['Received', 'Completed'])
             ->count();
 
         $recentPos = PurchaseOrder::where('ddc_id', $ddcId)
+            ->forDdcVisibility()
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get();

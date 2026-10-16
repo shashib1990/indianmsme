@@ -44,30 +44,30 @@ class ProfileController extends Controller
             }
         }
 
-        // Fetch Admin Official Bank Details for DDC Subscription
-        $adminBankName      = SystemSetting::getVal('admin_bank_name', 'HDFC Bank');
-        $adminAccountName   = SystemSetting::getVal('admin_account_name', 'ASC DISTRIBUTOR PVT LTD');
-        $adminAccountNumber = SystemSetting::getVal('admin_account_number', '50200089652670');
-        $adminIfscCode      = SystemSetting::getVal('admin_ifsc_code', 'HDFC0000886');
-        $adminBankBranch    = SystemSetting::getVal('admin_bank_branch', 'Naraina Plaza, Sec A, Rohini, Delhi');
-        $adminUpiId         = SystemSetting::getVal('admin_upi_id', 'ascdistributor@hdfcbank');
+        // Fetch ASWT Official Bank Details for DDC Subscription
+        $aswtBankName      = SystemSetting::getVal('aswt_bank_name', 'State Bank of India');
+        $aswtAccountName   = SystemSetting::getVal('aswt_account_name', 'ASC DISTRIBUTOR PRIVATE LIMITED');
+        $aswtAccountNumber = SystemSetting::getVal('aswt_account_number', '43753668461');
+        $aswtIfscCode      = SystemSetting::getVal('aswt_ifsc_code', 'SBIN0070613');
+        $aswtBankBranch    = SystemSetting::getVal('aswt_bank_branch', 'SECTOR EIGHT, ROHINI BRANCH');
+        $aswtUpiId         = SystemSetting::getVal('aswt_upi_id', 'ascto@sbi');
 
-        $adminQrCodeRaw = SystemSetting::getVal('admin_qr_code');
-        if ($adminQrCodeRaw) {
-            if (filter_var($adminQrCodeRaw, FILTER_VALIDATE_URL)) {
-                $adminQrCode = $adminQrCodeRaw;
-            } elseif (str_starts_with($adminQrCodeRaw, 'storage/')) {
-                $adminQrCode = asset($adminQrCodeRaw);
+        $aswtQrCodeRaw = SystemSetting::getVal('aswt_qr_code');
+        if ($aswtQrCodeRaw) {
+            if (filter_var($aswtQrCodeRaw, FILTER_VALIDATE_URL)) {
+                $aswtQrCode = $aswtQrCodeRaw;
+            } elseif (str_starts_with($aswtQrCodeRaw, 'storage/')) {
+                $aswtQrCode = asset($aswtQrCodeRaw);
             } else {
-                $adminQrCode = asset('storage/' . $adminQrCodeRaw);
+                $aswtQrCode = asset('storage/' . $aswtQrCodeRaw);
             }
         } else {
-            $adminQrCode = asset('admin-assets/images/qr-code.png');
+            $aswtQrCode = asset('admin-assets/images/qr-code.png');
         }
 
         return view('vendor.profile.index', compact(
             'vendor', 'categories', 'states', 'selectedStateId', 'selectedDistrictId', 'districts',
-            'adminBankName', 'adminAccountName', 'adminAccountNumber', 'adminIfscCode', 'adminBankBranch', 'adminUpiId', 'adminQrCode'
+            'aswtBankName', 'aswtAccountName', 'aswtAccountNumber', 'aswtIfscCode', 'aswtBankBranch', 'aswtUpiId', 'aswtQrCode'
         ));
     }
 

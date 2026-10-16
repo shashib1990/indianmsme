@@ -341,4 +341,29 @@ class PurchaseOrderController extends Controller
             return redirect()->back()->with('error', 'Failed to verify payment: ' . $e->getMessage());
         }
     }
+
+    public function toggleShowOrder(Request $request, int $id)
+    {
+        $purchaseOrder = PurchaseOrder::findOrFail($id);
+
+        $currentShowOrder = strtolower($purchaseOrder->show_order ?? ($purchaseOrder->admin_approved ? 'yes' : 'no'));
+        $newShowOrder = ($currentShowOrder === 'yes') ? 'No' : 'Yes';
+        $isAdminApproved = ($newShowOrder === 'Yes');
+
+        $purchaseOrder->update([
+            'show_order' => $newShowOrder,
+            'admin_approved' => $isAdminApproved,
+        ]);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'status' => $newShowOrder,
+                'admin_approved' => $isAdminApproved,
+                'message' => "Order #{$purchaseOrder->po_number} visibility set to {$newShowOrder}.",
+            ]);
+        }
+
+        return back()->with('success', "Order #{$purchaseOrder->po_number} visibility set to {$newShowOrder}.");
+    }
 }

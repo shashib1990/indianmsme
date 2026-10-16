@@ -1472,6 +1472,10 @@
                                         href="{{ route('admin.settings.bank.index') }}">ADPL Bank & Payment QR</a>
                                 </li>
                                 <li class="sub-nav-item">
+                                    <a class="sub-nav-link {{ request()->routeIs('admin.settings.aswt-bank.*') ? 'active' : '' }}"
+                                        href="{{ route('admin.settings.aswt-bank.index') }}">ASWT Bank & Payment QR</a>
+                                </li>
+                                <li class="sub-nav-item">
                                     <a class="sub-nav-link {{ request()->routeIs('admin.settings.adpl-office.*') ? 'active' : '' }}"
                                         href="{{ route('admin.settings.adpl-office.index') }}">ADPL Head Office Details</a>
                                 </li>
@@ -1882,7 +1886,8 @@
                 { parent: 'Categories Catalog', title: 'Units of Measure', url: "{{ route('admin.units-of-measure.index') }}", icon: 'solar:ruler-cross-bold-duotone', keywords: 'units of measure uom pcs kg meter box' },
                 { parent: 'System Settings', title: 'Global System Margins & Pricing', url: "{{ route('admin.settings.pricing.index') }}", icon: 'solar:settings-bold-duotone', keywords: 'settings global margins company admin margin ddc margin mbp fsi' },
                 { parent: 'System Settings', title: 'Depot Rack Pricing & Settings', url: "{{ route('admin.racks.settings') }}", icon: 'solar:server-square-bold-duotone', keywords: 'rack settings shelf amount depot pricing' },
-                { parent: 'System Settings', title: 'Bank Accounts & Payment QR', url: "{{ route('admin.settings.bank.index') }}", icon: 'solar:bank-bold-duotone', keywords: 'bank details upi qr code hdfc account' },
+                { parent: 'System Settings', title: 'ADPL Bank & Payment QR', url: "{{ route('admin.settings.bank.index') }}", icon: 'solar:bank-bold-duotone', keywords: 'adpl bank details upi qr code hdfc account' },
+                { parent: 'System Settings', title: 'ASWT Bank & Payment QR', url: "{{ route('admin.settings.aswt-bank.index') }}", icon: 'solar:bank-bold-duotone', keywords: 'aswt bank details upi qr code account' },
                 { parent: 'System Settings', title: 'Logos & Platform Branding', url: "{{ route('admin.settings.logos.index') }}", icon: 'solar:gallery-wide-bold-duotone', keywords: 'logo header logo footer logo favicon branding' },
                 { parent: 'System Settings', title: 'Homepage Banners', url: "{{ route('admin.banners.index') }}", icon: 'solar:slider-minimalistic-bold-duotone', keywords: 'banners hero slider homepage image' }
             ];
