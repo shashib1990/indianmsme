@@ -6,14 +6,14 @@
     <title>Tax Invoice - {{ $order->invoice ? $order->invoice->invoice_number : $order->order_no }}</title>
     <style>
         @page {
-            size: 80mm auto;
-            margin: 0;
+            size: A4 portrait;
+            margin: 10mm;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, Helvetica, sans-serif;
             font-size: 10pt;
             color: #000;
-            background: #f8f9fa;
+            background: #f1f5f9;
             margin: 0;
             padding: 0;
             -webkit-print-color-adjust: exact;
@@ -21,11 +21,12 @@
             -webkit-font-smoothing: antialiased;
         }
         .receipt-container {
-            width: 80mm;
-            max-width: 80mm;
+            width: 190mm;
+            max-width: 100%;
+            min-height: 277mm;
             background: #fff;
-            margin: 15px auto;
-            padding: 10px 8px;
+            margin: 20px auto;
+            padding: 12mm;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             box-sizing: border-box;
             color: #000;
@@ -192,13 +193,38 @@
         }
 
         @media print {
-            .no-print-bar { display: none !important; }
-            body { background: #fff; }
-            .receipt-container {
-                margin: 0 auto;
-                box-shadow: none;
-                padding: 2px 4px;
+            html, body {
                 width: 100%;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #fff !important;
+            }
+            .no-print-bar { display: none !important; }
+            .receipt-container {
+                width: 100% !important;
+                max-width: none !important;
+                min-height: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                background: #fff !important;
+                page-break-inside: auto;
+            }
+            table.items-table {
+                width: 100% !important;
+                table-layout: fixed;
+            }
+            table.items-table tr {
+                page-break-inside: avoid;
+            }
+            .summary-row {
+                break-inside: avoid;
+            }
+        }
+
+        @media screen {
+            .receipt-container {
+                width: min(190mm, calc(100% - 32px));
             }
         }
     </style>
@@ -207,11 +233,11 @@
 
     <!-- On-screen Action Toolbar -->
     <div class="no-print-bar">
-        <button class="btn-print" onclick="window.print()">🖨️ Print Invoice (80mm)</button>
+        <button class="btn-print" onclick="window.print()">🖨️ Print Invoice (A4)</button>
         <button class="btn-close-win" onclick="window.close()">✖ Close Window</button>
     </div>
 
-    <!-- 80mm Thermal Receipt Container -->
+    <!-- A4 Tax Invoice Container -->
     <div class="receipt-container">
         
         <!-- Top Permanent Branding Header -->

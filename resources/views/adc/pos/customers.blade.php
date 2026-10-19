@@ -25,6 +25,227 @@
             color: #fff !important;
             font-size: 11px;
         }
+        .customer-card-action {
+            width: 32px; height: 32px; padding: 0; display: inline-flex;
+            align-items: center; justify-content: center; border-radius: 9px;
+            border: 1px solid #fde68a; background: #fffbeb; color: #b45309;
+            box-shadow: 0 2px 5px rgba(15,23,42,.06); transition: .2s ease;
+        }
+        .customer-card-action:hover { background: #fef3c7; transform: translateY(-2px); }
+
+        /* APC ID Card Styling - Compact True ID Card Format */
+        .apc-card-preview {
+            position: relative;
+            background: #fff85c;
+            border: 3px solid #00823c;
+            border-radius: 6px;
+            color: #000;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.16);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            overflow: hidden;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .apc-tricolor-bar {
+            display: flex;
+            height: 7px;
+            width: 100%;
+        }
+        .apc-tricolor-bar .tc-orange { flex: 1; background-color: #ff5000; }
+        .apc-tricolor-bar .tc-white { flex: 1; background-color: #ffffff; }
+        .apc-tricolor-bar .tc-green { flex: 1; background-color: #048235; }
+        .apc-card-inner {
+            padding: 6px 10px 5px 8px;
+            background: #fff95a;
+        }
+        .apc-left-col {
+            width: 82px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+        .apc-logo-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 2px;
+        }
+        .apc-logo-box img.logo-ardh {
+            width: 62px;
+            height: auto;
+            object-fit: contain;
+        }
+        .apc-logo-box img.logo-abhhyam {
+            width: 64px;
+            height: auto;
+            object-fit: contain;
+            margin-top: 1px;
+        }
+        .apc-soldier-box {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 2px;
+        }
+        .apc-soldier-box img.soldier-img {
+            height: 105px;
+            width: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.12));
+        }
+        .apc-right-col {
+            flex: 1;
+            padding-left: 8px;
+            display: flex;
+            flex-direction: column;
+        }
+        .apc-hindi-title {
+            color: #0b348d;
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+            text-align: center;
+            line-height: 1.1;
+            margin-bottom: 2px;
+        }
+        .apc-blue-ribbon {
+            background-color: #0b348d;
+            color: #ffffff;
+            font-size: 11.5px;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            text-align: center;
+            padding: 2.5px 8px;
+            border-radius: 2px;
+            margin-bottom: 5px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+        }
+        .apc-fields-and-photo {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        .apc-fields-list {
+            flex: 1;
+        }
+        .apc-row-item {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 3px;
+            font-size: 11.5px;
+            line-height: 1.3;
+        }
+        .apc-row-label {
+            font-weight: 800;
+            color: #000000;
+            width: 78px;
+            text-align: right;
+            padding-right: 8px;
+            flex-shrink: 0;
+            font-family: Arial, sans-serif;
+            font-size: 11.5px;
+            white-space: nowrap;
+            letter-spacing: 0;
+        }
+        .apc-row-val {
+            flex: 1;
+            font-weight: 700;
+            color: #052962;
+            border-bottom: 1.2px solid #222222;
+            padding-left: 4px;
+            padding-bottom: 1px;
+            min-height: 17px;
+            font-family: Arial, sans-serif;
+            text-transform: uppercase;
+            font-size: 11.5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            letter-spacing: 0;
+        }
+        .apc-photo-box {
+            width: 82px;
+            height: 90px;
+            border: 1.5px solid #5a542b;
+            background: #fff85c;
+            border-radius: 3px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-shadow: inset 0 0 3px rgba(0,0,0,0.06);
+        }
+        .apc-photo-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .apc-photo-box .no-photo-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #8b8042;
+            font-size: 9px;
+            font-weight: 600;
+            text-align: center;
+            padding: 2px;
+        }
+        .apc-hindi-tagline {
+            color: #0b348d;
+            font-size: 15.5px;
+            font-weight: 900;
+            text-align: center;
+            margin-top: 4px;
+            line-height: 1.15;
+        }
+        .apc-card-footer-banner {
+            background-color: #0b348d;
+            color: #ffffff;
+            padding: 4px 6px 4px;
+            text-align: center;
+        }
+        .apc-footer-subline {
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 0.1px;
+            margin-bottom: 2px;
+        }
+        .apc-footer-contacts {
+            font-size: 9.5px;
+            font-weight: 600;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .apc-footer-contacts a, .apc-footer-contacts span {
+            color: #ffffff;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+        @media (max-width: 575px) {
+            .apc-card-preview { max-width: 100%; }
+            .apc-left-col { width: 72px; }
+            .apc-logo-box img.logo-ardh { width: 54px; }
+            .apc-logo-box img.logo-abhhyam { width: 56px; }
+            .apc-soldier-box img.soldier-img { height: 90px; }
+            .apc-hindi-title { font-size: 16px; }
+            .apc-blue-ribbon { font-size: 10px; padding: 2px 5px; }
+            .apc-row-label { width: 55px; font-size: 10px; }
+            .apc-row-val { font-size: 10px; }
+            .apc-photo-box { width: 68px; height: 75px; }
+            .apc-hindi-tagline { font-size: 13px; }
+            .apc-footer-subline { font-size: 9px; }
+            .apc-footer-contacts { font-size: 8.5px; gap: 6px; }
+        }
     </style>
 @endpush
 
@@ -209,6 +430,22 @@
                                         <button type="button" class="btn btn-sm btn-primary btn-icon rounded-circle shadow-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Send Message" onclick="openSendMessageModal({{ $cust->id }}, '{{ addslashes($cust->name) }}', '{{ $cust->mobile }}')">
                                             <iconify-icon icon="solar:plain-bold-duotone" class="fs-16"></iconify-icon>
                                         </button>
+                                        {{-- View APC Customer Card in the same customers URL, new tab --}}
+                                        <button type="button"
+                                            class="customer-card-action"
+                                            data-avi="{{ $cust->abhhyam_code ?? $cust->avi_no ?? $cust->avi ?? '' }}"
+                                            data-name="{{ $cust->name ?? '' }}"
+                                            data-mobile="{{ $cust->mobile ?? '' }}"
+                                            data-state="{{ $cust->state ?? $cust->state_name ?? '' }}"
+                                            data-guide-avi="{{ $cust->guide_avi_no ?? $cust->guide_avi ?? '' }}"
+                                            data-address="{{ $cust->address ?? '' }}"
+                                            data-email="{{ $cust->email ?? '' }}"
+                                            data-pincode="{{ $cust->pincode ?? '' }}"
+                                            onclick="openCustomerApcCardInNewTab(this)"
+                                            data-bs-toggle="tooltip" data-bs-placement="top"
+                                            title="Open APC Card in New Tab" aria-label="Open APC Card in New Tab">
+                                            <iconify-icon icon="solar:card-bold-duotone" class="fs-17"></iconify-icon>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -229,6 +466,113 @@
                 {{ $customers->links() }}
             </div>
         @endif
+    </div>
+
+
+    <!-- Modal: APC Customer Card -->
+    <div class="modal fade" id="customerApcCardModal" tabindex="-1" aria-labelledby="customerApcCardModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow" style="border-radius: 14px; overflow: hidden;">
+                <div class="modal-header text-white py-2.5 px-3" style="background: linear-gradient(135deg, #0b348d, #1e3a8a);">
+                    <div class="d-flex align-items-center gap-2">
+                        <iconify-icon icon="solar:card-bold-duotone" class="fs-22 text-warning"></iconify-icon>
+                        <h5 class="modal-title fw-bold fs-15 mb-0" id="customerApcCardModalLabel">Abhhyam Pension Plan Card (APC)</h5>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-3 p-md-4 bg-light d-flex justify-content-center">
+                    <!-- The exact ID Card preview -->
+                    <div class="apc-card-preview" id="modalApcCardPreview">
+                        <!-- Top Indian Tricolor Strip -->
+                        <div class="apc-tricolor-bar">
+                            <div class="tc-orange"></div>
+                            <div class="tc-white"></div>
+                            <div class="tc-green"></div>
+                        </div>
+
+                        <!-- Card Inner Body -->
+                        <div class="apc-card-inner">
+                            <div class="d-flex">
+                                <!-- Left Column: Logos & Soldier Illustration -->
+                                <div class="apc-left-col">
+                                    <div class="apc-logo-box">
+                                        <img src="{{ asset('images/adc-login/ardhsainik_logo.png') }}" alt="Ardhsainik Canteen" class="logo-ardh">
+                                        <img src="{{ asset('images/adc-login/abhhyam_logo.png') }}" alt="Abhhyam" class="logo-abhhyam">
+                                    </div>
+                                    <div class="apc-soldier-box">
+                                        <img src="{{ asset('images/adc-login/foji_logo.png') }}" alt="Soldier" class="soldier-img">
+                                    </div>
+                                </div>
+
+                                <!-- Right Column: Header, Ribbon, Fields, Photo, Slogan -->
+                                <div class="apc-right-col">
+                                    <div class="apc-hindi-title">अर्द्ध सैनिक कैंटीन</div>
+                                    <div class="apc-blue-ribbon">Abhhyam Pension Plan Card (APC)</div>
+
+                                    <div class="apc-fields-and-photo">
+                                        <div class="apc-fields-list">
+                                            <div class="apc-row-item">
+                                                <span class="apc-row-label">AVI No:</span>
+                                                <span class="apc-row-val font-monospace" id="apcAvi">—</span>
+                                            </div>
+                                            <div class="apc-row-item">
+                                                <span class="apc-row-label">Name:</span>
+                                                <span class="apc-row-val" id="apcName">—</span>
+                                            </div>
+                                            <div class="apc-row-item">
+                                                <span class="apc-row-label">Mobile:</span>
+                                                <span class="apc-row-val font-monospace" id="apcMobile">—</span>
+                                            </div>
+                                            <div class="apc-row-item">
+                                                <span class="apc-row-label">State:</span>
+                                                <span class="apc-row-val" id="apcState">—</span>
+                                            </div>
+                                            {{-- <div class="apc-row-item">
+                                                <span class="apc-row-label">Guide AVI No:</span>
+                                                <span class="apc-row-val font-monospace" id="apcGuideAvi">—</span>
+                                            </div> --}}
+                                        </div>
+
+                                        <!-- Customer Photo Box -->
+                                        <div class="apc-photo-box" id="apcPhotoContainer">
+                                            <div class="no-photo-icon">
+                                                <iconify-icon icon="solar:user-circle-bold-duotone" style="font-size:32px;color:#8b8042;"></iconify-icon>
+                                                <span>PHOTO</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Bottom Hindi Slogan -->
+                                    <div class="apc-hindi-tagline">खरीदारी से इनकम और पेंशन प्लान</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card Blue Footer Banner -->
+                        <div class="apc-card-footer-banner">
+                            <div class="apc-footer-subline">Achieve Your Dreams &amp; Pension with Routine shopping</div>
+                            <div class="apc-footer-contacts">
+                                <span><iconify-icon icon="solar:phone-calling-rounded-bold" class="align-middle"></iconify-icon> 8800001256 / 1240 / 1250</span>
+                                <span><iconify-icon icon="solar:global-bold" class="align-middle"></iconify-icon> www.abhhyam.com</span>
+                                <span><iconify-icon icon="solar:letter-bold" class="align-middle"></iconify-icon> info@abhhyam.com</span>
+                            </div>
+                        </div>
+
+                        <!-- Bottom Green Border Line -->
+                        <div style="height: 3px; background-color: #00823c; width: 100%;"></div>
+                    </div>
+                </div>
+                <div class="modal-footer py-2 px-3 bg-white justify-content-between">
+                    <span class="text-muted small">Abhhyam Pension Plan Card • Ready to Download</span>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-success btn-sm px-3" onclick="downloadModalApcCard()">
+                            <iconify-icon icon="solar:download-square-bold-duotone" class="align-middle me-1"></iconify-icon> Download Card (PNG)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Modal: Send Message to Customer -->
@@ -540,6 +884,276 @@
     let broadcastProcessed = 0;
     let broadcastTotal = 0;
     let broadcastLastId = 0;
+
+    function openCustomerApcCardInNewTab(button) {
+        const d = button.dataset;
+        const params = new URLSearchParams({
+            apc_card: '1', avi: d.avi || '', name: d.name || '', mobile: d.mobile || '',
+            state: d.state || '', guide_avi: d.guideAvi || '', address: d.address || '',
+            email: d.email || '', pincode: d.pincode || ''
+        });
+        // Open the same /adc/pos/customers URL in a new tab; the query flag renders the card view.
+        const cardUrl = window.location.origin + window.location.pathname + '?' + params.toString();
+        window.open(cardUrl, '_blank', 'noopener');
+    }
+
+    const APC_ASSETS = {
+        ardhLogo: "{{ asset('images/adc-login/ardhsainik_logo.png') }}",
+        abhhyamLogo: "{{ asset('images/adc-login/abhhyam_logo.png') }}",
+        soldierImg: "{{ asset('images/adc-login/foji_logo.png') }}"
+    };
+
+    function renderStandaloneApcCardFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('apc_card') !== '1') return;
+        const get = key => params.get(key) || '—';
+        const esc = value => String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+        document.title = 'Abhhyam Pension Plan Card (APC) - ' + get('name');
+
+        const html = `
+        <style>
+            * { box-sizing: border-box; margin: 0; padding: 0; }
+            body { background: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #000; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+            .toolbar { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+            .toolbar button { border: none; border-radius: 6px; padding: 9px 18px; color: #fff; background: #0b348d; font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.15); transition: 0.2s; }
+            .toolbar button:hover { opacity: 0.9; transform: translateY(-1px); }
+            .toolbar .download { background: #00823c; }
+
+            .apc-card-preview {
+                position: relative;
+                background: #fff85c;
+                border: 3px solid #00823c;
+                border-radius: 6px;
+                color: #000;
+                box-shadow: 0 8px 24px rgba(0,0,0,0.16);
+                overflow: hidden;
+                width: 500px;
+                max-width: 100%;
+            }
+            .apc-tricolor-bar { display: flex; height: 7px; width: 100%; }
+            .apc-tricolor-bar .tc-orange { flex: 1; background-color: #ff5000; }
+            .apc-tricolor-bar .tc-white { flex: 1; background-color: #ffffff; }
+            .apc-tricolor-bar .tc-green { flex: 1; background-color: #048235; }
+
+            .apc-card-inner { padding: 6px 10px 5px 8px; background: #fff95a; }
+            .apc-flex-body { display: flex; }
+            .apc-left-col { width: 82px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; }
+            .apc-logo-box { display: flex; flex-direction: column; align-items: center; margin-bottom: 2px; }
+            .apc-logo-box img.logo-ardh { width: 62px; height: auto; object-fit: contain; }
+            .apc-logo-box img.logo-abhhyam { width: 64px; height: auto; object-fit: contain; margin-top: 1px; }
+            .apc-soldier-box { width: 100%; display: flex; justify-content: center; align-items: center; margin-top: 2px; }
+            .apc-soldier-box img.soldier-img { height: 105px; width: auto; object-fit: contain; }
+
+            .apc-right-col { flex: 1; padding-left: 8px; display: flex; flex-direction: column; }
+            .apc-hindi-title { color: #0b348d; font-size: 20px; font-weight: 800; letter-spacing: 0.3px; text-align: center; line-height: 1.1; margin-bottom: 2px; }
+            .apc-blue-ribbon { background-color: #0b348d; color: #ffffff; font-size: 11.5px; font-weight: 700; letter-spacing: 0.2px; text-align: center; padding: 2.5px 8px; border-radius: 2px; margin-bottom: 5px; }
+            
+            .apc-fields-and-photo { display: flex; align-items: flex-start; gap: 8px; }
+            .apc-fields-list { flex: 1; }
+            .apc-row-item { display: flex; align-items: baseline; margin-bottom: 3px; font-size: 11.5px; line-height: 1.3; }
+            .apc-row-label { font-weight: 800; color: #000; width: 78px; text-align: right; padding-right: 8px; flex-shrink: 0; font-size: 11.5px; white-space: nowrap; letter-spacing: 0; font-family: Arial, sans-serif; }
+            .apc-row-val { flex: 1; font-weight: 700; color: #052962; border-bottom: 1.2px solid #222; padding-left: 4px; padding-bottom: 1px; min-height: 17px; text-transform: uppercase; font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: 0; font-family: Arial, sans-serif; }
+
+            .apc-photo-box { width: 82px; height: 90px; border: 1.5px solid #5a542b; background: #fff85c; border-radius: 3px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+            .apc-photo-box .no-photo-icon { font-size: 9px; font-weight: 700; color: #736b30; text-align: center; }
+
+            .apc-hindi-tagline { color: #0b348d; font-size: 15.5px; font-weight: 900; text-align: center; margin-top: 4px; line-height: 1.15; }
+            .apc-card-footer-banner { background-color: #0b348d; color: #fff; padding: 4px 6px 4px; text-align: center; }
+            .apc-footer-subline { font-size: 10px; font-weight: 500; margin-bottom: 2px; }
+            .apc-footer-contacts { font-size: 9.5px; font-weight: 600; display: flex; justify-content: center; align-items: center; gap: 14px; }
+            .apc-footer-contacts span { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+
+            @media print {
+                body { background: #fff; padding: 0; }
+                .toolbar { display: none !important; }
+                .apc-card-preview { width: 85.6mm; max-width: 85.6mm; box-shadow: none; border: 2px solid #00823c; page-break-inside: avoid; }
+            }
+        </style>
+
+        <div class="toolbar">
+            <button class="download" onclick="downloadApcCard()">📥 Download Card (PNG)</button>
+        </div>
+
+        <div class="apc-card-preview" id="apcCardPrint">
+            <div class="apc-tricolor-bar">
+                <div class="tc-orange"></div>
+                <div class="tc-white"></div>
+                <div class="tc-green"></div>
+            </div>
+            <div class="apc-card-inner">
+                <div class="apc-flex-body">
+                    <div class="apc-left-col">
+                        <div class="apc-logo-box">
+                            <img src="${APC_ASSETS.ardhLogo}" alt="Ardhsainik" class="logo-ardh">
+                            <img src="${APC_ASSETS.abhhyamLogo}" alt="Abhhyam" class="logo-abhhyam">
+                        </div>
+                        <div class="apc-soldier-box">
+                            <img src="${APC_ASSETS.soldierImg}" alt="Soldier" class="soldier-img">
+                        </div>
+                    </div>
+                    <div class="apc-right-col">
+                        <div class="apc-hindi-title">अर्द्ध सैनिक कैंटीन</div>
+                        <div class="apc-blue-ribbon">Abhhyam Pension Plan Card (APC)</div>
+                        <div class="apc-fields-and-photo">
+                            <div class="apc-fields-list">
+                                <div class="apc-row-item"><span class="apc-row-label">AVI No:</span><span class="apc-row-val font-monospace">${esc(get('avi'))}</span></div>
+                                <div class="apc-row-item"><span class="apc-row-label">Name:</span><span class="apc-row-val">${esc(get('name'))}</span></div>
+                                <div class="apc-row-item"><span class="apc-row-label">Mobile:</span><span class="apc-row-val font-monospace">${esc(get('mobile'))}</span></div>
+                                <div class="apc-row-item"><span class="apc-row-label">State:</span><span class="apc-row-val">${esc(get('state'))}</span></div>
+                                <!-- <div class="apc-row-item"><span class="apc-row-label">Guide AVI No:</span><span class="apc-row-val font-monospace">${esc(get('guide_avi'))}</span></div> -->
+                            </div>
+                            <div class="apc-photo-box"><div class="no-photo-icon">📷<br>PHOTO</div></div>
+                        </div>
+                        <div class="apc-hindi-tagline">खरीदारी से इनकम और पेंशन प्लान</div>
+                    </div>
+                </div>
+            </div>
+            <div class="apc-card-footer-banner">
+                <div class="apc-footer-subline">Achieve Your Dreams &amp; Pension with Routine shopping</div>
+                <div class="apc-footer-contacts">
+                    <span>☎ 8800001256 / 1240 / 1250</span>
+                    <span>🌐 www.abhhyam.com</span>
+                    <span>✉ info@abhhyam.com</span>
+                </div>
+            </div>
+            <div style="height:3px; background-color:#00823c; width:100%;"></div>
+        </div>
+        `;
+        document.body.innerHTML = html;
+    }
+
+    function printModalApcCard() {
+        const card = document.getElementById('modalApcCardPreview');
+        if (!card) return;
+        const printWindow = window.open('', '_blank');
+        const styles = [...document.querySelectorAll('style')].map(s => s.textContent).join('\n');
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Print Card - ${document.getElementById('apcName')?.textContent || 'Customer'}</title>
+                <style>
+                    ${styles}
+                    body { margin: 0; padding: 20px; display: flex; justify-content: center; align-items: flex-start; background: #fff; }
+                    @media print {
+                        body { padding: 0; }
+                        .apc-card-preview { border: 2px solid #00823c; box-shadow: none !important; width: 85.6mm !important; }
+                    }
+                </style>
+            </head>
+            <body>
+                ${card.outerHTML}
+                <script>
+                    window.onload = function() {
+                        setTimeout(function() {
+                            window.print();
+                        }, 300);
+                    };
+                <\/script>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+    }
+
+    function ensureHtml2CanvasLoaded(callback) {
+        if (window.html2canvas) {
+            callback();
+            return;
+        }
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+        script.onload = () => callback();
+        script.onerror = () => {
+            alert('Unable to load image export library. Please check your internet connection.');
+        };
+        document.head.appendChild(script);
+    }
+
+    function downloadCardElementAsPng(cardElement, filename) {
+        if (!cardElement) return;
+
+        ensureHtml2CanvasLoaded(function () {
+            // Save scroll position
+            const originalScrollX = window.scrollX;
+            const originalScrollY = window.scrollY;
+
+            window.html2canvas(cardElement, {
+                scale: 3, // High definition 3x resolution
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#fff85c',
+                logging: false,
+                imageTimeout: 15000
+            }).then(function (canvas) {
+                // Trigger direct file download
+                canvas.toBlob(function (blob) {
+                    if (!blob) {
+                        const dataUrl = canvas.toDataURL('image/png');
+                        const link = document.createElement('a');
+                        link.download = filename || 'APC-Card.png';
+                        link.href = dataUrl;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        return;
+                    }
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.download = filename || 'APC-Card.png';
+                    link.href = url;
+                    document.body.appendChild(link);
+                    link.click();
+                    setTimeout(function () {
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(url);
+                    }, 500);
+                }, 'image/png');
+            }).catch(function (err) {
+                console.error('html2canvas error:', err);
+                alert('Card image generation failed. Please try again.');
+            });
+        });
+    }
+
+    function downloadModalApcCard() {
+        const card = document.getElementById('modalApcCardPreview');
+        const custName = (document.getElementById('apcName')?.textContent || 'Customer').replace(/[^a-zA-Z0-9_-]/g, '_');
+        downloadCardElementAsPng(card, `APC-Card-${custName}.png`);
+    }
+
+    function downloadApcCard() {
+        const card = document.getElementById('apcCardPrint');
+        const params = new URLSearchParams(window.location.search);
+        const custName = (params.get('name') || 'Customer').replace(/[^a-zA-Z0-9_-]/g, '_');
+        downloadCardElementAsPng(card, `APC-Card-${custName}.png`);
+    }
+
+    function openCustomerApcCard(button) {
+        const customer = button.dataset;
+        const valueOrDash = value => (value !== null && value !== undefined && String(value).trim() !== '') ? value : '—';
+        document.getElementById('apcAvi').textContent = valueOrDash(customer.avi);
+        document.getElementById('apcName').textContent = valueOrDash(customer.name);
+        document.getElementById('apcMobile').textContent = valueOrDash(customer.mobile);
+        document.getElementById('apcState').textContent = valueOrDash(customer.state);
+        document.getElementById('apcGuideAvi').textContent = valueOrDash(customer.guideAvi);
+
+        // Check if customer photo exists or show fallback
+        const photoBox = document.getElementById('apcPhotoContainer');
+        if (photoBox) {
+            if (customer.photo && customer.photo.trim() !== '') {
+                photoBox.innerHTML = `<img src="${customer.photo}" alt="${valueOrDash(customer.name)}">`;
+            } else {
+                photoBox.innerHTML = `
+                    <div class="no-photo-icon">
+                        <iconify-icon icon="solar:user-circle-bold-duotone" style="font-size:32px;color:#8b8042;"></iconify-icon>
+                        <span>PHOTO</span>
+                    </div>`;
+            }
+        }
+
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('customerApcCardModal')).show();
+    }
 
     function openBroadcastModal() {
         if (broadcastRunning) {
@@ -1007,6 +1621,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+        renderStandaloneApcCardFromUrl();
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
         tooltipTriggerList.map(function (el) {
             return new bootstrap.Tooltip(el);
