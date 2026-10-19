@@ -152,11 +152,7 @@
                         <div
                           class="product-thumbnail max-w-[120px] h-[120px] rounded-2xl bg-[#F4F3F5]"
                         >
-                          <img
-                            src="{{ asset('ecommerce-assets/images/bp-machine.png') }}"
-                            alt="bp-machine"
-                            class="rounded-2xl h-full w-full object-cover"
-                          />
+                          <div class="w-full h-full flex items-center justify-center text-gray-400"><i class="hgi hgi-stroke hgi-package text-4xl"></i></div>
                         </div>
                         <div
                           class="flex flex-col gap-y-2 items-end md:items-start"
@@ -183,11 +179,11 @@
                           </p>
                           <div class="rating-section flex items-center">
                             <div
-                              class="bg-[url('../images/star-icon.png')] w-[90px] h-4.5 bg-repeat-x overflow-hidden bg-position-[0_0]"
+                              class="text-amber-400 w-[90px] h-4.5 bg-repeat-x overflow-hidden bg-position-[0_0]"
                             >
                               <div
                                 style="width: 80%"
-                                class="bg-[url('../images/star-icon.png')] h-4.5 bg-repeat-x bg-position-[0_-18px]"
+                                class="text-amber-400 h-4.5 bg-repeat-x bg-position-[0_-18px]"
                               ></div>
                             </div>
                             <span
@@ -305,11 +301,7 @@
                         <div
                           class="product-thumbnail max-w-[120px] h-[120px] rounded-2xl bg-[#F4F3F5]"
                         >
-                          <img
-                            src="{{ asset('ecommerce-assets/images/ground-nuts-oil.png') }}"
-                            alt="ground-nuts-oil"
-                            class="rounded-2xl h-full w-full object-cover"
-                          />
+                          <div class="w-full h-full flex items-center justify-center text-gray-400"><i class="hgi hgi-stroke hgi-package text-4xl"></i></div>
                         </div>
                         <div
                           class="flex flex-col gap-y-2 items-end md:items-start"
@@ -336,11 +328,11 @@
                           </p>
                           <div class="rating-section flex items-center">
                             <div
-                              class="bg-[url('../images/star-icon.png')] w-[90px] h-4.5 bg-repeat-x overflow-hidden bg-position-[0_0]"
+                              class="text-amber-400 w-[90px] h-4.5 bg-repeat-x overflow-hidden bg-position-[0_0]"
                             >
                               <div
                                 style="width: 80%"
-                                class="bg-[url('../images/star-icon.png')] h-4.5 bg-repeat-x bg-position-[0_-18px]"
+                                class="text-amber-400 h-4.5 bg-repeat-x bg-position-[0_-18px]"
                               ></div>
                             </div>
                             <span
@@ -502,11 +494,7 @@
                         <div
                           class="product-thumbnail max-w-[120px] h-[120px] rounded-2xl bg-[#F4F3F5]"
                         >
-                          <img
-                            src="{{ asset('ecommerce-assets/images/temperature-gun-2.png') }}"
-                            alt="temperature-gun-2"
-                            class="rounded-2xl h-full w-full object-cover"
-                          />
+                          <div class="w-full h-full flex items-center justify-center text-gray-400"><i class="hgi hgi-stroke hgi-package text-4xl"></i></div>
                         </div>
                         <div
                           class="flex flex-col gap-y-2 items-end md:items-start"
@@ -533,11 +521,11 @@
                           </p>
                           <div class="rating-section flex items-center">
                             <div
-                              class="bg-[url('../images/star-icon.png')] w-[90px] h-4.5 bg-repeat-x overflow-hidden bg-position-[0_0]"
+                              class="text-amber-400 w-[90px] h-4.5 bg-repeat-x overflow-hidden bg-position-[0_0]"
                             >
                               <div
                                 style="width: 80%"
-                                class="bg-[url('../images/star-icon.png')] h-4.5 bg-repeat-x bg-position-[0_-18px]"
+                                class="text-amber-400 h-4.5 bg-repeat-x bg-position-[0_-18px]"
                               ></div>
                             </div>
                             <span

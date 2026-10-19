@@ -32,7 +32,6 @@ Route::get('/contact', fn() => view('web.contact'))->name('contact');
 Route::post('/contact', [PublicFormController::class, 'submitContact'])->name('contact.submit');
 Route::post('/newsletter/subscribe', [PublicFormController::class, 'subscribeNewsletter'])->name('newsletter.subscribe');
 Route::get('/vendor-marketplace', fn() => view('web.vendor-marketplace'))->name('vendor-marketplace');
-Route::get('/cart-multi-vendor', fn() => view('web.cart-multi-vendor'))->name('cart-multi-vendor');
 Route::get('/vendor-account', fn() => view('web.vendor-account'))->name('vendor-account');
 
 // ── AJAX: Pincode Delivery Check ──────────────────────────────────────────

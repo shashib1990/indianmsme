@@ -780,7 +780,7 @@
               @php
                 $banner = $seller->company_banner 
                   ? (filter_var($seller->company_banner, FILTER_VALIDATE_URL) ? $seller->company_banner : asset('storage/' . $seller->company_banner))
-                  : asset('ecommerce-assets/images/vendors-list/vendor-1.png');
+                  : asset('images/indian-monuments-bg.png');
                 $logo = $seller->company_logo 
                   ? (filter_var($seller->company_logo, FILTER_VALIDATE_URL) ? $seller->company_logo : asset('storage/' . $seller->company_logo))
                   : asset('admin-assets/images/users/avatar-1.jpg');

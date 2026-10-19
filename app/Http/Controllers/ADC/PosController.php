@@ -35,23 +35,23 @@ class PosController extends Controller
         $search = $request->get('search', '');
 
         // Check view preference
-        // $viewPref = $request->get('view');
-        // if ($viewPref === 'desktop') {
-        //     session(['adc_pos_view_pref' => 'desktop']);
-        // } elseif ($viewPref === 'mobile') {
-        //     session(['adc_pos_view_pref' => 'mobile']);
-        //     return redirect()->route('adc.pos.retail.mobile', $request->query());
-        // }
+        $viewPref = $request->get('view');
+        if ($viewPref === 'desktop') {
+            session(['adc_pos_view_pref' => 'desktop']);
+        } elseif ($viewPref === 'mobile') {
+            session(['adc_pos_view_pref' => 'mobile']);
+            return redirect()->route('adc.pos.retail.mobile', $request->query());
+        }
 
-        // // Auto-redirect mobile devices if not forced to desktop
-        // $sessionPref = session('adc_pos_view_pref');
-        // if ($sessionPref !== 'desktop') {
-        //     $userAgent = $request->header('User-Agent', '');
-        //     $isMobile = preg_match('/(android|avantgo|blackberry|bolt|boost|cricket|docomo|fone|hiptop|mini|mobi|palm|phone|pie|tablet|up\.browser|up\.link|webos|wos)/i', $userAgent);
-        //     if ($isMobile) {
-        //         return redirect()->route('adc.pos.retail.mobile', $request->query());
-        //     }
-        // }
+        // Auto-redirect mobile devices if not forced to desktop
+        $sessionPref = session('adc_pos_view_pref');
+        if ($sessionPref !== 'desktop') {
+            $userAgent = $request->header('User-Agent', '');
+            $isMobile = preg_match('/(android|avantgo|blackberry|bolt|boost|cricket|docomo|fone|hiptop|mini|mobi|palm|phone|pie|tablet|up\.browser|up\.link|webos|wos)/i', $userAgent);
+            if ($isMobile) {
+                return redirect()->route('adc.pos.retail.mobile', $request->query());
+            }
+        }
 
         return view('adc.pos.retail', compact('mode', 'search'));
     }

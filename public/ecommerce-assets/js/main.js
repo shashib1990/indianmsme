@@ -131,7 +131,7 @@
   if (cartSidebarBtn.length) {
     cartSidebarBtn.on("click.hitesh", function (e) {
       e.preventDefault();
-      window.location.href = "/cart-multi-vendor";
+      window.location.href = "/adc/cart";
     });
   }
 
