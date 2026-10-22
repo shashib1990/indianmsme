@@ -27,6 +27,9 @@ Route::prefix('locations')->name('api.locations.')->group(function () {
 // Public Unauthenticated API: Update Abhhyam Code by ADC Code (POST /api/adc/update-abhhyam-code)
 Route::post('/adc/update-abhhyam-code', [\App\Http\Controllers\Api\AdcApiController::class, 'updateAbhhyamCode'])->name('api.adc.update-abhhyam-code');
 
+// POST API: Fetch complete ADC data with canteen name, stock summary, and product catalog (POST /api/adc/details)
+Route::post('/adc/details', [\App\Http\Controllers\Api\AdcApiController::class, 'getAdcDetails'])->name('api.adc.details');
+
 // Public Unauthenticated API: Update Customer Abhhyam Code by Phone/Mobile (POST /api/pos-customer/update-abhhyam-code or /api/adc-customer/update-abhhyam-code or /api/ddc-customer/update-abhhyam-code)
 Route::post('/pos-customer/update-abhhyam-code', [\App\Http\Controllers\Api\AdcApiController::class, 'updateCustomerAbhhyamCode'])->name('api.pos-customer.update-abhhyam-code');
 Route::post('/adc-customer/update-abhhyam-code', [\App\Http\Controllers\Api\AdcApiController::class, 'updateCustomerAbhhyamCode'])->name('api.adc-customer.update-abhhyam-code');
