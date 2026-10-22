@@ -109,6 +109,7 @@
                                             'Received'   => 'bg-success-subtle text-success',
                                             'Delivered'  => 'bg-success-subtle text-success',
                                             'Cancelled'  => 'bg-danger-subtle text-danger',
+                                            'Rejected'   => 'bg-danger-subtle text-danger',
                                         ];
                                     @endphp
                                     <span class="badge {{ $statusBadges[$order->status] ?? 'bg-secondary-subtle text-secondary' }}">

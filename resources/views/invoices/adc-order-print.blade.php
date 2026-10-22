@@ -561,7 +561,9 @@
                 <p>
                     {{ $dispatchDistrict }}{{ ($dispatchDistrict && $dispatchState) ? ', ' : '' }}{{ $dispatchState }}{{ $dispatchPincode ? ' - ' . $dispatchPincode : '' }}
                 </p>
-                <p><strong>Phone:</strong> {{ $dispatchPhone }}</p>
+                @if(!auth('adc')->check() && !empty($dispatchPhone) && $dispatchPhone !== 'N/A')
+                    <p><strong>Phone:</strong> {{ $dispatchPhone }}</p>
+                @endif
                 <p><strong>GSTIN:</strong> {{ $dispatchGstin }}</p>
             </div>
         </div>

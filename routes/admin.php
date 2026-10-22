@@ -330,6 +330,7 @@ Route::name('admin.')->group(function () {
         Route::get('adc-orders/{id}', [\App\Http\Controllers\Admin\AdcOrderController::class, 'show'])->name('adc-orders.show')->middleware('permission:users.view');
         Route::get('adc-orders/{id}/invoice', [\App\Http\Controllers\Admin\AdcOrderController::class, 'printInvoice'])->name('adc-orders.invoice')->middleware('permission:users.view');
         Route::get('adc/orders/{id}/invoice', [\App\Http\Controllers\Admin\AdcOrderController::class, 'printInvoice'])->middleware('permission:users.view');
+        Route::post('adc-orders/{id}/cancel', [\App\Http\Controllers\Admin\AdcOrderController::class, 'cancel'])->name('adc-orders.cancel')->middleware('permission:users.manage');
 
         // Purchase Orders Admin Monitoring Dashboard
         Route::get('purchase-orders', [\App\Http\Controllers\Admin\PurchaseOrderController::class, 'index'])->name('purchase-orders.index')->middleware('permission:users.view');

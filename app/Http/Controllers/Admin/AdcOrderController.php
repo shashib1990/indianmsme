@@ -4,7 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AdcOrder;
+use App\Models\AdcOrderItem;
+use App\Models\AdcWallet;
+use App\Models\AdcInventory;
+use App\Models\IncentiveHold;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AdcOrderController extends Controller
 {
@@ -376,5 +382,90 @@ class AdcOrderController extends Controller
 
         $rupees = implode('', array_reverse(array_filter($str)));
         return trim($rupees) ?: 'Zero';
+    }
+
+    public function cancel(Request $request, $id)
+    {
+        $order = AdcOrder::with(['items', 'purchaseOrders.items', 'adc.profile', 'adc.adcProfile'])->findOrFail($id);
+
+        if (in_array($order->status, ['Cancelled', 'Received', 'Delivered', 'Completed'])) {
+            return redirect()->back()->with('error', "Cannot cancel an order with status: {$order->status}.");
+        }
+
+        $reason = $request->input('reason', 'Cancelled by Admin');
+
+        DB::beginTransaction();
+        try {
+            $refundAmount = 0.0;
+
+            foreach ($order->items as $orderItem) {
+                if (in_array($orderItem->status, ['Cancelled', 'Rejected'])) {
+                    continue;
+                }
+
+                if ($orderItem->fulfillment_type === 'physical') {
+                    $inv = AdcInventory::where('ddc_id', $orderItem->ddc_id ?? $order->selected_ddc_id ?? $order->assigned_ddc_id)
+                        ->where('product_id', $orderItem->product_id)
+                        ->first();
+                    if ($inv) {
+                        $inv->releaseStock($orderItem->quantity);
+                    }
+                }
+
+                $orderItem->update([
+                    'status' => 'Cancelled',
+                    'remarks' => $reason
+                ]);
+                $refundAmount += (float) $orderItem->total;
+            }
+
+            // Also cancel linked PurchaseOrders (for virtual items)
+            foreach ($order->purchaseOrders as $po) {
+                if (!in_array($po->status, ['Cancelled', 'Received', 'Dispatched'])) {
+                    $po->status = 'Cancelled';
+                    $po->save();
+
+                    foreach ($po->items as $poItem) {
+                        $poItem->status = 'Rejected';
+                        $poItem->remarks = $reason;
+                        $poItem->save();
+                    }
+
+                    IncentiveHold::where('purchase_order_id', $po->id)->delete();
+                }
+            }
+
+            // Refund ADC Wallet
+            if ($refundAmount > 0 && ($order->payment_method === 'Wallet' || $order->payment_status === 'Paid')) {
+                $adc = $order->adc;
+                $adcProfile = $adc?->adcProfile ?? $adc?->profile;
+                if ($adcProfile) {
+                    $adcProfile->wallet_balance += $refundAmount;
+                    $adcProfile->save();
+
+                    AdcWallet::create([
+                        'adc_id'      => $adc->id,
+                        'amount'      => $refundAmount,
+                        'type'        => 'credit',
+                        'description' => "Refund for cancelled Order #{$order->order_number} by Admin",
+                    ]);
+                }
+            }
+
+            $order->update(['status' => 'Cancelled']);
+
+            NotificationService::notifyAdc(
+                $order->adc_id,
+                'Order Cancelled #' . $order->order_number,
+                "Your order #{$order->order_number} has been cancelled by Admin. " . ($refundAmount > 0 ? "₹" . number_format($refundAmount, 2) . " has been refunded to your wallet." : ""),
+                route('adc.orders.show', $order->id)
+            );
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Order cancelled successfully. ' . ($refundAmount > 0 ? '₹' . number_format($refundAmount, 2) . ' refunded to ADC wallet.' : ''));
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Failed to cancel order: ' . $e->getMessage());
+        }
     }
 }

@@ -9,11 +9,19 @@
         <a href="{{ route('admin.adc-orders.index') }}" class="btn btn-sm btn-outline-secondary">
             <iconify-icon icon="solar:arrow-left-bold-duotone" class="align-middle me-1"></iconify-icon> Back to ADC Orders
         </a>
-        <div>
-            <span class="badge {{ $order->payment_status === 'Paid' ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning' }} fs-13 px-3 py-1 me-2">
+        <div class="d-flex align-items-center gap-2">
+            @if(!in_array($order->status, ['Cancelled', 'Received', 'Delivered', 'Completed']))
+                <form action="{{ route('admin.adc-orders.cancel', $order->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to cancel this ADC Order? All items will be cancelled and refund will be credited to ADC wallet.');">
+                    @csrf
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                        <iconify-icon icon="solar:close-circle-bold" class="align-middle me-1"></iconify-icon> Cancel Order
+                    </button>
+                </form>
+            @endif
+            <span class="badge {{ $order->payment_status === 'Paid' ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning' }} fs-13 px-3 py-1">
                 Payment: {{ $order->payment_status }}
             </span>
-            <span class="badge {{ $order->status === 'Dispatched' || $order->status === 'Delivered' || $order->status === 'Received' ? 'bg-success-subtle text-success' : ($order->status === 'Partially Dispatched' ? 'bg-info-subtle text-info' : 'bg-primary-subtle text-primary') }} fs-13 px-3 py-1">
+            <span class="badge {{ $order->status === 'Cancelled' ? 'bg-danger-subtle text-danger' : ($order->status === 'Dispatched' || $order->status === 'Delivered' || $order->status === 'Received' ? 'bg-success-subtle text-success' : ($order->status === 'Partially Dispatched' ? 'bg-info-subtle text-info' : 'bg-primary-subtle text-primary')) }} fs-13 px-3 py-1">
                 Order Status: {{ $order->status }}
             </span>
         </div>

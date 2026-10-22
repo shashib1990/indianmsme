@@ -31,7 +31,7 @@
                     <span class="badge {{ $order->payment_status === 'Paid' ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning' }} fs-13 px-3 py-1 mb-1">
                         Payment: {{ $order->payment_status }}
                     </span><br>
-                    <span class="badge {{ $order->status === 'Dispatched' ? 'bg-success-subtle text-success' : ($order->status === 'Partially Dispatched' ? 'bg-info-subtle text-info' : 'bg-primary-subtle text-primary') }} fs-12 px-2.5 py-0.5">
+                    <span class="badge {{ in_array($order->status, ['Cancelled', 'Rejected']) ? 'bg-danger-subtle text-danger' : ($order->status === 'Dispatched' || $order->status === 'Received' || $order->status === 'Delivered' ? 'bg-success-subtle text-success' : ($order->status === 'Partially Dispatched' ? 'bg-info-subtle text-info' : 'bg-primary-subtle text-primary')) }} fs-12 px-2.5 py-0.5">
                         Status: {{ $order->status }}
                     </span>
                     @if($order->received_invoice_file)
@@ -230,7 +230,6 @@
                 $physDdcDistrict = $physDdcProfile?->district ?? ($physDdc?->district ?? null);
                 $physDdcState = $physDdcProfile?->state ?? ($physDdc?->state ?? null);
                 $physDdcPincode = $physDdcProfile?->pincode ?? ($physDdc?->pincode ?? null);
-                $physDdcPhone = $physDdcProfile?->official_phone ?? ($physDdcProfile?->phone ?? ($physDdc?->mobile ?? null));
             @endphp
             <div class="card-body bg-light-subtle border-bottom py-2.5 px-3">
                 <div class="d-flex align-items-start small">
@@ -241,9 +240,6 @@
                         @if($physDdcAddress)
                             <div class="text-muted small mt-0.5">
                                 {{ $physDdcAddress }}@if($physDdcDistrict || $physDdcState || $physDdcPincode), {{ $physDdcDistrict }}{{ ($physDdcDistrict && $physDdcState) ? ', ' : '' }}{{ $physDdcState }}{{ $physDdcPincode ? ' - ' . $physDdcPincode : '' }}@endif
-                                @if($physDdcPhone)
-                                    <span class="ms-2 text-dark"><i class="bx bx-phone me-0.5 text-muted"></i>{{ $physDdcPhone }}</span>
-                                @endif
                             </div>
                         @endif
                     </div>
@@ -322,7 +318,6 @@
             $dispatchDistrict = $pickupStore?->districtRelation?->name ?? ($pickupStore?->district ?? ($seller?->sellerProfile?->district ?? null));
             $dispatchState = $pickupStore?->stateRelation?->name ?? ($pickupStore?->state ?? ($seller?->sellerProfile?->state ?? null));
             $dispatchPincode = $pickupStore?->pincode ?? ($seller?->sellerProfile?->pincode ?? null);
-            $dispatchPhone = $pickupStore?->mobile ?? ($seller?->sellerProfile?->alternate_mobile ?? ($seller?->mobile ?? null));
 
             $activeItemsInPkg = $itemsList->reject(function($i) {
                 return in_array($i->status, ['Rejected', 'Cancelled'])
@@ -377,9 +372,6 @@
                                 @if($dispatchAddress)
                                     <div class="text-muted small mt-0.5">
                                         {{ $dispatchAddress }}@if($dispatchDistrict || $dispatchState || $dispatchPincode), {{ $dispatchDistrict }}{{ ($dispatchDistrict && $dispatchState) ? ', ' : '' }}{{ $dispatchState }}{{ $dispatchPincode ? ' - ' . $dispatchPincode : '' }}@endif
-                                        @if($dispatchPhone)
-                                            <span class="ms-2 text-dark"><i class="bx bx-phone me-0.5 text-muted"></i>{{ $dispatchPhone }}</span>
-                                        @endif
                                     </div>
                                 @endif
                             </div>

@@ -297,6 +297,19 @@ class PurchaseOrderController extends Controller
                 $purchaseOrder->rejection_reason = $rejectionReason;
                 $purchaseOrder->accepted_amount = 0.00;
                 $purchaseOrder->seller_accepted_amount = 0.00;
+
+                // For Virtual DDC ADC Orders: update ADC order status to Rejected if all items rejected
+                if ($purchaseOrder->adc_order_id) {
+                    $adcOrder = $purchaseOrder->adcOrder;
+                    if ($adcOrder) {
+                        $remainingActiveCount = \App\Models\AdcOrderItem::where('adc_order_id', $adcOrder->id)
+                            ->whereNotIn('status', ['Cancelled', 'Rejected'])
+                            ->count();
+                        if ($remainingActiveCount === 0) {
+                            $adcOrder->update(['status' => 'Rejected']);
+                        }
+                    }
+                }
             } else {
                 // Seller accepted some or all items → Accepted
                 $purchaseOrder->status = 'Accepted';

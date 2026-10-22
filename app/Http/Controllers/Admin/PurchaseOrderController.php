@@ -7,6 +7,11 @@ use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
 use App\Services\DdcCashbackService;
 use Illuminate\Http\Request;
+use App\Models\AdcOrder;
+use App\Models\AdcOrderItem;
+use App\Models\AdcWallet;
+use App\Models\IncentiveHold;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\DB;
 
 class PurchaseOrderController extends Controller
@@ -96,9 +101,9 @@ class PurchaseOrderController extends Controller
 
     public function cancel($id)
     {
-        $purchaseOrder = PurchaseOrder::findOrFail($id);
+        $purchaseOrder = PurchaseOrder::with(['items', 'adcOrder.adc.profile', 'adcOrder.adc.adcProfile'])->findOrFail($id);
 
-        if ($purchaseOrder->payment_status === 'Paid') {
+        if ($purchaseOrder->payment_status === 'Paid' && !$purchaseOrder->adc_order_id) {
             return redirect()->back()->with('error', 'Cannot cancel this Purchase Order. Payment has already been completed.');
         }
 
@@ -107,15 +112,83 @@ class PurchaseOrderController extends Controller
             $purchaseOrder->status = 'Cancelled';
             $purchaseOrder->save();
 
-            // Reject all items
+            // Reject all items in PO
             foreach ($purchaseOrder->items as $item) {
                 $item->status = 'Rejected';
                 $item->remarks = 'Cancelled by Admin';
                 $item->save();
             }
 
+            $refundAmount = 0.0;
+            $adcOrder = null;
+
+            // If this PO is linked to an ADC Order (Virtual DDC Order routed to Seller)
+            if ($purchaseOrder->adc_order_id || $purchaseOrder->adcOrder) {
+                $adcOrder = $purchaseOrder->adcOrder ?? AdcOrder::with(['adc.profile', 'adc.adcProfile', 'items'])->find($purchaseOrder->adc_order_id);
+                if ($adcOrder) {
+                    $adcItems = AdcOrderItem::where('adc_order_id', $adcOrder->id)
+                        ->where(function ($q) use ($purchaseOrder) {
+                            $q->where('purchase_order_id', $purchaseOrder->id)
+                              ->orWhereIn('product_id', $purchaseOrder->items->pluck('product_id'));
+                        })
+                        ->get();
+
+                    foreach ($adcItems as $adcItem) {
+                        if (!in_array($adcItem->status, ['Cancelled', 'Rejected'])) {
+                            $refundAmount += (float) $adcItem->total;
+                        }
+                        $adcItem->status = 'Cancelled';
+                        $adcItem->remarks = 'Cancelled by Admin (PO #' . $purchaseOrder->po_number . ')';
+                        $adcItem->save();
+                    }
+
+                    // Check if all items in this ADC Order are now Cancelled or Rejected
+                    $remainingActiveCount = AdcOrderItem::where('adc_order_id', $adcOrder->id)
+                        ->whereNotIn('status', ['Cancelled', 'Rejected'])
+                        ->count();
+
+                    if ($remainingActiveCount === 0) {
+                        $adcOrder->status = 'Cancelled';
+                        $adcOrder->save();
+                    }
+
+                    // Refund to ADC Wallet if paid via wallet
+                    if ($refundAmount > 0 && ($adcOrder->payment_method === 'Wallet' || $adcOrder->payment_status === 'Paid')) {
+                        $adc = $adcOrder->adc;
+                        $adcProfile = $adc?->adcProfile ?? $adc?->profile;
+                        if ($adcProfile) {
+                            $adcProfile->wallet_balance += $refundAmount;
+                            $adcProfile->save();
+
+                            AdcWallet::create([
+                                'adc_id'      => $adc->id,
+                                'amount'      => $refundAmount,
+                                'type'        => 'credit',
+                                'description' => 'Refund for Cancelled Order #' . $adcOrder->order_number . ' (PO #' . $purchaseOrder->po_number . ') by Admin',
+                            ]);
+
+                            NotificationService::notifyAdc(
+                                $adc->id,
+                                'Order Cancelled #' . $adcOrder->order_number,
+                                'Your order #' . $adcOrder->order_number . ' (PO #' . $purchaseOrder->po_number . ') was cancelled by Admin. ₹' . number_format($refundAmount, 2) . ' has been refunded to your wallet.',
+                                route('adc.orders.show', $adcOrder->id)
+                            );
+                        }
+                    }
+
+                    // Release / delete any incentive holds for this PO
+                    IncentiveHold::where('purchase_order_id', $purchaseOrder->id)->delete();
+                }
+            }
+
             DB::commit();
-            return redirect()->back()->with('success', 'Purchase Order has been cancelled successfully.');
+
+            $msg = 'Purchase Order has been cancelled successfully.';
+            if ($refundAmount > 0 && $adcOrder) {
+                $msg .= ' ₹' . number_format($refundAmount, 2) . ' refunded to ADC wallet and Order #' . $adcOrder->order_number . ' marked as Cancelled.';
+            }
+
+            return redirect()->back()->with('success', $msg);
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Failed to cancel Purchase Order: ' . $e->getMessage());
