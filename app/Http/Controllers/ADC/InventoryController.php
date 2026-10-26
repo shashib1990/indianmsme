@@ -288,6 +288,8 @@ class InventoryController extends Controller
             ->firstOrFail();
 
         $validated = $request->validate([
+            'mrp' => 'nullable|numeric|min:0',
+            'purchase_price' => 'nullable|numeric|min:0',
             'csp' => 'nullable|numeric|min:0',
             'mfg_date' => 'nullable|date',
             'expire_date' => 'nullable|date',
@@ -296,8 +298,12 @@ class InventoryController extends Controller
             'csp_margin' => 'nullable|numeric|min:0|max:100',
         ]);
 
-        $mrp = (float) ($inv->mrp ?? 0);
-        $cost = (float) ($inv->purchase_price ?: 0);
+        $mrp = array_key_exists('mrp', $validated) && $validated['mrp'] !== null 
+            ? (float) $validated['mrp'] 
+            : (float) ($inv->mrp ?? 0);
+        $cost = array_key_exists('purchase_price', $validated) && $validated['purchase_price'] !== null 
+            ? (float) $validated['purchase_price'] 
+            : (float) ($inv->purchase_price ?: 0);
 
         if (array_key_exists('csp', $validated) && $validated['csp'] !== null) {
             $cspVal = (float) $validated['csp'];
@@ -311,13 +317,19 @@ class InventoryController extends Controller
             }
             $validated['adc_margin'] = $marginVal;
             $validated['margin'] = $marginVal;
+        } elseif (array_key_exists('mrp', $validated) && $validated['mrp'] !== null) {
+            // If MRP is changed, recalculate CSP margin based on existing CSP
+            $currentCsp = (float) ($inv->csp ?? 0);
+            if ($mrp > 0 && $currentCsp > 0) {
+                $validated['csp_margin'] = round((($mrp - $currentCsp) / $mrp) * 100, 2);
+            }
         }
 
-        $mrp = (float) ($inv->mrp ?? 0);
-        if ($mrp > 0 && isset($validated['csp']) && $validated['csp'] > $mrp) {
+        $checkCsp = isset($validated['csp']) ? (float) $validated['csp'] : (float) ($inv->csp ?? 0);
+        if ($mrp > 0 && $checkCsp > $mrp) {
             return response()->json([
                 'success' => false,
-                'message' => 'Calculated CSP (₹' . number_format($validated['csp'], 2) . ') cannot be greater than MRP (₹' . number_format($mrp, 2) . ').',
+                'message' => 'CSP (₹' . number_format($checkCsp, 2) . ') cannot be greater than MRP (₹' . number_format($mrp, 2) . ').',
             ], 422);
         }
 
@@ -358,6 +370,8 @@ class InventoryController extends Controller
             'success' => true,
             'message' => 'Inventory updated successfully.',
             'inventory' => $freshInv,
+            'mrp' => number_format((float) $freshInv->mrp, 2, '.', ''),
+            'purchase_price' => number_format((float) $freshInv->purchase_price, 2, '.', ''),
             'csp' => number_format((float) $freshInv->csp, 2, '.', ''),
             'csp_margin' => number_format((float) $freshInv->csp_margin, 2, '.', ''),
             'expiry_html' => $expiryHtml,
