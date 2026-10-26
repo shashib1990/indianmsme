@@ -117,6 +117,9 @@ class Controller extends BaseController
     {
         try {
             $response = \Illuminate\Support\Facades\Http::timeout(10)->get("https://abhhyamindia.com/api/get_advisor_codes");
+            // $response = \Illuminate\Support\Facades\Http::withoutVerifying()
+            //     ->timeout(10)
+            //     ->get("https://abhhyamindia.com/api/get_advisor_codes");
             if ($response->successful()) {
                 return response()->json($response->json());
             } else {
