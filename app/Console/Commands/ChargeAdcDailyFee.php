@@ -85,7 +85,7 @@ class ChargeAdcDailyFee extends Command
                     if ($currentBalance > 0) {
                         AdcWallet::create([
                             'adc_id' => $user->id,
-                            'amount' => -$currentBalance,
+                            'amount' => $currentBalance,
                             'type' => 'debit',
                             'description' => "Daily platform fee (partial) — ₹{$currentBalance} deducted on {$today}",
                         ]);
@@ -98,7 +98,7 @@ class ChargeAdcDailyFee extends Command
 
                     AdcWallet::create([
                         'adc_id' => $user->id,
-                        'amount' => -$dailyCharge,
+                        'amount' => $dailyCharge,
                         'type' => 'debit',
                         'description' => "Daily platform fee — ₹{$dailyCharge} deducted on {$today}",
                     ]);

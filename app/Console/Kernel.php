@@ -12,7 +12,9 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        $schedule->command('adc:charge-daily-fee')->dailyAt('23:00');
+        $schedule->command('adc:charge-daily-fee')
+            ->dailyAt('08:00')
+            ->timezone('Asia/Kolkata');
     }
 
     /**
@@ -20,7 +22,7 @@ class Kernel extends ConsoleKernel
      */
     protected function commands(): void
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
 
         require base_path('routes/console.php');
     }
