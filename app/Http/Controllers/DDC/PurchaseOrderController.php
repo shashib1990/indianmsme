@@ -895,6 +895,7 @@ class PurchaseOrderController extends Controller
             $ddcPincodes = array_unique(array_filter($ddcPincodes));
 
             $poNumbers = [];
+            $createdPoIds = [];
 
             foreach ($groupedItems as $sellerId => $items) {
                 $seller = User::find($sellerId);
@@ -976,6 +977,7 @@ class PurchaseOrderController extends Controller
                     $itemData['purchase_order_id'] = $purchaseOrder->id;
                     PurchaseOrderItem::create($itemData);
                 }
+                $createdPoIds[] = $purchaseOrder->id;
 
                 // Send notification to Seller
                 NotificationService::notifySeller(

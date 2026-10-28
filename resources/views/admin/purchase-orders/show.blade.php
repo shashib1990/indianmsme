@@ -14,16 +14,24 @@
                             <p class="text-muted small mb-0">Monitor the details, item-wise status, payment tracking, and logistics routing for this Purchase Order.</p>
                         </div>
                         <div class="col-md-6 text-md-end d-flex justify-content-md-end gap-2">
+                            @php
+                                $returnUrl = request()->get('return_url') ?: url()->previous(route('admin.purchase-orders.index'));
+                                // If previous url was the cancel post action, fallback to index
+                                if (str_contains($returnUrl, '/cancel')) {
+                                    $returnUrl = route('admin.purchase-orders.index');
+                                }
+                            @endphp
                             @if(!in_array($purchaseOrder->status, ['Cancelled', 'Rejected', 'Received', 'Dispatched']) && $purchaseOrder->dispatch_status !== 'Dispatched' && $purchaseOrder->payment_status !== 'Paid')
                                 <form action="{{ route('admin.purchase-orders.cancel', $purchaseOrder->id) }}" method="POST">
                                     @csrf
+                                    <input type="hidden" name="return_url" value="{{ $returnUrl }}">
                                     <button type="submit" class="btn btn-danger confirm-action" data-confirm-message="Are you sure you want to cancel this Purchase Order? All items will be rejected.">
                                         <iconify-icon icon="solar:close-circle-bold" class="align-middle me-1"></iconify-icon>
                                         Cancel Purchase Order
                                     </button>
                                 </form>
                             @endif
-                            <a href="{{ route('admin.purchase-orders.index') }}" class="btn btn-outline-secondary">
+                            <a href="{{ $returnUrl }}" class="btn btn-outline-secondary">
                                 <iconify-icon icon="solar:arrow-left-bold-duotone" class="align-middle me-1 fs-18"></iconify-icon>
                                 Back to PO List
                             </a>

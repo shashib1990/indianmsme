@@ -170,6 +170,7 @@ class CheckoutController extends Controller
 
             $createdOrders = [];
             $orderNumbers  = [];
+            $createdPoIds  = [];
 
             // 2. Create Physical ADC Order (if any physical items exist)
             if (!empty($physicalGroup)) {
@@ -338,6 +339,7 @@ class CheckoutController extends Controller
 
                     $createdOrders[] = $virtOrder;
                     $orderNumbers[]  = $virtOrder->order_number;
+                    $createdPoIds[]  = $po->id;
 
                     // Notify Seller
                     NotificationService::notifySeller(

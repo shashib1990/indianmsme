@@ -61,11 +61,14 @@ class SendAdcMessage extends Command
             return 0;
         }
 
-        $adcName = $adc->name ?: 'ADC Partner';
+        $canteenName = $adcProfile?->company_name 
+            ?: ($adcProfile?->trade_name ?: ($adc->name ?: 'ADC Partner'));
+        $adcName = $adc->name ?: $canteenName;
+
         $adcCodeStr = $adcProfile?->adc_code 
             ?: ($adc->adc_code 
             ?: ($adcProfile?->code 
-            ?: ('ADC' . str_pad($adc->id ?? 0, 3, '0', STR_PAD_LEFT))));
+            ?: ('ASC' . str_pad($adc->id ?? 0, 3, '0', STR_PAD_LEFT))));
 
         $orderNumbers = $orders->pluck('order_number')->filter()->toArray();
         $orderNumsStr = implode(', ', $orderNumbers);
@@ -110,15 +113,17 @@ class SendAdcMessage extends Command
 
         $advisorCode = $this->option('advisor-code') ?: $firstOrder->advisor_code;
 
-        $msg = "🎉 *Order Placed Successfully!*\n"
+        $msg = "Dear ADC Partner,\n"
+            . "Your Order has been Placed Successfully through IndianMSME.org.\n"
             . "━━━━━━━━━━━━━━━━━━━━\n"
-            . "👤 *ADC:* {$adcName} ({$adcCodeStr})\n"
-            . "🧾 *Order No:* {$orderNumsStr}\n"
-            . "📅 *Date:* " . now()->format('d-M-Y h:i A') . "\n"
-            . "📦 *Total Quantity:* {$totalItemsCount} pcs\n"
+            . "🏪 Canteen Name: {$canteenName}\n"
+            . "🆔 ADC / ASC No: {$adcCodeStr}\n"
+            . "🧾 Order No: {$orderNumsStr}\n"
+            . "📅 Date: " . now()->format('d-M-Y h:i A') . "\n"
+            . "📦 Total Quantity: {$totalItemsCount} pcs\n"
             . "━━━━━━━━━━━━━━━━━━━━\n"
-            . "🏷️ *Total MRP:* ₹{$formattedMrp}\n"
-            . "💳 *ADC Paid Amount:* ₹{$formattedPayable}\n";
+            . "🏷️ Total MRP: ₹{$formattedMrp}\n"
+            . "💳 Paid Amount: ₹{$formattedPayable}\n";
 
         if ($totalSavings > 0) {
             $msg .= "💰 *Your Instant Margin/Savings:* ₹{$formattedSavings}\n";
@@ -128,22 +133,15 @@ class SendAdcMessage extends Command
             $msg .= "🪙 *MBP Coins Earned:* {$formattedMbp}\n";
         }
 
-        $msg .= "💼 *Wallet Balance Left:* ₹{$newBalance}\n";
-
         if (!empty($itemLines)) {
             $msg .= "━━━━━━━━━━━━━━━━━━━━\n"
                 . "📋 *Item Details:*\n"
                 . implode("\n", $itemLines) . "\n";
         }
 
-        if (!empty($advisorCode)) {
-            $msg .= "━━━━━━━━━━━━━━━━━━━━\n"
-                . "🤝 *Advisor (AMA):* {$advisorCode}\n";
-        }
-
         $msg .= "━━━━━━━━━━━━━━━━━━━━\n"
-            . "🙏 Thank you for ordering with Indian MSME & Abhhyam!\n"
-            . "करोगे तो होगा! 🇮🇳";
+            . "🙏 Thank you for ordering with IndianMSME.org!\n"
+            . "🇮🇳 करेंगे तो होगा!";
 
         try {
             // 1. Ensure ADC is registered on TheekHai
