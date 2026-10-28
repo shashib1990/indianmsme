@@ -46,12 +46,29 @@ class PurchaseOrderController extends Controller
                         $iq->where('invoice_number', 'like', "%{$search}%");
                     })
                     ->orWhereHas('adcOrder', function ($sq) use ($search) {
+                        $cleanDigits = preg_replace('/\D+/', '', $search);
+
                         $sq->where('order_number', 'like', "%{$search}%")
-                            ->orWhereHas('adc', function ($ssq) use ($search) {
-                                $ssq->where('name', 'like', "%{$search}%")
-                                    ->orWhereHas('profile', function ($apq) use ($search) {
-                                        $apq->where('company_name', 'like', "%{$search}%");
-                                    });
+                            ->orWhereHas('adc', function ($ssq) use ($search, $cleanDigits) {
+                                $ssq->where(function ($uq) use ($search, $cleanDigits) {
+                                    $uq->where('name', 'like', "%{$search}%")
+                                       ->orWhere('mobile', 'like', "%{$search}%")
+                                       ->orWhere('email', 'like', "%{$search}%");
+
+                                    if (!empty($cleanDigits)) {
+                                        $uq->orWhere('id', (int) $cleanDigits);
+                                    }
+                                })
+                                ->orWhereHas('adcProfile', function ($apq) use ($search, $cleanDigits) {
+                                    $apq->where('company_name', 'like', "%{$search}%")
+                                        ->orWhere('trade_name', 'like', "%{$search}%")
+                                        ->orWhere('adc_code', 'like', "%{$search}%")
+                                        ->orWhere('code', 'like', "%{$search}%")
+                                        ->orWhere('official_phone', 'like', "%{$search}%");
+                                    if (!empty($cleanDigits)) {
+                                        $apq->orWhere('user_id', (int) $cleanDigits);
+                                    }
+                                });
                             });
                     });
             });
@@ -99,7 +116,7 @@ class PurchaseOrderController extends Controller
         return view('admin.purchase-orders.show', compact('purchaseOrder'));
     }
 
-    public function cancel($id)
+    public function cancel(Request $request, $id)
     {
         $purchaseOrder = PurchaseOrder::with(['items', 'adcOrder.adc.profile', 'adcOrder.adc.adcProfile'])->findOrFail($id);
 
@@ -186,6 +203,10 @@ class PurchaseOrderController extends Controller
             $msg = 'Purchase Order has been cancelled successfully.';
             if ($refundAmount > 0 && $adcOrder) {
                 $msg .= ' ₹' . number_format($refundAmount, 2) . ' refunded to ADC wallet and Order #' . $adcOrder->order_number . ' marked as Cancelled.';
+            }
+
+            if ($request->filled('return_url')) {
+                return redirect()->to($request->return_url)->with('success', $msg);
             }
 
             return redirect()->back()->with('success', $msg);
@@ -427,6 +448,24 @@ class PurchaseOrderController extends Controller
             'show_order' => $newShowOrder,
             'admin_approved' => $isAdminApproved,
         ]);
+
+        if ($newShowOrder === 'Yes') {
+            try {
+                \Illuminate\Support\Facades\Artisan::call('seller:send-order-message', [
+                    'po_ids' => (string) $purchaseOrder->id,
+                ]);
+            } catch (\Throwable $sellerThkEx) {
+                \Illuminate\Support\Facades\Log::error("Failed to execute seller:send-order-message command on toggleShowOrder: " . $sellerThkEx->getMessage());
+            }
+
+            try {
+                \Illuminate\Support\Facades\Artisan::call('ddc:send-order-message', [
+                    'po_ids' => (string) $purchaseOrder->id,
+                ]);
+            } catch (\Throwable $ddcThkEx) {
+                \Illuminate\Support\Facades\Log::error("Failed to execute ddc:send-order-message command on toggleShowOrder: " . $ddcThkEx->getMessage());
+            }
+        }
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([

@@ -16,7 +16,7 @@
                         <input type="hidden" name="order" id="formOrder" value="{{ $order }}">
                         <div class="col-md-3">
                             <label class="form-label small fw-semibold text-slate-700">Search</label>
-                            <input type="text" name="search" class="form-control form-control-sm" placeholder="PO Number, DDC or Seller..." value="{{ request('search') }}">
+                            <input type="text" name="search" class="form-control form-control-sm" placeholder="PO, DDC, Seller, ADC/ASC Code..." value="{{ request('search') }}">
                         </div>
                         <div class="col-md-2">
                             <label class="form-label small fw-semibold text-slate-700">PO Status</label>
@@ -242,7 +242,7 @@
                                             @endif
                                         </td>
                                         <td class="text-end pe-3">
-                                            <a href="{{ route('admin.purchase-orders.show', $po->id) }}" class="btn btn-sm btn-outline-primary py-1 px-3">
+                                            <a href="{{ route('admin.purchase-orders.show', array_merge(['id' => $po->id], ['return_url' => request()->fullUrl()])) }}" class="btn btn-sm btn-outline-primary py-1 px-3">
                                                 View
                                             </a>
                                         </td>
