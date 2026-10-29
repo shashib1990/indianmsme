@@ -16,7 +16,10 @@
                             </h4>
                             <p class="text-muted small mb-0">Record regional supplier stock receipt and pricing. Add one or multiple products under a single purchase invoice.</p>
                         </div>
-                        <div class="col-md-4 text-md-end">
+                        <div class="col-md-4 text-md-end d-flex align-items-center justify-content-md-end gap-2">
+                            <a href="{{ route('adc.local-inventory.invoice-scan') }}" class="btn btn-primary btn-sm fw-semibold shadow-sm">
+                                <iconify-icon icon="solar:scanner-bold-duotone" class="align-middle me-1 fs-18"></iconify-icon> Smart Invoice Scanner
+                            </a>
                             <a href="{{ route('adc.local-purchases.index') }}" class="btn btn-outline-secondary btn-sm fw-semibold">
                                 <iconify-icon icon="solar:arrow-left-bold-duotone" class="align-middle me-1 fs-18"></iconify-icon> Back to Purchases
                             </a>
@@ -25,6 +28,22 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Smart Invoice Import Promo Banner -->
+    <div class="alert alert-primary bg-primary-subtle border-0 rounded-4 shadow-sm mb-4 d-flex align-items-center justify-content-between flex-wrap gap-3 p-3">
+        <div class="d-flex align-items-center gap-3">
+            <span class="p-2 rounded-circle bg-primary text-white d-flex align-items-center justify-content-center">
+                <iconify-icon icon="solar:scanner-bold-duotone" class="fs-24"></iconify-icon>
+            </span>
+            <div>
+                <h6 class="fw-bold mb-0 text-slate-800">Scan &amp; Auto-Fill from Supplier Invoice</h6>
+                <p class="small text-muted mb-0">Upload a PDF or bill photo (or use phone camera) to automatically extract supplier, invoice details and multiple products.</p>
+            </div>
+        </div>
+        <a href="{{ route('adc.local-inventory.invoice-scan') }}" class="btn btn-primary rounded-3 px-3 fw-bold text-nowrap">
+            <iconify-icon icon="solar:magic-stick-3-bold-duotone" class="align-middle me-1 fs-16"></iconify-icon> Launch Invoice Scanner
+        </a>
     </div>
 
     @if($errors->any())

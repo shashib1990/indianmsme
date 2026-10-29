@@ -20,6 +20,9 @@
                             <a href="{{ route('adc.local-products.comparison') }}" class="btn btn-outline-info btn-sm fw-semibold">
                                 <iconify-icon icon="solar:scale-bold-duotone" class="align-middle me-1 fs-18"></iconify-icon> Price Analytics
                             </a>
+                            <a href="{{ route('adc.local-inventory.invoice-scan') }}" class="btn btn-outline-primary btn-sm fw-semibold">
+                                <iconify-icon icon="solar:scanner-bold-duotone" class="align-middle me-1 fs-18"></iconify-icon> Invoice Scanner
+                            </a>
                             <a href="{{ route('adc.local-purchases.create') }}" class="btn btn-outline-success btn-sm fw-semibold">
                                 <iconify-icon icon="solar:box-minimalistic-bold-duotone" class="align-middle me-1 fs-18"></iconify-icon> Stock In
                             </a>

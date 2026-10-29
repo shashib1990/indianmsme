@@ -87,6 +87,11 @@ Route::name('adc.')->group(function () {
 
         Route::resource('local-purchases', \App\Http\Controllers\ADC\LocalPurchaseController::class)->only(['index', 'create', 'store', 'show']);
 
+        // ── Smart Invoice Scanner (ADC Local Inventory OCR) ──
+        Route::get('/local-inventory/invoice-scan', [\App\Http\Controllers\ADC\InvoiceScanController::class, 'index'])->name('local-inventory.invoice-scan');
+        Route::post('/local-inventory/invoice-scan/process', [\App\Http\Controllers\ADC\InvoiceScanController::class, 'process'])->name('local-inventory.invoice-scan.process');
+        Route::post('/local-inventory/invoice-scan/save', [\App\Http\Controllers\ADC\InvoiceScanController::class, 'save'])->name('local-inventory.invoice-scan.save');
+
         // ── Comprehensive ADC Reports Module (5 Core Reports) ──
         Route::get('/reports/sales', [\App\Http\Controllers\ADC\SalesReportController::class, 'index'])->name('reports.sales');
         Route::get('/reports/sales/export-csv', [\App\Http\Controllers\ADC\SalesReportController::class, 'exportCsv'])->name('reports.sales.export-csv');

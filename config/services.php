@@ -43,4 +43,10 @@ return [
         'upload_url'  => env('FILE_SERVICE_UPLOAD_URL', 'https://upload.sainikcanteen.com/api/upload'),
     ],
 
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY'),
+        'model'   => env('GEMINI_MODEL', 'gemini-3.5-flash-lite'),
+        'timeout' => (int) env('GEMINI_TIMEOUT', 60),
+    ],
+
 ];

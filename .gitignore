@@ -19,3 +19,5 @@ yarn-error.log
 /.vscode
 app.zip
 *.zip
+*.traineddata
+*.traineddata.gz

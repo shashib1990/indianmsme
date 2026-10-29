@@ -1318,16 +1318,23 @@
                     {{-- ========= REGIONAL PRODUCTS & PURCHASES ========= --}}
                     <li class="menu-title mt-2">Regional Sourcing</li>
                     <li class="nav-item">
-                        <a class="nav-link menu-arrow {{ request()->routeIs('adc.local-products.*') || request()->routeIs('adc.local-purchases.*') ? '' : '' }}"
+                        <a class="nav-link menu-arrow {{ request()->routeIs('adc.local-products.*') || request()->routeIs('adc.local-purchases.*') || request()->routeIs('adc.local-inventory.*') ? '' : '' }}"
                             href="#sidebarAdcLocalSourcing" data-bs-toggle="collapse" role="button"
-                            aria-expanded="{{ request()->routeIs('adc.local-products.*') || request()->routeIs('adc.local-purchases.*') ? 'true' : 'false' }}"
+                            aria-expanded="{{ request()->routeIs('adc.local-products.*') || request()->routeIs('adc.local-purchases.*') || request()->routeIs('adc.local-inventory.*') ? 'true' : 'false' }}"
                             aria-controls="sidebarAdcLocalSourcing">
                             <span class="nav-icon"><iconify-icon icon="solar:shop-bold-duotone"></iconify-icon></span>
                             <span class="nav-text">Regional Products & Purchases</span>
                         </a>
-                        <div class="collapse {{ request()->routeIs('adc.local-products.*') || request()->routeIs('adc.local-purchases.*') ? 'show' : '' }}"
+                        <div class="collapse {{ request()->routeIs('adc.local-products.*') || request()->routeIs('adc.local-purchases.*') || request()->routeIs('adc.local-inventory.*') ? 'show' : '' }}"
                             id="sidebarAdcLocalSourcing">
                             <ul class="nav sub-navbar-nav">
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link {{ request()->routeIs('adc.local-inventory.invoice-scan') ? 'active' : '' }}"
+                                        href="{{ route('adc.local-inventory.invoice-scan') }}">
+                                        <iconify-icon icon="solar:scanner-bold-duotone" class="align-middle me-1 fs-16 text-primary"></iconify-icon>
+                                        Smart Invoice Scanner
+                                    </a>
+                                </li>
                                 <li class="sub-nav-item">
                                     <a class="sub-nav-link {{ request()->routeIs('adc.local-products.index') || request()->routeIs('adc.local-products.create') || request()->routeIs('adc.local-products.edit') ? 'active' : '' }}"
                                         href="{{ route('adc.local-products.index') }}">Regional Product Master</a>
