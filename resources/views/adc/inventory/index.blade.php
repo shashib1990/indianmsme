@@ -490,9 +490,9 @@
                             <th class="col-stock" style="min-width:80px;">Balance</th>
 
                             {{-- Pricing --}}
-                            <th class="group-price" style="min-width:85px;">MRP</th>
-                            <th style="min-width:95px;">Purch. Price</th>
-                            <th style="min-width:95px;">CSP (₹) ✎</th>
+                            <th class="group-price" style="min-width:105px;">MRP (₹) ✎</th>
+                            <th style="min-width:105px;">Purch. Price (₹) ✎</th>
+                            <th style="min-width:105px;">CSP (₹) ✎</th>
                             <th style="min-width:110px;">CSP Margin (%)</th>
 
                             {{-- Dates --}}
@@ -623,8 +623,31 @@
                                 </td>
 
                                 {{-- ── Pricing ── --}}
-                                <td class="col-price"><span class="price-val">₹{{ number_format($mrpVal, 2) }}</span></td>
-                                <td class="col-price"><span class="price-val pp">₹{{ number_format($purchasePriceVal, 2) }}</span></td>
+                                {{-- MRP (editable) --}}
+                                <td class="col-price">
+                                    <div class="margin-wrap">
+                                        <span class="rs">₹</span>
+                                        <input type="number" step="0.01" min="0" class="inv-editable price-field"
+                                            data-field="mrp" style="padding-left:18px;"
+                                            value="{{ number_format($mrpVal, 2, '.', '') }}"
+                                            placeholder="0.00">
+                                    </div>
+                                    <span class="save-tip" id="si-mrp-{{ $inv->id }}"></span>
+                                </td>
+
+                                {{-- Purchase Price (editable) --}}
+                                <td class="col-price">
+                                    <div class="margin-wrap">
+                                        <span class="rs">₹</span>
+                                        <input type="number" step="0.01" min="0" class="inv-editable price-field pp-field"
+                                            data-field="purchase_price" style="padding-left:18px; color:#7c3aed; font-weight:700;"
+                                            value="{{ number_format($purchasePriceVal, 2, '.', '') }}"
+                                            placeholder="0.00">
+                                    </div>
+                                    <span class="save-tip" id="si-purchase_price-{{ $inv->id }}"></span>
+                                </td>
+
+                                {{-- CSP (editable) --}}
                                 <td class="col-price">
                                     <div class="margin-wrap">
                                         <span class="rs">₹</span>
@@ -725,12 +748,15 @@
             }
 
             function getIndicatorId(invId, field) {
+                if (field === 'mrp') return `si-mrp-${invId}`;
+                if (field === 'purchase_price') return `si-purchase_price-${invId}`;
+                if (field === 'csp') return `si-csp-${invId}`;
                 if (field === 'adc_margin') return `si-adc_margin-${invId}`;
                 if (field === 'csp_margin') return `si-csp_margin-${invId}`;
                 if (field === 'margin') return `si-margin-${invId}`;
                 if (field === 'mfg_date') return `si-mfg-${invId}`;
                 if (field === 'expire_date') return `si-exp-${invId}`;
-                return null;
+                return `si-${field}-${invId}`;
             }
 
             function showTip(id, state, msg) {

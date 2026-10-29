@@ -15,9 +15,11 @@ use App\Models\DdcInventory;
 use App\Services\OrderRoutingService;
 use App\Services\TransactionSnapshotService;
 use App\Services\NotificationService;
+use App\Services\TheekHaiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class CheckoutController extends Controller
 {
@@ -168,6 +170,7 @@ class CheckoutController extends Controller
 
             $createdOrders = [];
             $orderNumbers  = [];
+            $createdPoIds  = [];
 
             // 2. Create Physical ADC Order (if any physical items exist)
             if (!empty($physicalGroup)) {
@@ -336,6 +339,7 @@ class CheckoutController extends Controller
 
                     $createdOrders[] = $virtOrder;
                     $orderNumbers[]  = $virtOrder->order_number;
+                    $createdPoIds[]  = $po->id;
 
                     // Notify Seller
                     NotificationService::notifySeller(
@@ -385,6 +389,20 @@ class CheckoutController extends Controller
             );
 
             DB::commit();
+
+            // 8. Send WhatsApp / TheekHai Notification to ADC via SendAdcMessage Command
+            try {
+                $createdIds = collect($createdOrders)->pluck('id')->toArray();
+                $idsCsv = implode(',', $createdIds);
+                $advCode = $request->advisor_code ?: '';
+
+                \Illuminate\Support\Facades\Artisan::call('adc:send-message', [
+                    'order_ids' => $idsCsv,
+                    '--advisor-code' => $advCode,
+                ]);
+            } catch (\Throwable $thkEx) {
+                \Illuminate\Support\Facades\Log::error("Failed to execute adc:send-message command: " . $thkEx->getMessage());
+            }
 
             $createdIds = collect($createdOrders)->pluck('id')->toArray();
             session(['created_order_ids' => $createdIds]);
