@@ -229,9 +229,9 @@
                 $ddcCode = $ddcProf?->ddc_code ?: 'DDB001';
             @endphp
             <img src="{{ $siteHeaderLogo }}" style="max-height: 52px; max-width: 180px; object-fit: contain; margin-bottom: 3px;" alt="Logo" onerror="this.style.display='none'">
-            
+                
             <div class="shop-title">Ardh Sainik Mall</div>
-            <div class="depot-title">{{ $depotName }}</div>
+            <div class="depot-title">{{ $ddcCode }}</div>
             <div class="depot-address">
                 {{ $ddcAddress }}
                 @if($ddcDistrict || $ddcState)
