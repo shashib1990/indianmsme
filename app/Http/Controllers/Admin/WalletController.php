@@ -15,9 +15,17 @@ class WalletController extends Controller
 {
     public function ddcIndex(Request $request)
     {
-        $query = DDC::query();
+        $query = DDC::query()->with('profile');
         if ($request->search) {
-            $query->where('name', 'like', "%{$request->search}%")->orWhere('email', 'like', "%{$request->search}%");
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('mobile', 'like', "%{$search}%")
+                    ->orWhereHas('profile', function ($pq) use ($search) {
+                        $pq->where('ddc_code', 'like', "%{$search}%");
+                    });
+            });
         }
         $users = $query->paginate(15);
         $type = 'ddc';
@@ -47,6 +55,9 @@ class WalletController extends Controller
                 $user = DDC::findOrFail($id);
                 $profile = $user->ddcProfile()->firstOrCreate([]);
                 $profile->increment('wallet_balance', $request->amount);
+                if ((float) $profile->fresh()->wallet_balance > 0 && str_contains($profile->deactivation_reason ?? '', 'Wallet balance')) {
+                    $profile->update(['deactivation_reason' => null]);
+                }
                 DdcWallet::create([
                     'ddc_id' => $id,
                     'amount' => $request->amount,

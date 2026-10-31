@@ -498,6 +498,17 @@ class User extends Authenticatable
         return 0.00;
     }
 
+    public function getDeactivationReasonAttribute()
+    {
+        if ($this->role === 'ddc') {
+            return $this->ddcProfile?->deactivation_reason;
+        }
+        if ($this->role === 'adc') {
+            return $this->adcProfile?->deactivation_reason;
+        }
+        return null;
+    }
+
     public function getCompanyNameAttribute()
     {
         if (array_key_exists('company_name', $this->tempProfileData)) {

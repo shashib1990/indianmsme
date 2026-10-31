@@ -10,6 +10,9 @@
             <iconify-icon icon="solar:arrow-left-bold-duotone" class="align-middle me-1"></iconify-icon> Back to ADC Orders
         </a>
         <div class="d-flex align-items-center gap-2">
+            <a href="{{ route('admin.adc-orders.invoice', $order->id) }}" target="_blank" class="btn btn-sm btn-success d-inline-flex align-items-center gap-1.5 shadow-sm">
+                <iconify-icon icon="solar:printer-bold" class="fs-16"></iconify-icon> View / Print Tax Invoice
+            </a>
             @if(!in_array($order->status, ['Cancelled', 'Received', 'Delivered', 'Completed']))
                 <form action="{{ route('admin.adc-orders.cancel', $order->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to cancel this ADC Order? All items will be cancelled and refund will be credited to ADC wallet.');">
                     @csrf
@@ -31,12 +34,24 @@
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
             <div class="row g-3 align-items-center">
-                <div class="col-md-4 border-end">
+                <div class="col-md-3 border-end">
                     <span class="text-muted small d-block mb-1">Order Reference</span>
                     <h4 class="fw-bold text-slate-800 mb-0">#{{ $order->order_number }}</h4>
                     <span class="text-muted small">Placed on {{ $order->created_at->format('d M Y, h:i A') }}</span>
                 </div>
-                <div class="col-md-4 border-end">
+                <div class="col-md-3 border-end">
+                    <span class="text-muted small d-block mb-1">Tax Invoice</span>
+                    @if($order->invoice && $order->invoice->invoice_number)
+                        <div class="fw-bold text-success font-monospace mb-0 fs-15">#{{ $order->invoice->invoice_number }}</div>
+                        <span class="text-muted small">Dated {{ \Carbon\Carbon::parse($order->invoice->invoice_date)->format('d M Y') }}</span>
+                    @else
+                        <div class="d-flex align-items-center gap-1.5 mt-0.5">
+                            <span class="badge bg-light text-muted border fs-11">Pending Generation</span>
+                            <a href="{{ route('admin.adc-orders.invoice', $order->id) }}" target="_blank" class="btn btn-xs btn-outline-primary py-0 px-1.5 fs-11">Generate</a>
+                        </div>
+                    @endif
+                </div>
+                <div class="col-md-3 border-end">
                     <span class="text-muted small d-block mb-1">ADC Coordinator</span>
                     <div class="fw-bold text-slate-800">{{ $order->adc?->name ?? 'N/A' }}</div>
                     <div class="text-muted small">
@@ -44,7 +59,7 @@
                         {{ $order->adc?->mobile ?? 'N/A' }} | {{ $order->adc?->email ?? 'N/A' }}
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <span class="text-muted small d-block mb-1">Fulfillment Routing</span>
                     <div class="d-flex align-items-center gap-2">
                         @if($order->fulfillment_type === 'physical')
@@ -242,6 +257,41 @@
 
         <!-- Sidebar Column: Addresses & Summary -->
         <div class="col-lg-4">
+            <!-- Tax Invoice Card -->
+            <div class="card border-0 shadow-sm mb-4 border-start border-4 border-success">
+                <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+                    <h6 class="fw-bold text-slate-800 mb-0 d-flex align-items-center gap-2">
+                        <iconify-icon icon="solar:document-text-bold-duotone" class="text-success fs-5"></iconify-icon>
+                        Official Tax Invoice
+                    </h6>
+                    @if($order->invoice && $order->invoice->invoice_number)
+                        <span class="badge bg-success-subtle text-success fs-11 font-monospace">
+                            {{ $order->invoice->invoice_number }}
+                        </span>
+                    @endif
+                </div>
+                <div class="card-body">
+                    @if($order->invoice && $order->invoice->invoice_number)
+                        <div class="mb-2">
+                            <span class="text-muted small d-block">Invoice Number:</span>
+                            <span class="fw-bold text-slate-800 font-monospace fs-15">#{{ $order->invoice->invoice_number }}</span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="text-muted small d-block">Invoice Date:</span>
+                            <span class="fw-semibold text-slate-700 small">{{ \Carbon\Carbon::parse($order->invoice->invoice_date)->format('d M Y') }}</span>
+                        </div>
+                    @else
+                        <p class="text-muted small mb-3">
+                            Tax Invoice is available for this order. Click below to generate, view or print the official invoice copy.
+                        </p>
+                    @endif
+                    <a href="{{ route('admin.adc-orders.invoice', $order->id) }}" target="_blank" class="btn btn-success w-100 py-2 d-inline-flex align-items-center justify-content-center gap-1.5 fw-semibold shadow-sm">
+                        <iconify-icon icon="solar:printer-bold" class="fs-18"></iconify-icon>
+                        View / Print Tax Invoice
+                    </a>
+                </div>
+            </div>
+
             <!-- Shipping & Delivery Address Card -->
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-white py-3">

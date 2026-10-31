@@ -45,10 +45,22 @@
                             </div>
 
                             <div class="mt-2 pt-1 border-top border-white border-opacity-10 d-flex align-items-center justify-content-between">
-                                <span class="text-white-50 fs-10">
-                                    <iconify-icon icon="solar:shield-check-bold" class="align-middle me-1 text-info fs-12"></iconify-icon>
-                                    Active Account
-                                </span>
+                                @if((float) ($user->wallet_balance ?? 0) <= 0)
+                                    <span class="badge bg-danger text-white fs-10 px-2 py-1">
+                                        <iconify-icon icon="solar:close-circle-bold" class="align-middle me-1 fs-12"></iconify-icon>
+                                        POS Deactivated
+                                    </span>
+                                @elseif((float) ($user->wallet_balance ?? 0) <= 100)
+                                    <span class="badge bg-warning text-dark fs-10 px-2 py-1">
+                                        <iconify-icon icon="solar:danger-triangle-bold" class="align-middle me-1 fs-12"></iconify-icon>
+                                        Low Balance
+                                    </span>
+                                @else
+                                    <span class="text-white-50 fs-10">
+                                        <iconify-icon icon="solar:shield-check-bold" class="align-middle me-1 text-info fs-12"></iconify-icon>
+                                        Active Account
+                                    </span>
+                                @endif
                                 <a href="#request-topup-section" class="btn btn-xs btn-light text-primary fw-semibold fs-10 px-2 py-0.5 rounded-pill shadow-xs">
                                     + Top-up
                                 </a>

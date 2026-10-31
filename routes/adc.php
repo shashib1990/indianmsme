@@ -91,6 +91,7 @@ Route::name('adc.')->group(function () {
         Route::get('/local-inventory/invoice-scan', [\App\Http\Controllers\ADC\InvoiceScanController::class, 'index'])->name('local-inventory.invoice-scan');
         Route::post('/local-inventory/invoice-scan/process', [\App\Http\Controllers\ADC\InvoiceScanController::class, 'process'])->name('local-inventory.invoice-scan.process');
         Route::post('/local-inventory/invoice-scan/save', [\App\Http\Controllers\ADC\InvoiceScanController::class, 'save'])->name('local-inventory.invoice-scan.save');
+        Route::post('/local-inventory/invoice-scan/brand', [\App\Http\Controllers\ADC\InvoiceScanController::class, 'storeBrand'])->name('local-inventory.invoice-scan.brand.store');
 
         // ── Comprehensive ADC Reports Module (5 Core Reports) ──
         Route::get('/reports/sales', [\App\Http\Controllers\ADC\SalesReportController::class, 'index'])->name('reports.sales');

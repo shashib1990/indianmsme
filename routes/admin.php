@@ -314,6 +314,11 @@ Route::name('admin.')->group(function () {
         Route::get('settings/cashback', [SystemSettingController::class, 'cashbackIndex'])->name('settings.cashback.index');
         Route::post('settings/cashback', [SystemSettingController::class, 'cashbackUpdate'])->name('settings.cashback.update');
 
+        // System Settings / Google Gemini AI Settings
+        Route::get('settings/gemini', [SystemSettingController::class, 'geminiIndex'])->name('settings.gemini.index');
+        Route::post('settings/gemini', [SystemSettingController::class, 'geminiUpdate'])->name('settings.gemini.update');
+        Route::post('settings/gemini/test', [SystemSettingController::class, 'geminiTest'])->name('settings.gemini.test');
+
         // Home Page Banners Management
         Route::get('settings/banners', [\App\Http\Controllers\Admin\HomePageBannerController::class, 'index'])->name('banners.index');
         Route::post('settings/banners', [\App\Http\Controllers\Admin\HomePageBannerController::class, 'store'])->name('banners.store');
@@ -340,6 +345,8 @@ Route::name('admin.')->group(function () {
         Route::post('purchase-orders/{id}/cancel', [\App\Http\Controllers\Admin\PurchaseOrderController::class, 'cancel'])->name('purchase-orders.cancel')->middleware('permission:users.manage');
         Route::post('purchase-orders/{id}/complete', [\App\Http\Controllers\Admin\PurchaseOrderController::class, 'markCompleted'])->name('purchase-orders.complete')->middleware('permission:users.manage');
         Route::post('purchase-orders/{id}/toggle-show-order', [\App\Http\Controllers\Admin\PurchaseOrderController::class, 'toggleShowOrder'])->name('purchase-orders.toggle-show-order')->middleware('permission:users.manage');
+        Route::get('purchase-orders/{id}/pickup-stores', [\App\Http\Controllers\Admin\PurchaseOrderController::class, 'getSellerPickupStores'])->name('purchase-orders.pickup-stores')->middleware('permission:users.view');
+        Route::post('purchase-orders/{id}/update-pickup-store', [\App\Http\Controllers\Admin\PurchaseOrderController::class, 'updatePickupStore'])->name('purchase-orders.update-pickup-store')->middleware('permission:users.manage');
 
         // Debit Notes & Settlement Management (ADPL)
         Route::get('debit-notes', [\App\Http\Controllers\Admin\DebitNoteController::class, 'index'])->name('debit-notes.index')->middleware('permission:users.view');

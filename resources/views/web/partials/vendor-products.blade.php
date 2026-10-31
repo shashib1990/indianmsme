@@ -4,7 +4,7 @@
   Variables: $products (LengthAwarePaginator), $seller (User)
 --}}
 @forelse($products as $product)
-  <div class="wow animate__animated animate__fadeIn">
+  <div class="wow animate__animated animate__fadeIn" data-product-id="{{ $product->id }}">
     @include('web.partials.product-card', ['product' => $product])
   </div>
 @empty

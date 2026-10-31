@@ -248,9 +248,17 @@
                 <p class="text-sm text-light-secondary-text">
                   {{ $vendorCategory ?? 'General' }}
                 </p>
-                <div class="inline-flex items-center gap-1 bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-semibold mt-1">
-                  <i class="hgi hgi-stroke hgi-checkmark-circle-02 text-[14px]"></i>
-                  Verified Seller
+                <div class="flex flex-wrap items-center justify-center gap-1.5 mt-1">
+                  <div class="inline-flex items-center gap-1 bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-semibold">
+                    <i class="hgi hgi-stroke hgi-checkmark-circle-02 text-[14px]"></i>
+                    Verified Seller
+                  </div>
+                  @if($seller->sellerProfile?->is_ddc_subscribed)
+                    <div class="inline-flex items-center gap-1.5 bg-amber-50 text-amber-800 border border-amber-300 px-3 py-1 rounded-full text-xs font-bold shadow-xs">
+                      <i class="hgi hgi-stroke hgi-crown text-amber-600 text-[13px]"></i>
+                      DDC Subscribed
+                    </div>
+                  @endif
                 </div>
               </div>
 
@@ -265,15 +273,24 @@
                     <h6 class="text-light-primary-text font-bold">{{ $imvCode }}</h6>
                   </div>
                 </div>
-                @if($seller->has_sub_sellers)
-                  <div class="flex items-center pt-4">
+                <div class="flex flex-col gap-2 pt-4">
+                  {{-- Download Catalog Button (Red background as requested) --}}
+                  <a href="{{ route('vendor.catalog', $imvCode) }}" target="_blank"
+                     style="background-color: #dc2626 !important;"
+                     class="w-full text-center hover:bg-red-700 text-white transition-all duration-300 rounded-xl py-3 px-4 font-bold text-xs flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
+                     title="Download {{ $companyName }} Catalog">
+                    <i class="hgi hgi-stroke hgi-file-download text-base text-white"></i>
+                    <span>Download Catalog</span>
+                  </a>
+
+                  @if($seller->has_sub_sellers)
                     <a href="{{ route('vendor.sub-sellers', $imvCode) }}"
                        class="btn btn-small flex-1 text-center bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 transition-colors duration-300 rounded-xl py-2.5 font-semibold text-xs flex items-center justify-center gap-1.5">
                       <i class="hgi hgi-stroke hgi-user-group text-sm"></i>
                       Sub Sellers
                     </a>
-                  </div>
-                @endif
+                  @endif
+                </div>
               </div>
             </div>
           </div>
@@ -425,7 +442,7 @@
         {{-- Products grid --}}
         <div id="vm-products-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 pb-8">
           @forelse($products as $product)
-            <div class="wow animate__animated animate__fadeInUp" data-wow-delay=".1s">
+            <div class="wow animate__animated animate__fadeInUp" data-wow-delay=".1s" data-product-id="{{ $product->id }}">
               @include('web.partials.product-card', ['product' => $product])
             </div>
           @empty
@@ -466,7 +483,7 @@
     price_min: {{ $currentMin }},
     price_max: {{ $currentMax ? $currentMax : 99999999 }},
     discount:  '{{ $currentDiscount }}',
-    page:      1,
+    page:      2,
   };
 
   let loading  = false;
@@ -778,6 +795,11 @@
         tmp.innerHTML = data.html;
         const children = Array.from(tmp.children);
         children.forEach(child => {
+          const prodId = child.getAttribute('data-product-id');
+          // Deduplication: prevent duplicate cards if already in grid
+          if (prodId && grid.querySelector(`[data-product-id="${prodId}"]`)) {
+            return;
+          }
           child.classList.remove('wow');
           child.classList.add('animate__animated','animate__fadeIn');
           grid.appendChild(child);

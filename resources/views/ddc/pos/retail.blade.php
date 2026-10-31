@@ -235,13 +235,36 @@
                     </div>
                 </div>
 
-                <!-- Complete Sale Button -->
-                <button type="button"
-                    class="btn btn-primary w-100 py-2 fs-14 fw-bold rounded-2 shadow-sm d-flex align-items-center justify-content-center gap-2"
-                    id="btnCheckout" onclick="processCheckout()">
-                    <iconify-icon icon="solar:check-circle-bold-duotone" class="fs-18"></iconify-icon>
-                    Complete Checkout & Print
-                </button>
+                @php
+                    $posDdcUser = Auth::guard('ddc')->user();
+                    $posDdcProfile = $posDdcUser?->ddcProfile;
+                    $posWalletBal = (float) ($posDdcProfile?->wallet_balance ?? 0);
+                    $posIsDeactivated = ($posDdcUser?->status == 0 || $posDdcUser?->status === '0' || $posWalletBal <= 0);
+                @endphp
+
+                @if($posIsDeactivated)
+                    <div class="alert alert-danger p-2 mb-2 fs-12 rounded-2 border-0 text-start"
+                        style="background: #fef2f2; color: #991b1b; border-left: 3px solid #ef4444 !important;">
+                        <iconify-icon icon="solar:close-circle-bold-duotone"
+                            class="text-danger me-1 align-middle fs-16"></iconify-icon>
+                        <strong>POS Sales Deactivated:</strong>
+                        {{ $posDdcProfile?->deactivation_reason ?: 'Wallet balance exhausted. Daily platform fee deduction failed. Recharge wallet to resume sales.' }}
+                    </div>
+                    <button type="button"
+                        class="btn btn-secondary w-100 py-2 fs-14 fw-bold rounded-2 shadow-sm d-flex align-items-center justify-content-center gap-2"
+                        disabled>
+                        <iconify-icon icon="solar:forbidden-circle-bold-duotone" class="fs-18"></iconify-icon>
+                        Sales Disabled (Recharge Required)
+                    </button>
+                @else
+                    <!-- Complete Sale Button -->
+                    <button type="button"
+                        class="btn btn-primary w-100 py-2 fs-14 fw-bold rounded-2 shadow-sm d-flex align-items-center justify-content-center gap-2"
+                        id="btnCheckout" onclick="processCheckout()">
+                        <iconify-icon icon="solar:check-circle-bold-duotone" class="fs-18"></iconify-icon>
+                        Complete Checkout & Print
+                    </button>
+                @endif
             </div>
 
         </div>

@@ -96,10 +96,17 @@
               </span>
             </div>
 
-            {{-- Action CTA Button --}}
-            <a href="{{ $cardUrl }}" class="vendor-card-btn" onclick="event.stopPropagation()">
-              View Profile
-            </a>
+            {{-- Action CTA Buttons --}}
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <a href="{{ $cardUrl }}" class="vendor-card-btn" style="flex: 1;" onclick="event.stopPropagation()">
+                View Profile
+              </a>
+              <a href="{{ route('vendor.catalog', $imvCode) }}" target="_blank" class="vendor-card-catalog-btn"
+                 title="Download {{ $companyName }} Catalog (PDF)" onclick="event.stopPropagation()">
+                <i class="hgi hgi-stroke hgi-file-download" style="font-size: 13px;"></i>
+                <span>Catalog</span>
+              </a>
+            </div>
           </div>
 
         </div>

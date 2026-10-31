@@ -1447,18 +1447,27 @@
 
                     @permission('users.manage')
                     <li class="nav-item">
-                        <a class="nav-link menu-arrow {{ request()->routeIs('admin.settings.pricing.*') || request()->routeIs('admin.settings.logos.*') || request()->routeIs('admin.settings.bank.*') || request()->routeIs('admin.settings.adpl-office.*') || request()->routeIs('admin.banners.*') ? '' : '' }}"
+                        <a class="nav-link menu-arrow {{ request()->routeIs('admin.settings.pricing.*') || request()->routeIs('admin.settings.logos.*') || request()->routeIs('admin.settings.bank.*') || request()->routeIs('admin.settings.adpl-office.*') || request()->routeIs('admin.settings.gemini.*') || request()->routeIs('admin.banners.*') ? '' : '' }}"
                             href="#sidebarSystemSettings" data-bs-toggle="collapse" role="button"
-                            aria-expanded="{{ request()->routeIs('admin.settings.pricing.*') || request()->routeIs('admin.settings.logos.*') || request()->routeIs('admin.settings.bank.*') || request()->routeIs('admin.settings.adpl-office.*') || request()->routeIs('admin.banners.*') ? 'true' : 'false' }}"
+                            aria-expanded="{{ request()->routeIs('admin.settings.pricing.*') || request()->routeIs('admin.settings.logos.*') || request()->routeIs('admin.settings.bank.*') || request()->routeIs('admin.settings.adpl-office.*') || request()->routeIs('admin.settings.gemini.*') || request()->routeIs('admin.banners.*') ? 'true' : 'false' }}"
                             aria-controls="sidebarSystemSettings">
                             <span class="nav-icon">
                                 <iconify-icon icon="solar:settings-bold-duotone"></iconify-icon>
                             </span>
                             <span class="nav-text">System & Site Settings</span>
                         </a>
-                        <div class="collapse {{ request()->routeIs('admin.settings.pricing.*') || request()->routeIs('admin.settings.logos.*') || request()->routeIs('admin.settings.bank.*') || request()->routeIs('admin.settings.adpl-office.*') || request()->routeIs('admin.banners.*') ? 'show' : '' }}"
+                        <div class="collapse {{ request()->routeIs('admin.settings.pricing.*') || request()->routeIs('admin.settings.logos.*') || request()->routeIs('admin.settings.bank.*') || request()->routeIs('admin.settings.adpl-office.*') || request()->routeIs('admin.settings.gemini.*') || request()->routeIs('admin.banners.*') ? 'show' : '' }}"
                             id="sidebarSystemSettings">
                             <ul class="nav sub-navbar-nav">
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link {{ request()->routeIs('admin.settings.gemini.*') ? 'active' : '' }}"
+                                        href="{{ route('admin.settings.gemini.index') }}">
+                                        <span class="d-flex align-items-center justify-content-between w-100">
+                                            <span>Gemini AI API Key</span>
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-10 px-1 py-0.5">AI</span>
+                                        </span>
+                                    </a>
+                                </li>
                                 <li class="sub-nav-item">
                                     <a class="sub-nav-link {{ request()->routeIs('admin.settings.pricing.*') ? 'active' : '' }}"
                                         href="{{ route('admin.settings.pricing.index') }}">Pricing Margins</a>
@@ -1889,6 +1898,7 @@
                 { parent: 'System Settings', title: 'ADPL Bank & Payment QR', url: "{{ route('admin.settings.bank.index') }}", icon: 'solar:bank-bold-duotone', keywords: 'adpl bank details upi qr code hdfc account' },
                 { parent: 'System Settings', title: 'ASWT Bank & Payment QR', url: "{{ route('admin.settings.aswt-bank.index') }}", icon: 'solar:bank-bold-duotone', keywords: 'aswt bank details upi qr code account' },
                 { parent: 'System Settings', title: 'Logos & Platform Branding', url: "{{ route('admin.settings.logos.index') }}", icon: 'solar:gallery-wide-bold-duotone', keywords: 'logo header logo footer logo favicon branding' },
+                { parent: 'System Settings', title: 'Google Gemini AI API Key & Model', url: "{{ route('admin.settings.gemini.index') }}", icon: 'solar:magic-stick-3-bold-duotone', keywords: 'gemini ai api key google invoice scanner' },
                 { parent: 'System Settings', title: 'Homepage Banners', url: "{{ route('admin.banners.index') }}", icon: 'solar:slider-minimalistic-bold-duotone', keywords: 'banners hero slider homepage image' }
             ];
 

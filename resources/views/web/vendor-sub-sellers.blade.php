@@ -377,6 +377,29 @@
       color: #ffffff !important;
     }
 
+    .vendor-card-catalog-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 8px 10px;
+      background-color: #f0fdf4;
+      color: #15803d !important;
+      border: 1px solid #bbf7d0;
+      font-weight: 600;
+      font-size: 11px;
+      border-radius: 10px;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+
+    .vendor-card-catalog-btn:hover {
+      background-color: #16a34a;
+      color: #ffffff !important;
+      border-color: #16a34a;
+    }
+
     /* Stats Section */
     .vendor-stats-container {
       max-width: 100% !important;

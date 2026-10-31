@@ -12,6 +12,7 @@
           $profile     = $seller->sellerProfile;
           $imvCode     = $profile->seller_id ?? 'N/A';
           $companyName = $profile->company_name ?? $seller->name;
+          $isDdcSub    = (bool) ($profile->is_ddc_subscribed ?? false);
           
           // Category resolution
           if ($profile?->category?->name) {
@@ -44,16 +45,34 @@
           }
         @endphp
 
-        {{-- Seller Card --}}
-        <div class="vendor-card" style="position: relative;" onclick="window.location='{{ $cardUrl }}'">
+        {{-- Seller Card (Highlighted if DDC Subscribed) --}}
+        <div class="vendor-card {{ $isDdcSub ? 'is-ddc-subscribed' : '' }}" style="position: relative;" onclick="window.location='{{ $cardUrl }}'">
           
-          {{-- Share Button (Triggers global openShareModal) --}}
-          <button type="button" class="seller-share-btn"
-            onclick="event.stopPropagation(); openShareModal('{{ addslashes($companyName) }}', '{{ $cardUrl }}', '{{ $imvCode }}')"
-            title="Share Seller" aria-label="Share Seller"
-            style="position: absolute; top: 10px; right: 10px; z-index: 10; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #0284c7; box-shadow: 0 1px 4px rgba(0,0,0,0.08); transition: all 0.2s;">
-            <i class="hgi hgi-stroke hgi-share-01" style="font-size: 14px;"></i>
-          </button>
+          {{-- DDC Subscribed Badge --}}
+          @if($isDdcSub)
+            <span class="vendor-ddc-badge" title="DDC Subscribed Partner Seller">
+              <i class="hgi hgi-stroke hgi-crown"></i>
+              <span>DDC Subscribed</span>
+            </span>
+          @endif
+
+          {{-- Top Right Quick Actions (Catalog Download & Share) --}}
+          <div style="position: absolute; top: 10px; right: 10px; z-index: 10; display: flex; align-items: center; gap: 6px;">
+            {{-- Quick Catalog Download Button --}}
+            <a href="{{ route('vendor.catalog', $imvCode) }}" target="_blank" class="seller-quick-catalog-btn"
+               onclick="event.stopPropagation()"
+               title="Download {{ $companyName }} Catalog (PDF)" aria-label="Download Catalog">
+              <i class="hgi hgi-stroke hgi-file-download"></i>
+            </a>
+
+            {{-- Share Button (Triggers global openShareModal) --}}
+            <button type="button" class="seller-share-btn"
+              onclick="event.stopPropagation(); openShareModal('{{ addslashes($companyName) }}', '{{ $cardUrl }}', '{{ $imvCode }}')"
+              title="Share Seller" aria-label="Share Seller"
+              style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #0284c7; box-shadow: 0 1px 4px rgba(0,0,0,0.08); transition: all 0.2s;">
+              <i class="hgi hgi-stroke hgi-share-01" style="font-size: 14px;"></i>
+            </button>
+          </div>
 
           <div>
             {{-- Logo Container --}}
@@ -80,15 +99,22 @@
           </div>
 
           <div>
-            {{-- Products Count Footer --}}
-            <div class="vendor-card-footer" style="justify-content: center;">
+            {{-- Products Count & Catalog Link Footer --}}
+            <div class="vendor-card-footer" style="display: flex; justify-content: space-between; align-items: center;">
               <span class="vendor-card-products">
                 <i class="hgi hgi-stroke hgi-store-01"></i>
                 {{ $displayProdCount }}
               </span>
+
+              {{-- Download Catalog Pill Link --}}
+              <a href="{{ route('vendor.catalog', $imvCode) }}" target="_blank" class="vendor-card-catalog-pill"
+                 title="Download {{ $companyName }} Catalog (PDF)" onclick="event.stopPropagation()">
+                <i class="hgi hgi-stroke hgi-file-download" style="font-size: 12px;"></i>
+                <span>Catalog</span>
+              </a>
             </div>
 
-            {{-- Action CTA Button --}}
+            {{-- Primary Action Button (Full-width clean button) --}}
             <a href="{{ $cardUrl }}" class="vendor-card-btn" onclick="event.stopPropagation()">
               View Profile
             </a>

@@ -247,6 +247,7 @@ class OrderController extends Controller
                 'financial_year' => $invoiceDetails['financial_year'],
                 'serial_number' => $invoiceDetails['serial_number'],
                 'invoice_date' => $invoiceDetails['invoice_date'],
+                'type' => $isPhysicalDdcOrder ? 'ddc_to_adc' : 'adc_order',
             ], $extractedDetails));
         }
 

@@ -81,6 +81,8 @@ Route::name('ddc.')->group(function () {
         Route::get('/purchase-orders/cart', [\App\Http\Controllers\DDC\PurchaseOrderController::class, 'viewCart'])->name('purchase-orders.cart.view');
         Route::post('/purchase-orders/cart/update', [\App\Http\Controllers\DDC\PurchaseOrderController::class, 'updateCart'])->name('purchase-orders.cart.update');
         Route::post('/purchase-orders/cart/remove', [\App\Http\Controllers\DDC\PurchaseOrderController::class, 'removeFromCart'])->name('purchase-orders.cart.remove');
+        Route::post('/purchase-orders/cart/clear', [\App\Http\Controllers\DDC\PurchaseOrderController::class, 'clearCart'])->name('purchase-orders.cart.clear');
+        Route::post('/purchase-orders/cart/clear-seller', [\App\Http\Controllers\DDC\PurchaseOrderController::class, 'clearSellerCart'])->name('purchase-orders.cart.clear-seller');
         Route::post('/purchase-orders/store', [\App\Http\Controllers\DDC\PurchaseOrderController::class, 'store'])->name('purchase-orders.store');
         Route::get('/purchase-orders', [\App\Http\Controllers\DDC\PurchaseOrderController::class, 'index'])->name('purchase-orders.index');
         Route::get('/purchase-orders/pending', [\App\Http\Controllers\DDC\PurchaseOrderController::class, 'pendingOrders'])->name('purchase-orders.pending');

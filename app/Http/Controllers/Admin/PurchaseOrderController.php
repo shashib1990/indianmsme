@@ -13,6 +13,10 @@ use App\Models\AdcWallet;
 use App\Models\IncentiveHold;
 use App\Services\NotificationService;
 use Illuminate\Support\Facades\DB;
+use App\Models\PickupStore;
+use App\Models\Invoice;
+use App\Models\User;
+use App\Models\SellerProfile;
 
 class PurchaseOrderController extends Controller
 {
@@ -477,5 +481,144 @@ class PurchaseOrderController extends Controller
         }
 
         return back()->with('success', "Order #{$purchaseOrder->po_number} visibility set to {$newShowOrder}.");
+    }
+
+    /**
+     * Fetch seller's registered pickup stores for the given Purchase Order.
+     */
+    public function getSellerPickupStores($id)
+    {
+        $po = PurchaseOrder::with(['seller.sellerProfile', 'pickupStore'])->findOrFail($id);
+
+        $seller = $po->seller;
+        $sellerIds = array_filter([$po->seller_id]);
+
+        if ($seller && $seller->sellerProfile) {
+            if (!empty($seller->sellerProfile->parent_id)) {
+                $sellerIds[] = $seller->sellerProfile->parent_id;
+            }
+            $childIds = SellerProfile::where('parent_id', $po->seller_id)->pluck('user_id')->toArray();
+            $sellerIds = array_unique(array_merge($sellerIds, $childIds));
+        }
+
+        $sellerStores = PickupStore::with(['stateRelation', 'districtRelation'])
+            ->whereIn('owner_id', $sellerIds)
+            ->orderBy('pickup_store_name')
+            ->get()
+            ->map(function ($store) {
+                return [
+                    'id' => $store->id,
+                    'pickup_store_code' => $store->pickup_store_code,
+                    'pickup_store_name' => $store->pickup_store_name,
+                    'contact_person' => $store->contact_person,
+                    'mobile' => $store->mobile,
+                    'district' => $store->districtRelation?->name ?? $store->district,
+                    'state' => $store->stateRelation?->name ?? $store->state,
+                    'pincode' => $store->pincode,
+                    'status' => $store->status->value ?? $store->status,
+                    'can_receive_payment_and_dispatch' => (bool) $store->can_receive_payment_and_dispatch,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'po_id' => $po->id,
+            'po_number' => $po->po_number,
+            'seller_name' => $seller?->sellerProfile?->company_name ?: ($seller?->name ?? 'Seller'),
+            'current_pickup_store_id' => $po->pickup_store_id,
+            'current_pickup_store_code' => $po->pickupStore?->pickup_store_code,
+            'current_pickup_store_name' => $po->pickupStore?->pickup_store_name,
+            'seller_stores' => $sellerStores,
+        ]);
+    }
+
+    /**
+     * Update the assigned Pickup Store for a Purchase Order and synchronize all linked invoices.
+     */
+    public function updatePickupStore(Request $request, $id)
+    {
+        $request->validate([
+            'pickup_store_id' => 'nullable|exists:pickup_stores,id',
+        ]);
+
+        $po = PurchaseOrder::with(['seller.sellerProfile', 'invoice', 'adcOrder.adc.profile', 'ddc.profile'])->findOrFail($id);
+
+        $newStoreId = $request->input('pickup_store_id');
+        $newStore = null;
+
+        if ($newStoreId) {
+            $sellerIds = array_filter([$po->seller_id]);
+            if ($po->seller && $po->seller->sellerProfile) {
+                if (!empty($po->seller->sellerProfile->parent_id)) {
+                    $sellerIds[] = $po->seller->sellerProfile->parent_id;
+                }
+                $childIds = SellerProfile::where('parent_id', $po->seller_id)->pluck('user_id')->toArray();
+                $sellerIds = array_unique(array_merge($sellerIds, $childIds));
+            }
+
+            $newStore = PickupStore::with(['stateRelation', 'districtRelation'])
+                ->whereIn('owner_id', $sellerIds)
+                ->find($newStoreId);
+
+            if (!$newStore) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The selected pickup store does not belong to this seller.',
+                ], 422);
+            }
+        }
+
+        DB::beginTransaction();
+        try {
+            $po->pickup_store_id = $newStore?->id;
+            $po->save();
+
+            // Refresh model relations to ensure exact state for invoice generation/update
+            $refreshedPo = $po->fresh(['pickupStore.stateRelation', 'pickupStore.districtRelation', 'seller.sellerProfile', 'ddc.profile', 'adcOrder.adc.profile']);
+            $extractedDetails = Invoice::extractInvoiceDetails($refreshedPo);
+
+            // Synchronize all invoices linked to this PO (including DL invoices and virtual ADC invoices)
+            $invoices = Invoice::where('purchase_order_id', $po->id)
+                ->when($po->adc_order_id, function ($q) use ($po) {
+                    $q->orWhere('adc_order_id', $po->adc_order_id);
+                })
+                ->get();
+
+            foreach ($invoices as $inv) {
+                $inv->update([
+                    'dispatch_from_name'     => $extractedDetails['dispatch_from_name'],
+                    'dispatch_from_address'  => $extractedDetails['dispatch_from_address'],
+                    'dispatch_from_district' => $extractedDetails['dispatch_from_district'],
+                    'dispatch_from_state'    => $extractedDetails['dispatch_from_state'],
+                    'dispatch_from_pincode'  => $extractedDetails['dispatch_from_pincode'],
+                    'dispatch_from_phone'    => $extractedDetails['dispatch_from_phone'],
+                    'dispatch_from_gstin'    => $extractedDetails['dispatch_from_gstin'],
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => $newStore 
+                    ? "Pickup Store successfully updated to [{$newStore->pickup_store_code}] {$newStore->pickup_store_name}. Linked invoices (DL series) synchronized." 
+                    : "Pickup Store removed. Order set to Direct Seller Fulfillment. Linked invoices synchronized.",
+                'po_id' => $po->id,
+                'pickup_store' => $newStore ? [
+                    'id' => $newStore->id,
+                    'pickup_store_code' => $newStore->pickup_store_code,
+                    'pickup_store_name' => $newStore->pickup_store_name,
+                    'can_receive_payment_and_dispatch' => (bool) $newStore->can_receive_payment_and_dispatch,
+                    'district' => $newStore->districtRelation?->name ?? $newStore->district,
+                    'state' => $newStore->stateRelation?->name ?? $newStore->state,
+                ] : null,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update pickup store: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }

@@ -6,6 +6,16 @@
 @push('styles')
 <style>
     /* ── Scanner UI Styles ── */
+    .page-content > .container-fluid {
+        max-width: 100% !important;
+        padding-left: 1.25rem !important;
+        padding-right: 1.25rem !important;
+    }
+    .invoice-scanner-wrapper {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
     .scan-card-dropzone {
         border: 2px dashed #cbd5e1;
         border-radius: 16px;
@@ -112,46 +122,37 @@
         font-size: 12px;
         border-radius: 6px;
     }
+    .product-item-row {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s ease-in-out;
+    }
+    .product-item-row:hover {
+        border-color: #cbd5e1;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    }
+    .product-item-row .item-csp:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25);
+    }
 </style>
 @endpush
 
 @section('content')
-<div class="container-fluid px-3 px-md-4 py-3">
+<div class="invoice-scanner-wrapper">
 
     {{-- ── Header Card ── --}}
     <div class="row mb-3">
         <div class="col-12">
             <div class="card shadow-sm border-0 rounded-4">
                 <div class="card-body py-3 px-4">
-                    <div class="row align-items-center g-3">
-                            <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
-                                <h4 class="fw-bold text-slate-800 mb-0 d-flex align-items-center gap-2" style="font-family: 'Outfit', sans-serif;">
-                                    <iconify-icon icon="solar:scanner-bold-duotone" class="text-primary fs-28"></iconify-icon>
-                                    Smart Invoice Scanner
-                                </h4>
-                                @if(!empty($geminiConfigured))
-                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill px-3 py-1 fs-11 fw-semibold d-inline-flex align-items-center gap-1">
-                                        <iconify-icon icon="solar:stars-bold-duotone" class="fs-13 text-primary"></iconify-icon> Gemini AI ({{ $geminiModel }})
-                                    </span>
-                                @else
-                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle rounded-pill px-3 py-1 fs-11 fw-semibold d-inline-flex align-items-center gap-1" title="Set GEMINI_API_KEY in .env to activate Google Gemini multimodal AI">
-                                        <iconify-icon icon="solar:danger-circle-bold-duotone" class="fs-13 text-danger"></iconify-icon> Gemini Key Pending (.env)
-                                    </span>
-                                @endif
-                            </div>
-                            <p class="text-muted small mb-0">Upload or capture any regional supplier invoice (Image/PDF). AI multimodal understanding auto-extracts supplier, invoice details &amp; product rows.</p>
-                        <div class="col-md-5 text-md-end d-flex align-items-center justify-content-md-end gap-2 flex-wrap">
-                            <a href="{{ route('adc.local-purchases.index') }}" class="btn btn-outline-secondary btn-sm rounded-3 fw-semibold">
-                                <iconify-icon icon="solar:history-bold-duotone" class="align-middle me-1 fs-16"></iconify-icon> Purchase History
-                            </a>
-                            <a href="{{ route('adc.local-products.index') }}" class="btn btn-outline-primary btn-sm rounded-3 fw-semibold">
-                                <iconify-icon icon="solar:shop-bold-duotone" class="align-middle me-1 fs-16"></iconify-icon> Regional Products
-                            </a>
-                            <a href="{{ route('adc.local-purchases.create') }}" class="btn btn-outline-success btn-sm rounded-3 fw-semibold">
-                                <iconify-icon icon="solar:pen-new-square-bold-duotone" class="align-middle me-1 fs-16"></iconify-icon> Manual Stock In
-                            </a>
-                        </div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                        <h4 class="fw-bold text-slate-800 mb-0 d-flex align-items-center gap-2" style="font-family: 'Outfit', sans-serif;">
+                            <iconify-icon icon="solar:scanner-bold-duotone" class="text-primary fs-28"></iconify-icon>
+                            Smart Invoice Scanner
+                        </h4>
                     </div>
+                    <p class="text-muted small mb-0">Upload or capture any regional supplier invoice (Image/PDF). AI multimodal understanding auto-extracts supplier, invoice details &amp; product rows.</p>
                 </div>
             </div>
         </div>
@@ -250,8 +251,8 @@
                 {{-- Processing Progress Indicator --}}
                 <div id="scan-progress-wrap" class="mt-4 p-4 rounded-4 bg-light text-center d-none border">
                     <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
-                    <h5 class="fw-bold text-slate-800 mb-1" id="scan-status-title">Processing Invoice with Gemini AI...</h5>
-                    <p class="text-muted small mb-0" id="scan-status-desc">Multimodal AI is analyzing document layout, supplier details &amp; product rows...</p>
+                    <h5 class="fw-bold text-slate-800 mb-1" id="scan-status-title">Processing Invoice with AI...</h5>
+                    <p class="text-muted small mb-0" id="scan-status-desc">AI is analyzing document layout, supplier details &amp; product rows...</p>
                 </div>
             </div>
         </div>
@@ -287,13 +288,10 @@
                     {{-- Card 1: Supplier & Invoice Information --}}
                     <div class="card shadow-sm border-0 rounded-4 mb-3">
                         <div class="card-header bg-white py-3 px-4 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
-                            <div class="d-flex align-items-center gap-2 flex-wrap">
-                                <h6 class="fw-bold text-slate-800 mb-0 d-flex align-items-center gap-2">
-                                    <iconify-icon icon="solar:user-bold-duotone" class="text-success fs-20"></iconify-icon>
-                                    1. Supplier &amp; Invoice Information
-                                </h6>
-                                <span id="badge-engine-type" class="badge rounded-pill px-3 py-1 fs-12 fw-semibold d-none"></span>
-                            </div>
+                            <h6 class="fw-bold text-slate-800 mb-0 d-flex align-items-center gap-2">
+                                <iconify-icon icon="solar:user-bold-duotone" class="text-success fs-20"></iconify-icon>
+                                1. Supplier &amp; Invoice Information
+                            </h6>
                             <div class="d-flex align-items-center gap-2">
                                 <a href="#" target="_blank" id="btn-view-doc-link" class="btn btn-sm btn-outline-info rounded-pill px-3 d-none">
                                     <iconify-icon icon="solar:document-bold-duotone" class="align-middle me-1 fs-14"></iconify-icon> View Uploaded Invoice
@@ -337,40 +335,27 @@
                         </div>
                     </div>
 
-                    {{-- Card 2: Extracted Product Items Table --}}
+                    {{-- Card 2: Extracted Product Entries (Spacious Two-Row Layout) --}}
                     <div class="card shadow-sm border-0 rounded-4 mb-4">
-                        <div class="card-header bg-white py-3 px-4 border-bottom d-flex align-items-center justify-content-between">
-                            <h6 class="fw-bold text-slate-800 mb-0 d-flex align-items-center gap-2">
-                                <iconify-icon icon="solar:box-minimalistic-bold-duotone" class="text-primary fs-20"></iconify-icon>
-                                2. Extracted Product Rows (<span id="items-count-badge">0</span> Items)
-                            </h6>
-                            <button type="button" class="btn btn-sm btn-success rounded-3 px-3 shadow-sm" id="btn-add-product-row">
-                                <iconify-icon icon="solar:add-circle-bold-duotone" class="align-middle me-1 fs-16"></iconify-icon> Add Row
-                            </button>
-                        </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle mb-0" id="extracted-items-table">
-                                    <thead class="bg-light fs-11 text-uppercase fw-bold text-muted border-bottom">
-                                        <tr>
-                                            <th style="min-width: 220px;" class="ps-3">Product Name &amp; Match</th>
-                                            <th style="min-width: 140px;">Category</th>
-                                            <th style="min-width: 130px;">Brand</th>
-                                            <th style="width: 80px;">HSN</th>
-                                            <th style="width: 75px;">GST%</th>
-                                            <th style="width: 90px;">Unit</th>
-                                            <th style="width: 75px;">Qty</th>
-                                            <th style="width: 85px;">Purch. Price</th>
-                                            <th style="width: 85px;">MRP</th>
-                                            <th style="width: 85px;">CSP</th>
-                                            <th style="width: 50px;" class="pe-3 text-center">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="extracted-items-tbody">
-                                        {{-- Dynamic extracted product rows inserted via JS --}}
-                                    </tbody>
-                                </table>
+                        <div class="card-header bg-white py-3 px-4 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <h6 class="fw-bold text-slate-800 mb-0 d-flex align-items-center gap-2">
+                                    <iconify-icon icon="solar:box-minimalistic-bold-duotone" class="text-primary fs-20"></iconify-icon>
+                                    2. Extracted Product Entries (<span id="items-count-badge">0</span> Items)
+                                </h6>
+                                <span class="badge bg-light text-muted border fs-11">Two-Row Spacious Layout</span>
                             </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-primary rounded-3 px-3 fw-semibold" onclick="openAddBrandModal(null)">
+                                    <iconify-icon icon="solar:tag-bold-duotone" class="align-middle me-1 fs-15"></iconify-icon> + New Brand
+                                </button>
+                                <button type="button" class="btn btn-sm btn-success rounded-3 px-3 fw-semibold shadow-sm" id="btn-add-product-row">
+                                    <iconify-icon icon="solar:add-circle-bold-duotone" class="align-middle me-1 fs-16"></iconify-icon> Add Product Entry
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body p-3 bg-light bg-opacity-25" id="extracted-items-container">
+                            {{-- Dynamic extracted product items rendered across two rows --}}
                         </div>
                         <div class="card-footer bg-white py-3 px-4 border-top d-flex align-items-center justify-content-between flex-wrap gap-2">
                             <div>
@@ -403,6 +388,39 @@
     </div>
 
 </div>
+
+{{-- ── Quick Add Brand Modal ── --}}
+<div class="modal fade" id="addBrandModal" tabindex="-1" aria-labelledby="addBrandModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom py-3 px-4 bg-white">
+                <h5 class="modal-title fw-bold text-slate-800 d-flex align-items-center gap-2" id="addBrandModalLabel">
+                    <iconify-icon icon="solar:tag-bold-duotone" class="text-primary fs-22"></iconify-icon>
+                    Add New Brand
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="form-quick-add-brand">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label for="new-brand-name" class="form-label fw-bold text-slate-700 fs-13">Brand Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control rounded-3" id="new-brand-name" placeholder="e.g. Tata, Fortune, Nestlé, Amul" required autocomplete="off">
+                        <div class="form-text text-muted mt-2 small">
+                            <iconify-icon icon="solar:info-circle-bold" class="align-middle text-primary"></iconify-icon>
+                            This brand will be created instantly and made available across all brand selectors on this invoice.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top py-2 px-4 bg-light bg-opacity-50">
+                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-3 px-4 fw-bold" id="btn-save-new-brand">
+                        <iconify-icon icon="solar:check-circle-bold-duotone" class="align-middle me-1 fs-18"></iconify-icon> Save Brand
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -415,6 +433,7 @@
 
     const processRoute = "{{ route('adc.local-inventory.invoice-scan.process') }}";
     const saveRoute = "{{ route('adc.local-inventory.invoice-scan.save') }}";
+    const brandStoreRoute = "{{ route('adc.local-inventory.invoice-scan.brand.store') }}";
     const csrfToken = "{{ csrf_token() }}";
 
     let currentRotation = 0;
@@ -422,6 +441,105 @@
     let cameraStream = null;
     let capturedBase64 = null;
     let rowIndexCounter = 0;
+    let activeBrandTargetRowIdx = null;
+    let addBrandModalInstance = null;
+
+    // ── Inline Brand Creation Modal Helper ──
+    function openAddBrandModal(rowIdx = null) {
+        activeBrandTargetRowIdx = rowIdx;
+        const brandInput = document.getElementById('new-brand-name');
+        if (brandInput) brandInput.value = '';
+        const modalEl = document.getElementById('addBrandModal');
+        if (!addBrandModalInstance && modalEl) {
+            addBrandModalInstance = new bootstrap.Modal(modalEl);
+        }
+        if (addBrandModalInstance) {
+            addBrandModalInstance.show();
+            setTimeout(() => {
+                if (brandInput) brandInput.focus();
+            }, 350);
+        }
+    }
+
+    // Handle Quick Brand Creation Form Submission
+    document.getElementById('form-quick-add-brand')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const brandInput = document.getElementById('new-brand-name');
+        const brandName = brandInput ? brandInput.value.trim() : '';
+        if (!brandName) return;
+
+        const btnSave = document.getElementById('btn-save-new-brand');
+        const origText = btnSave.innerHTML;
+        btnSave.disabled = true;
+        btnSave.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span>Saving...`;
+
+        try {
+            const resp = await fetch(brandStoreRoute, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ name: brandName })
+            });
+            const data = await resp.json();
+            btnSave.disabled = false;
+            btnSave.innerHTML = origText;
+
+            if (data.success && data.brand) {
+                const newBrand = data.brand;
+                // Add to memory list if not already present
+                const exists = brandsList.some(b => b.id == newBrand.id);
+                if (!exists) {
+                    brandsList.push(newBrand);
+                    brandsList.sort((a, b) => a.name.localeCompare(b.name));
+                }
+
+                // Update all existing brand dropdowns in the form
+                document.querySelectorAll('.item-brand-select').forEach(sel => {
+                    const optExists = Array.from(sel.options).some(o => o.value == newBrand.id);
+                    if (!optExists) {
+                        const opt = document.createElement('option');
+                        opt.value = newBrand.id;
+                        opt.textContent = newBrand.name;
+                        sel.appendChild(opt);
+                    }
+                });
+
+                // If opened from a specific row, select this new brand
+                if (activeBrandTargetRowIdx !== null) {
+                    const targetRow = document.getElementById(`row-${activeBrandTargetRowIdx}`);
+                    if (targetRow) {
+                        const sel = targetRow.querySelector('.item-brand-select');
+                        if (sel) {
+                            sel.value = newBrand.id;
+                        }
+                    }
+                }
+
+                if (addBrandModalInstance) {
+                    addBrandModalInstance.hide();
+                }
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Brand Created',
+                    text: `Brand "${newBrand.name}" was added successfully!`,
+                    timer: 2000,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            } else {
+                Swal.fire('Error', data.message || 'Could not create brand.', 'error');
+            }
+        } catch (err) {
+            btnSave.disabled = false;
+            btnSave.innerHTML = origText;
+            Swal.fire('Error', 'Server request error: ' + err.message, 'error');
+        }
+    });
 
     // ── Input Dropzone Events ──
     const dropzone = document.getElementById('dropzone-area');
@@ -524,9 +642,9 @@
         processInvoiceData(formData, true);
     }
 
-    // ── Backend Process Call (Gemini AI Vision Extraction) ──
+    // ── Backend Process Call (AI Vision Extraction) ──
     async function processInvoiceData(payload, isFormData = false) {
-        showProgress('Analyzing Invoice with Gemini AI...', 'Reading supplier info, product rows, rates & pricing via AI vision...');
+        showProgress('Analyzing Invoice with AI...', 'Reading supplier info, product rows, rates & pricing via AI vision...');
 
         try {
             let res;
@@ -598,7 +716,7 @@
         const engineBadge = document.getElementById('badge-engine-type');
         if (engineBadge) {
             engineBadge.className = 'badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill px-3 py-1 fs-12 fw-semibold d-inline-flex align-items-center gap-1';
-            engineBadge.innerHTML = '<iconify-icon icon="solar:stars-bold-duotone" class="fs-14 text-primary"></iconify-icon> ' + (data.engine_label || 'Google Gemini AI');
+            engineBadge.innerHTML = '<iconify-icon icon="solar:stars-bold-duotone" class="fs-14 text-primary"></iconify-icon> ' + (data.engine_label || 'AI');
             engineBadge.classList.remove('d-none');
         }
 
@@ -646,14 +764,14 @@
             recAlert.classList.add('d-none');
         }
 
-        // Populate Extracted Products Table
-        const tbody = document.getElementById('extracted-items-tbody');
-        tbody.innerHTML = '';
+        // Populate Extracted Products Container
+        const container = document.getElementById('extracted-items-container');
+        container.innerHTML = '';
         rowIndexCounter = 0;
 
         const products = data.products || [];
         if (products.length === 0) {
-            // Add at least one empty row for manual entry
+            // Add at least one empty entry for manual entry
             addProductRow();
         } else {
             products.forEach(item => {
@@ -664,27 +782,35 @@
         updateCalculations();
     }
 
-    // ── Add Product Row to Table ──
+    // ── Add Product Row to Container (Two-Row Spacious Entry) ──
     function addProductRow(data = {}) {
-        const tbody = document.getElementById('extracted-items-tbody');
+        const container = document.getElementById('extracted-items-container');
         const idx = rowIndexCounter++;
 
-        const tr = document.createElement('tr');
-        tr.id = `row-${idx}`;
+        const block = document.createElement('div');
+        block.className = 'product-item-row p-3 mb-3 border rounded-3 bg-white shadow-sm';
+        block.id = `row-${idx}`;
+        block.setAttribute('data-idx', idx);
 
         const pName = data.product_name || '';
         const matchType = data.match_type || 'NEW';
         const matchSource = data.match_source || '';
         const selectedProductId = data.local_product_id || 'NEW';
-        const categoryId = data.category_id || 1;
+
+        // REQUIREMENT 3: Keep category unselected by default ("No Selection")
+        const categoryId = (data.category_id !== undefined && data.category_id !== null && data.category_id !== '') ? data.category_id : '';
+
         const brandId = data.brand_id || '';
         const hsn = data.hsn_code || '';
         const gst = data.gst_rate !== undefined ? parseFloat(data.gst_rate) : 0;
         const uom = data.unit_of_measure || 'Piece';
         const qty = data.quantity || 1;
-        const pPrice = data.purchase_price !== undefined ? parseFloat(data.purchase_price).toFixed(2) : '0.00';
-        const mrp = data.mrp !== undefined ? parseFloat(data.mrp).toFixed(2) : '0.00';
-        const csp = data.csp !== undefined ? parseFloat(data.csp).toFixed(2) : '0.00';
+        const pPrice = (data.purchase_price !== undefined && data.purchase_price !== null && parseFloat(data.purchase_price) > 0) ? parseFloat(data.purchase_price).toFixed(2) : '0.00';
+        const mrp = (data.mrp !== undefined && data.mrp !== null && parseFloat(data.mrp) > 0) ? parseFloat(data.mrp).toFixed(2) : '';
+
+        // REQUIREMENT 1: CSP must be entered manually; keep empty by default
+        const csp = (data.csp !== undefined && data.csp !== null && parseFloat(data.csp) > 0) ? parseFloat(data.csp).toFixed(2) : '';
+
         const barcode = data.barcode || '';
 
         // Match Badge HTML
@@ -697,14 +823,14 @@
             matchBadgeHtml = `<span class="match-badge-new" title="New Regional Product"><iconify-icon icon="solar:add-circle-bold" class="align-middle me-0.5"></iconify-icon> New Product</span>`;
         }
 
-        // Category Options
-        let catOptions = '';
+        // Category Options: REQUIREMENT 3 - Display "No Selection" until chosen
+        let catOptions = `<option value="" ${!categoryId ? 'selected' : ''}>-- No Selection --</option>`;
         categoriesList.forEach(c => {
             catOptions += `<option value="${c.id}" ${c.id == categoryId ? 'selected' : ''}>${c.name}</option>`;
         });
 
-        // Brand Options
-        let brandOptions = '<option value="">None / Unbranded</option>';
+        // Brand Options: REQUIREMENT 4 - Inline creation option available
+        let brandOptions = '<option value="">-- None / Unbranded --</option>';
         brandsList.forEach(b => {
             brandOptions += `<option value="${b.id}" ${b.id == brandId ? 'selected' : ''}>${b.name}</option>`;
         });
@@ -737,107 +863,162 @@
         });
         productMasterOptions += `</optgroup>`;
 
-        // Missing field warnings
-        const mrpBadge = (parseFloat(mrp) <= 0) ? `<div class="text-danger fs-10 fw-semibold mt-0.5"><iconify-icon icon="solar:danger-circle-bold" class="align-middle"></iconify-icon> Enter MRP</div>` : '';
-        const cspBadge = (parseFloat(csp) <= 0) ? `<div class="text-warning fs-10 fw-semibold mt-0.5"><iconify-icon icon="solar:danger-circle-bold" class="align-middle"></iconify-icon> Enter CSP</div>` : '';
+        // Warnings / Helpers
+        const mrpBadge = (!mrp || parseFloat(mrp) <= 0) ? `<div class="text-danger fs-11 mt-1 mrp-warning-hint"><iconify-icon icon="solar:danger-circle-bold" class="align-middle"></iconify-icon> Enter MRP</div>` : '';
+        const cspBadge = (!csp || parseFloat(csp) <= 0) ? `<div class="text-primary fs-11 fw-semibold mt-1 csp-manual-hint"><iconify-icon icon="solar:pen-bold" class="align-middle"></iconify-icon> Manual entry required</div>` : '';
 
-        tr.innerHTML = `
-            <td class="ps-3">
-                <div class="d-flex align-items-center gap-1 mb-1">
+        block.innerHTML = `
+            {{-- Entry Header Bar --}}
+            <div class="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-light text-dark fw-bold px-2.5 py-1.5 fs-12 border product-index-badge">#${idx + 1}</span>
                     ${matchBadgeHtml}
-                    ${matchSource ? `<small class="text-muted fs-11 text-truncate" style="max-width: 140px;" title="${matchSource}">${matchSource}</small>` : ''}
+                    ${matchSource ? `<small class="text-muted fs-12 text-truncate" style="max-width: 250px;" title="${matchSource}">${matchSource}</small>` : ''}
                 </div>
-                <input type="text" name="items[${idx}][product_name]" class="form-control table-input-sm fw-semibold mb-1 item-name-input" value="${pName}" placeholder="Product Name" required>
-                <select name="items[${idx}][local_product_id]" class="form-select table-input-sm text-muted fs-11 item-product-select">
-                    ${productMasterOptions}
-                </select>
-                <input type="hidden" name="items[${idx}][barcode]" value="${barcode}">
-                <input type="hidden" name="items[${idx}][hsn_code]" value="${hsn}">
-            </td>
-            <td>
-                <select name="items[${idx}][category_id]" class="form-select table-input-sm" required>
-                    ${catOptions}
-                </select>
-            </td>
-            <td>
-                <select name="items[${idx}][brand_id]" class="form-select table-input-sm">
-                    ${brandOptions}
-                </select>
-            </td>
-            <td>
-                <input type="text" name="items[${idx}][hsn_code]" class="form-control table-input-sm" value="${hsn}" placeholder="HSN">
-            </td>
-            <td>
-                <select name="items[${idx}][gst_rate]" class="form-select table-input-sm">
-                    ${gstOptions}
-                </select>
-            </td>
-            <td>
-                <select name="items[${idx}][unit_of_measure]" class="form-select table-input-sm">
-                    ${unitOptions}
-                </select>
-            </td>
-            <td>
-                <input type="number" step="0.001" min="0.001" name="items[${idx}][quantity]" class="form-control table-input-sm item-qty text-end" value="${qty}" required>
-            </td>
-            <td>
-                <input type="number" step="0.01" min="0" name="items[${idx}][purchase_price]" class="form-control table-input-sm item-price text-end fw-bold text-slate-800" value="${pPrice}" required>
-            </td>
-            <td>
-                <input type="number" step="0.01" min="0" name="items[${idx}][mrp]" class="form-control table-input-sm item-mrp text-end ${parseFloat(mrp) <= 0 ? 'border-warning bg-warning-subtle' : ''}" value="${mrp}" placeholder="MRP" required>
-                ${mrpBadge}
-            </td>
-            <td>
-                <input type="number" step="0.01" min="0" name="items[${idx}][csp]" class="form-control table-input-sm item-csp text-end text-success fw-bold ${parseFloat(csp) <= 0 ? 'border-warning bg-warning-subtle' : ''}" value="${csp}" placeholder="CSP" required>
-                ${cspBadge}
-            </td>
-            <td class="pe-3 text-center">
-                <button type="button" class="btn btn-sm btn-outline-danger p-1 rounded-2" onclick="removeProductRow(${idx})" title="Remove Row">
-                    <iconify-icon icon="solar:trash-bin-trash-bold" class="fs-16"></iconify-icon>
-                </button>
-            </td>
+                <div>
+                    <button type="button" class="btn btn-outline-danger btn-sm rounded-2 py-1 px-2.5 d-inline-flex align-items-center gap-1" onclick="removeProductRow(${idx})" title="Remove Item">
+                        <iconify-icon icon="solar:trash-bin-trash-bold" class="fs-15"></iconify-icon> <span class="fs-12">Remove</span>
+                    </button>
+                </div>
+            </div>
+
+            {{-- Row 1: Product Master Info (Name, Match Link, Category, Brand, Unit) --}}
+            <div class="row g-2 mb-2 align-items-start">
+                <div class="col-xl-5 col-lg-5 col-md-12">
+                    <label class="form-label fs-12 fw-bold text-slate-700 mb-1">Product Description / Name <span class="text-danger">*</span></label>
+                    <input type="text" name="items[${idx}][product_name]" class="form-control form-control-sm fw-semibold mb-1 item-name-input" value="${pName}" placeholder="e.g. Basmati Rice 1kg" required>
+                    <select name="items[${idx}][local_product_id]" class="form-select form-select-sm text-muted fs-11 item-product-select">
+                        ${productMasterOptions}
+                    </select>
+                    <input type="hidden" name="items[${idx}][barcode]" value="${barcode}">
+                </div>
+                <div class="col-xl-3 col-lg-3 col-md-4">
+                    <label class="form-label fs-12 fw-bold text-slate-700 mb-1">Category <span class="text-danger">*</span></label>
+                    <select name="items[${idx}][category_id]" class="form-select form-select-sm item-category-select ${!categoryId ? 'border-warning bg-warning-subtle' : ''}" required>
+                        ${catOptions}
+                    </select>
+                    ${!categoryId ? `<div class="text-warning fs-11 mt-1 cat-warning-hint"><iconify-icon icon="solar:danger-circle-bold" class="align-middle"></iconify-icon> Please select a category</div>` : ''}
+                </div>
+                <div class="col-xl-3 col-lg-3 col-md-5">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <label class="form-label fs-12 fw-bold text-slate-700 mb-0">Brand</label>
+                        <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none fs-11 fw-semibold text-primary" onclick="openAddBrandModal(${idx})">
+                            <iconify-icon icon="solar:add-circle-bold" class="align-middle"></iconify-icon> + Add Brand
+                        </button>
+                    </div>
+                    <div class="input-group input-group-sm">
+                        <select name="items[${idx}][brand_id]" class="form-select form-select-sm item-brand-select">
+                            ${brandOptions}
+                        </select>
+                        <button type="button" class="btn btn-outline-primary" onclick="openAddBrandModal(${idx})" title="Add new brand">
+                            <iconify-icon icon="solar:add-circle-bold" class="align-middle fs-15"></iconify-icon>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-xl-1 col-lg-1 col-md-3">
+                    <label class="form-label fs-12 fw-bold text-slate-700 mb-1">Unit <span class="text-danger">*</span></label>
+                    <select name="items[${idx}][unit_of_measure]" class="form-select form-select-sm">
+                        ${unitOptions}
+                    </select>
+                </div>
+            </div>
+
+            {{-- Row 2: Pricing, Tax & Inventory Details --}}
+            <div class="row g-2 align-items-end pt-2 border-top bg-light bg-opacity-50 rounded-2 p-2 mt-1">
+                <div class="col-xl-2 col-lg-2 col-md-4 col-6">
+                    <label class="form-label fs-11 text-muted fw-bold text-uppercase mb-1">HSN / SAC</label>
+                    <input type="text" name="items[${idx}][hsn_code]" class="form-control form-control-sm" value="${hsn}" placeholder="HSN Code">
+                </div>
+                <div class="col-xl-2 col-lg-2 col-md-4 col-6">
+                    <label class="form-label fs-11 text-muted fw-bold text-uppercase mb-1">GST Rate</label>
+                    <select name="items[${idx}][gst_rate]" class="form-select form-select-sm">
+                        ${gstOptions}
+                    </select>
+                </div>
+                <div class="col-xl-2 col-lg-2 col-md-4 col-6">
+                    <label class="form-label fs-11 text-muted fw-bold text-uppercase mb-1">Quantity <span class="text-danger">*</span></label>
+                    <input type="number" step="0.001" min="0.001" name="items[${idx}][quantity]" class="form-control form-control-sm item-qty text-end fw-semibold" value="${qty}" required>
+                </div>
+                <div class="col-xl-2 col-lg-2 col-md-4 col-6">
+                    <label class="form-label fs-11 text-muted fw-bold text-uppercase mb-1">Purch. Price (₹) <span class="text-danger">*</span></label>
+                    <input type="number" step="0.01" min="0" name="items[${idx}][purchase_price]" class="form-control form-control-sm item-price text-end fw-bold text-slate-800" value="${pPrice}" required>
+                </div>
+                <div class="col-xl-2 col-lg-2 col-md-4 col-6">
+                    <label class="form-label fs-11 text-muted fw-bold text-uppercase mb-1">MRP (₹) <span class="text-danger">*</span></label>
+                    <input type="number" step="0.01" min="0" name="items[${idx}][mrp]" class="form-control form-control-sm item-mrp text-end ${(!mrp || parseFloat(mrp) <= 0) ? 'border-warning bg-warning-subtle' : ''}" value="${mrp}" placeholder="MRP" required>
+                    ${mrpBadge}
+                </div>
+                <div class="col-xl-2 col-lg-2 col-md-4 col-6">
+                    <label class="form-label fs-11 text-primary fw-bold text-uppercase mb-1 d-flex align-items-center justify-content-between">
+                        <span>CSP (₹) <span class="text-danger">*</span></span>
+                        <span class="badge bg-primary-subtle text-primary fs-10 py-0 px-1">Manual</span>
+                    </label>
+                    <input type="number" step="0.01" min="0.01" name="items[${idx}][csp]" class="form-control form-control-sm item-csp text-end text-primary fw-bold ${(!csp || parseFloat(csp) <= 0) ? 'border-primary bg-primary-subtle bg-opacity-10' : ''}" value="${csp > 0 ? csp : ''}" placeholder="Enter CSP" required>
+                    ${cspBadge}
+                </div>
+            </div>
         `;
 
-        tbody.appendChild(tr);
+        container.appendChild(block);
 
-        // Attach recalculation listeners (isolated to this row)
-        const priceInput = tr.querySelector('.item-price');
-        const mrpInput = tr.querySelector('.item-mrp');
-        const cspInput = tr.querySelector('.item-csp');
-        const qtyInput = tr.querySelector('.item-qty');
+        // Attach event listeners
+        const priceInput = block.querySelector('.item-price');
+        const mrpInput = block.querySelector('.item-mrp');
+        const cspInput = block.querySelector('.item-csp');
+        const qtyInput = block.querySelector('.item-qty');
+        const catSelect = block.querySelector('.item-category-select');
 
-        // Only calculate CSP if MRP > Purchase Price and Purchase Price > 0
-        // Never guess or fabricate CSP if MRP is missing
-        [priceInput, mrpInput].forEach(inp => {
-            inp.addEventListener('input', () => {
-                const p = parseFloat(priceInput.value || 0);
-                const m = parseFloat(mrpInput.value || 0);
-                if (m > p && p > 0) {
-                    cspInput.value = (p + ((m - p) / 2)).toFixed(2);
-                    cspInput.classList.remove('border-warning', 'bg-warning-subtle');
-                }
-                if (m > 0) {
-                    mrpInput.classList.remove('border-warning', 'bg-warning-subtle');
-                }
-                updateCalculations();
-            });
+        // Price, MRP & Qty update totals. CSP is strictly manual and never altered!
+        priceInput.addEventListener('input', updateCalculations);
+        qtyInput.addEventListener('input', updateCalculations);
+
+        mrpInput.addEventListener('input', () => {
+            const m = parseFloat(mrpInput.value || 0);
+            if (m > 0) {
+                mrpInput.classList.remove('border-warning', 'bg-warning-subtle');
+                const hint = block.querySelector('.mrp-warning-hint');
+                if (hint) hint.remove();
+            } else {
+                mrpInput.classList.add('border-warning', 'bg-warning-subtle');
+            }
         });
 
-        qtyInput.addEventListener('input', updateCalculations);
+        // CSP manual input listener
         cspInput.addEventListener('input', () => {
-            if (parseFloat(cspInput.value || 0) > 0) {
-                cspInput.classList.remove('border-warning', 'bg-warning-subtle');
+            const c = parseFloat(cspInput.value || 0);
+            if (c > 0) {
+                cspInput.classList.remove('border-primary', 'bg-primary-subtle', 'bg-opacity-10', 'border-danger', 'bg-danger-subtle');
+                const hint = block.querySelector('.csp-manual-hint');
+                if (hint) hint.remove();
+            } else {
+                cspInput.classList.add('border-primary', 'bg-primary-subtle', 'bg-opacity-10');
             }
-            updateCalculations();
+        });
+
+        // Category selection listener
+        catSelect.addEventListener('change', () => {
+            if (catSelect.value) {
+                catSelect.classList.remove('border-warning', 'bg-warning-subtle', 'border-danger', 'bg-danger-subtle');
+                const hint = block.querySelector('.cat-warning-hint');
+                if (hint) hint.remove();
+            } else {
+                catSelect.classList.add('border-warning', 'bg-warning-subtle');
+            }
         });
 
         updateCalculations();
     }
 
+    // ── Remove Product Entry ──
     function removeProductRow(idx) {
         const row = document.getElementById(`row-${idx}`);
         if (row) {
             row.remove();
+            // Re-index remaining badges
+            document.querySelectorAll('.product-item-row').forEach((item, i) => {
+                const badge = item.querySelector('.product-index-badge');
+                if (badge) badge.textContent = `#${i + 1}`;
+            });
             updateCalculations();
         }
     }
@@ -846,8 +1027,9 @@
         addProductRow();
     });
 
+    // ── Calculate Grand Totals across all Entries ──
     function updateCalculations() {
-        const rows = document.querySelectorAll('#extracted-items-tbody tr');
+        const rows = document.querySelectorAll('.product-item-row');
         let totalItems = 0;
         let totalQty = 0;
         let grandTotal = 0;
@@ -860,10 +1042,14 @@
             grandTotal += (q * p);
         });
 
-        document.getElementById('items-count-badge').textContent = totalItems;
-        document.getElementById('summary-total-items').textContent = totalItems;
-        document.getElementById('summary-total-qty').textContent = totalQty.toFixed(2);
-        document.getElementById('summary-grand-total').textContent = '₹' + grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const badgeCount = document.getElementById('items-count-badge');
+        if (badgeCount) badgeCount.textContent = totalItems;
+        const sumItems = document.getElementById('summary-total-items');
+        if (sumItems) sumItems.textContent = totalItems;
+        const sumQty = document.getElementById('summary-total-qty');
+        if (sumQty) sumQty.textContent = totalQty.toFixed(2);
+        const sumTotal = document.getElementById('summary-grand-total');
+        if (sumTotal) sumTotal.textContent = '₹' + grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     // ── Rescan / Reset Buttons ──
@@ -883,15 +1069,55 @@
     saveForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const rowCount = document.querySelectorAll('#extracted-items-tbody tr').length;
-        if (rowCount === 0) {
+        const items = document.querySelectorAll('.product-item-row');
+        if (items.length === 0) {
             Swal.fire('No Products', 'Please extract or add at least one product row to stock in.', 'warning');
+            return;
+        }
+
+        // Validate Category Selection on all items
+        let missingCat = false;
+        items.forEach(it => {
+            const cat = it.querySelector('.item-category-select');
+            if (!cat || !cat.value) {
+                missingCat = true;
+                cat.classList.add('border-danger', 'bg-danger-subtle');
+                cat.focus();
+            }
+        });
+        if (missingCat) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Category Required',
+                text: 'Please select a Category for every product item (cannot be left as "No Selection").',
+                confirmButtonColor: '#eab308'
+            });
+            return;
+        }
+
+        // Validate Manual CSP Entry on all items
+        let missingCsp = false;
+        items.forEach(it => {
+            const csp = it.querySelector('.item-csp');
+            if (!csp || !csp.value || parseFloat(csp.value) <= 0) {
+                missingCsp = true;
+                csp.classList.add('border-danger', 'bg-danger-subtle');
+                csp.focus();
+            }
+        });
+        if (missingCsp) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'CSP Required',
+                text: 'Please enter the Customer Sale Price (CSP) manually for all products before saving.',
+                confirmButtonColor: '#3b82f6'
+            });
             return;
         }
 
         const confirmRes = await Swal.fire({
             title: 'Confirm Stock-In?',
-            text: `Are you sure you want to stock-in ${rowCount} product item(s) from this invoice?`,
+            text: `Are you sure you want to stock-in ${items.length} product item(s) from this invoice?`,
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: 'Yes, Confirm & Stock In',

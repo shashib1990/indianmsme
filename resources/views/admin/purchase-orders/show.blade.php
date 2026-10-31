@@ -192,8 +192,19 @@
                                 </tr>
                             </table>
                         </div>
-                        <div class="col-md-6">
-                            <h6 class="fw-bold text-slate-800 mb-2">Assigned Pickup Store</h6>
+                        <div class="col-md-6" id="po-show-store-wrap">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <h6 class="fw-bold text-slate-800 mb-0">Assigned Pickup Store</h6>
+                                <button type="button" 
+                                        class="btn btn-xs btn-outline-primary px-2 py-1 fs-12 d-inline-flex align-items-center gap-1 btn-change-pickup-store"
+                                        data-po-id="{{ $purchaseOrder->id }}"
+                                        data-po-number="{{ $purchaseOrder->po_number }}"
+                                        data-seller-name="{{ $purchaseOrder->seller?->company_name ?: ($purchaseOrder->seller?->name ?? 'Seller') }}"
+                                        data-current-store-id="{{ $purchaseOrder->pickup_store_id ?? '' }}"
+                                        title="Change Pickup Store Code">
+                                    <iconify-icon icon="solar:pen-bold-duotone" class="fs-13"></iconify-icon> Change Store Code
+                                </button>
+                            </div>
                             @if($purchaseOrder->pickupStore)
                                 <table class="table table-borderless table-sm mb-0">
                                     <tr>
@@ -463,4 +474,6 @@
             @endif
         </div>
     </div>
+
+    @include('admin.purchase-orders._change_pickup_store_modal')
 @endsection

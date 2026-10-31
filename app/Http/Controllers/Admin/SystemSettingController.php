@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SystemSetting;
 use App\Models\Product;
 use App\Http\Controllers\Vendor\ProductController;
+use App\Services\GeminiInvoiceExtractorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -307,5 +308,57 @@ class SystemSettingController extends Controller
         } catch (\Exception $e) {
             return back()->withInput()->with('error', 'Error updating cashback settings: ' . $e->getMessage());
         }
+    }
+
+    public function geminiIndex(GeminiInvoiceExtractorService $geminiService)
+    {
+        $apiKey = SystemSetting::getVal('gemini_api_key', config('services.gemini.api_key', ''));
+        $model = SystemSetting::getVal('gemini_model', config('services.gemini.model', 'gemini-3.5-flash'));
+        $timeout = (int) SystemSetting::getVal('gemini_timeout', config('services.gemini.timeout', 60));
+        $isConfigured = $geminiService->isConfigured();
+
+        $availableModels = [
+            'gemini-3.5-flash'      => 'Gemini 3.5 Flash (Recommended - Fastest & Multi-modal)',
+            'gemini-3.5-flash-lite' => 'Gemini 3.5 Flash Lite (High Speed & Lightweight)',
+            'gemini-3.8-flash'      => 'Gemini 3.8 Flash (Latest Generation)',
+            'gemini-2.5-flash'      => 'Gemini 2.5 Flash',
+            'gemini-2.5-pro'        => 'Gemini 2.5 Pro',
+        ];
+
+        return view('admin.settings.gemini', compact('apiKey', 'model', 'timeout', 'isConfigured', 'availableModels'));
+    }
+
+    public function geminiUpdate(Request $request)
+    {
+        $request->validate([
+            'gemini_api_key' => 'required|string|min:15',
+            'gemini_model'   => 'required|string|max:100',
+            'gemini_timeout' => 'required|integer|min:10|max:300',
+        ]);
+
+        $apiKey = trim($request->input('gemini_api_key'));
+        $model = trim($request->input('gemini_model'));
+        $timeout = (int) $request->input('gemini_timeout');
+
+        try {
+            SystemSetting::setVal('gemini_api_key', $apiKey);
+            SystemSetting::setVal('gemini_model', $model);
+            SystemSetting::setVal('gemini_timeout', $timeout);
+
+            return redirect()->route('admin.settings.gemini.index')
+                ->with('success', 'Google Gemini AI settings have been successfully updated and saved in system settings.');
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', 'Error saving Gemini AI settings: ' . $e->getMessage());
+        }
+    }
+
+    public function geminiTest(Request $request, GeminiInvoiceExtractorService $geminiService)
+    {
+        $apiKey = $request->input('gemini_api_key');
+        $model = $request->input('gemini_model');
+
+        $result = $geminiService->testConnection($apiKey, $model);
+
+        return response()->json($result);
     }
 }

@@ -15,6 +15,10 @@ class Kernel extends ConsoleKernel
         $schedule->command('adc:charge-daily-fee')
             ->dailyAt('08:00')
             ->timezone('Asia/Kolkata');
+
+        $schedule->command('ddc:charge-daily-fee')
+            ->dailyAt('00:00')
+            ->timezone('Asia/Kolkata');
     }
 
     /**

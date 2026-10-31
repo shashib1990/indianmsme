@@ -173,12 +173,32 @@
 
                                 <!-- Action -->
                                 <td class="pe-4 text-center">
-                                    <button type="button" class="btn btn-sm btn-outline-primary px-3 py-1 btn-edit-inv fs-13"
-                                        data-table="{{ $inv['table_type'] }}"
-                                        data-id="{{ $inv['record_id'] }}"
-                                        data-number="{{ $inv['invoice_number'] }}">
-                                        <iconify-icon icon="solar:pen-new-square-bold-duotone" class="me-1"></iconify-icon> Edit Invoice No
-                                    </button>
+                                    <div class="d-flex align-items-center justify-content-center gap-1">
+                                        <button type="button" class="btn btn-sm btn-outline-primary px-2.5 py-1 btn-edit-inv fs-13"
+                                            data-table="{{ $inv['table_type'] }}"
+                                            data-id="{{ $inv['record_id'] }}"
+                                            data-number="{{ $inv['invoice_number'] }}"
+                                            title="Edit Invoice Number">
+                                            <iconify-icon icon="solar:pen-new-square-bold-duotone" class="me-1"></iconify-icon> Edit No
+                                        </button>
+                                        @php
+                                            $poIdForStore = null;
+                                            if (!empty($inv['purchase_order_id'])) {
+                                                $poIdForStore = $inv['purchase_order_id'];
+                                            } elseif ($inv['table_type'] === 'purchase_orders') {
+                                                $poIdForStore = $inv['record_id'];
+                                            }
+                                        @endphp
+                                        @if($poIdForStore)
+                                            <button type="button" class="btn btn-sm btn-outline-info px-2.5 py-1 btn-change-pickup-store fs-13"
+                                                data-po-id="{{ $poIdForStore }}"
+                                                data-po-number="{{ $inv['order_number'] }}"
+                                                data-seller-name="{{ $inv['source_name'] }}"
+                                                title="Change Pickup Store Code / Location">
+                                                <iconify-icon icon="solar:shop-bold-duotone" class="me-1"></iconify-icon> Store Code
+                                            </button>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -252,6 +272,8 @@
         </div>
     </div>
 </div>
+
+@include('admin.purchase-orders._change_pickup_store_modal')
 @endsection
 
 @push('scripts')

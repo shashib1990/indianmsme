@@ -304,9 +304,16 @@
                             <iconify-icon icon="solar:wallet-bold-duotone" class="fs-18"></iconify-icon>
                         </a>
                     </div>
-                    <a href="{{ route('ddc.wallet.index') }}" class="kpi-value-v2 text-decoration-none text-success d-block">
-                        ₹{{ number_format($walletBalance, 2) }}
-                    </a>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <a href="{{ route('ddc.wallet.index') }}" class="kpi-value-v2 text-decoration-none {{ $walletBalance <= 0 ? 'text-danger' : ($walletBalance <= 100 ? 'text-warning' : 'text-success') }} d-block">
+                            ₹{{ number_format($walletBalance, 2) }}
+                        </a>
+                        @if($walletBalance <= 0)
+                            <span class="badge bg-danger-subtle text-danger fs-11 fw-bold">POS Deactivated</span>
+                        @elseif($walletBalance <= 100)
+                            <span class="badge bg-warning-subtle text-warning-emphasis fs-11 fw-bold">Low Balance</span>
+                        @endif
+                    </div>
                 </div>
                 <div class="pt-2 border-top mt-1.5 d-flex align-items-center justify-content-between">
                     <span class="text-muted fs-11">Available Balance</span>

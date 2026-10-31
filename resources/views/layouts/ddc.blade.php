@@ -1107,7 +1107,53 @@
         <!-- ========== Page Content Start ========== -->
         <div class="page-content">
             <div class="container-fluid pt-3">
-                <!-- Alerts removed. Handled via Toastify at bottom of script. -->
+                @php
+                    $globalDdcUser = Auth::guard('ddc')->user();
+                    $globalDdcProfile = $globalDdcUser?->ddcProfile;
+                    $globalDdcWalletBal = (float) ($globalDdcProfile?->wallet_balance ?? 0);
+                    $globalDdcStatus = $globalDdcUser?->status;
+                @endphp
+
+                @if($globalDdcUser)
+                    @if($globalDdcStatus == 0 || $globalDdcStatus === '0' || $globalDdcWalletBal <= 0)
+                        <div class="alert alert-danger border-0 shadow-sm d-flex align-items-center justify-content-between mb-3 rounded-3 py-2.5 px-3"
+                            style="background: #fef2f2; border-left: 4px solid #ef4444 !important; color: #991b1b;">
+                            <div class="d-flex align-items-center gap-2">
+                                <iconify-icon icon="solar:close-circle-bold-duotone" class="text-danger fs-22"></iconify-icon>
+                                <div>
+                                    <strong class="text-danger">POS Sales Deactivated!</strong>
+                                    <span class="ms-1 fs-13" style="color: #7f1d1d;">
+                                        {{ $globalDdcProfile?->deactivation_reason ?: 'Your wallet balance has reached ₹0.00. Daily platform fee could not be deducted, so POS sales have been temporarily deactivated.' }}
+                                    </span>
+                                </div>
+                            </div>
+                            <a href="{{ route('ddc.wallet.index') }}"
+                                class="btn btn-danger btn-sm fw-semibold rounded-pill px-3 ms-2 text-nowrap">
+                                Recharge Wallet Now
+                            </a>
+                        </div>
+                    @elseif($globalDdcWalletBal <= 100)
+                        <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center justify-content-between mb-3 rounded-3 py-2 px-3"
+                            style="background: #fff8e6; border-left: 4px solid #f59e0b !important; color: #78350f;">
+                            <div class="d-flex align-items-center gap-2">
+                                <iconify-icon icon="solar:danger-triangle-bold-duotone"
+                                    class="text-warning fs-20"></iconify-icon>
+                                <div>
+                                    <strong class="text-warning-emphasis">Wallet Balance Low!</strong>
+                                    <span class="ms-1 fs-13">
+                                        Your wallet balance is low (<strong>₹{{ number_format($globalDdcWalletBal, 2) }}</strong>).
+                                        Daily platform fee of 1% of previous day POS sales (max ₹100.00) will be deducted at midnight (12:00 AM). Please recharge your wallet to avoid POS sales deactivation.
+                                    </span>
+                                </div>
+                            </div>
+                            <a href="{{ route('ddc.wallet.index') }}"
+                                class="btn btn-warning btn-sm fw-semibold rounded-pill px-3 ms-2 text-nowrap">
+                                Recharge Wallet
+                            </a>
+                        </div>
+                    @endif
+                @endif
+
                 @yield('content')
             </div>
 

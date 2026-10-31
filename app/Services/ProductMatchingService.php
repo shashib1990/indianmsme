@@ -197,24 +197,21 @@ class ProductMatchingService
             $source = ($topCand['is_local'] ? 'Local Master' : 'Central Master') . " ({$confidence}%)";
         }
 
-        // Detect or suggest Brand from product name
+        // Detect or suggest Brand ONLY from verified matched catalog product
         $suggestedBrandId = null;
         if ($matchedProduct && isset($matchedProduct->brand_id)) {
             $suggestedBrandId = $matchedProduct->brand_id;
-        } else {
-            $suggestedBrandId = $this->detectBrandFromName($rawName);
         }
 
-        // Detect or suggest Category
+        // Detect or suggest Category ONLY from verified matched product
         $suggestedCategoryId = null;
         if ($matchedProduct && isset($matchedProduct->category_id)) {
             $suggestedCategoryId = $matchedProduct->category_id;
-        } else {
-            $suggestedCategoryId = $this->detectCategoryFromName($rawName);
         }
 
         // Final values prioritizing invoice values first, falling back to matched data
-        $finalCategoryId = $suggestedCategoryId ?: ($this->categories->first()?->id ?: 1);
+        // REQUIREMENT 3: Do not automatically select Agriculture (category 1). Keep null ("No Selection") by default.
+        $finalCategoryId = $suggestedCategoryId ?: null;
         $finalBrandId    = $suggestedBrandId;
         $finalHsn        = !empty($hsn) ? $hsn : ($matchedProduct->hsn_code ?? null);
         $finalGst        = ($item['gst_rate'] > 0) ? $item['gst_rate'] : ($matchedProduct->gst_rate ?? 0.00);
@@ -226,12 +223,9 @@ class ProductMatchingService
         $finalMrp = $invoiceMrp > 0 ? $invoiceMrp : (float) ($matchedProduct->mrp ?? 0.00);
         $isMrpMissing = ($finalMrp <= 0);
 
-        // CSP: calculate ONLY if both MRP and Purchase Price are present
-        $finalCsp = (float) ($item['csp'] ?? 0.00);
-        if ($finalCsp <= 0 && $finalMrp > $finalPrice && $finalPrice > 0) {
-            $finalCsp = round($finalPrice + (($finalMrp - $finalPrice) / 2), 2);
-        }
-        $isCspMissing = ($finalCsp <= 0);
+        // CSP: REQUIREMENT 1: Must be entered manually. Do NOT automatically calculate or extract CSP.
+        $finalCsp = null;
+        $isCspMissing = true;
 
         // Determine local_product_id dropdown selection value
         $selectedProductId = 'NEW';

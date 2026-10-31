@@ -14,9 +14,9 @@ class GeminiInvoiceExtractorService
 
     public function __construct()
     {
-        $this->apiKey  = config('services.gemini.api_key');
-        $this->model   = config('services.gemini.model', 'gemini-2.5-flash');
-        $this->timeout = (int) config('services.gemini.timeout', 60);
+        $this->apiKey  = \App\Models\SystemSetting::getVal('gemini_api_key') ?: config('services.gemini.api_key');
+        $this->model   = \App\Models\SystemSetting::getVal('gemini_model') ?: config('services.gemini.model', 'gemini-2.5-flash');
+        $this->timeout = (int) (\App\Models\SystemSetting::getVal('gemini_timeout') ?: config('services.gemini.timeout', 60));
     }
 
     /**
@@ -28,11 +28,92 @@ class GeminiInvoiceExtractorService
     }
 
     /**
+     * Get the active API Key
+     */
+    public function getApiKey(): ?string
+    {
+        return $this->apiKey;
+    }
+
+    /**
      * Get the active model name
      */
     public function getModel(): string
     {
         return $this->model;
+    }
+
+    /**
+     * Get the active timeout in seconds
+     */
+    public function getTimeout(): int
+    {
+        return $this->timeout;
+    }
+
+    /**
+     * Test connection to Google Gemini API
+     */
+    public function testConnection(?string $testKey = null, ?string $testModel = null): array
+    {
+        $apiKey = !empty($testKey) ? trim($testKey) : $this->apiKey;
+        $model = !empty($testModel) ? trim($testModel) : $this->model;
+
+        if (empty($apiKey) || strlen($apiKey) < 10) {
+            return [
+                'success' => false,
+                'message' => 'API Key is missing or too short.',
+            ];
+        }
+
+        $url = "{$this->apiBaseUrl}/models/{$model}:generateContent?key={$apiKey}";
+        $start = microtime(true);
+
+        try {
+            $response = Http::timeout(15)
+                ->withHeaders([
+                    'Content-Type' => 'application/json',
+                ])
+                ->post($url, [
+                    'contents' => [
+                        [
+                            'role' => 'user',
+                            'parts' => [
+                                ['text' => 'Respond with single word: OK']
+                            ]
+                        ]
+                    ],
+                    'generationConfig' => [
+                        'maxOutputTokens' => 5,
+                    ]
+                ]);
+
+            $elapsed = round(microtime(true) - $start, 2);
+
+            if ($response->successful()) {
+                return [
+                    'success' => true,
+                    'message' => "Gemini API Connection successful! Responded in {$elapsed}s using model '{$model}'.",
+                    'latency' => $elapsed,
+                    'model' => $model,
+                    'status' => $response->status(),
+                ];
+            }
+
+            $errorBody = $response->json();
+            $errorMsg = $errorBody['error']['message'] ?? ($response->body() ?: 'Unknown HTTP error');
+
+            return [
+                'success' => false,
+                'message' => "Google Gemini API Error [HTTP {$response->status()}]: {$errorMsg}",
+                'status' => $response->status(),
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Connection failed: ' . $e->getMessage(),
+            ];
+        }
     }
 
     /**
@@ -46,7 +127,7 @@ class GeminiInvoiceExtractorService
     public function extract(string $absoluteFilePath, string $mimeType): array
     {
         if (!$this->isConfigured()) {
-            throw new \RuntimeException('Gemini API key is not configured. Please set GEMINI_API_KEY in the .env file.');
+            throw new \RuntimeException('Gemini API key is not configured. Please configure the Google Gemini API Key in Admin Panel (System & Site Settings > Gemini AI API Key).');
         }
 
         if (!file_exists($absoluteFilePath)) {
@@ -135,10 +216,6 @@ class GeminiInvoiceExtractorService
                                 'type' => 'NUMBER',
                                 'description' => 'Maximum Retail Price (MRP) if explicitly printed on the invoice. 0 if missing/wholesale.',
                             ],
-                            'csp' => [
-                                'type' => 'NUMBER',
-                                'description' => 'Customer Sale Price (CSP) if explicitly specified. 0 if missing.',
-                            ],
                             'gst_rate' => [
                                 'type' => 'NUMBER',
                                 'description' => 'GST tax percentage rate e.g. 0, 5, 12, 18, 28. 0 if exempt/unspecified.',
@@ -159,11 +236,21 @@ class GeminiInvoiceExtractorService
 You are an expert Indian MSME retail and wholesale invoice auditor.
 Carefully examine the provided document (invoice image or PDF).
 
-Extract all structured billing details according to these strict rules:
+STRICT ACCURACY & ANTI-HALLUCINATION INSTRUCTIONS:
+- ACCURACY IS PARAMOUNT: Extract ONLY data that can be identified clearly and accurately from the document.
+- If ANY field cannot be detected, is cut off, illegible, or unclear, leave that field empty (null, empty string, or 0).
+- NEVER guess, invent, extrapolate, or fabricate missing values or unrelated text.
+- Never invent product codes, HSN numbers, or barcodes.
+- Do NOT extract or calculate Customer Sale Price (CSP). CSP must be left empty as it will be entered manually by the user.
+- If MRP is not explicitly printed next to the item, do NOT guess or calculate it; leave MRP as 0.
+- If GST percentage is not explicitly stated on the invoice row or tax table, leave it 0.
+- Extract only actual product line items. Do not treat tax summary rows, freight charges, discounts, or footer notes as products.
+
+Extract structured billing details according to these strict rules:
 1. SUPPLIER INFORMATION:
    - Identify the seller/supplier who issued this invoice (look at "Invoice From", "Billed By", letterhead, or logo).
    - Do NOT confuse the supplier with the buyer / customer / consignee ("Bill To", "Ship To").
-   - Extract Supplier GSTIN (15 characters) and Supplier contact number if printed.
+   - Extract Supplier GSTIN (15 characters) and Supplier contact number ONLY if clearly printed.
 
 2. INVOICE METADATA:
    - Extract the invoice number, bill number, or invoice reference.
@@ -173,17 +260,16 @@ Extract all structured billing details according to these strict rules:
 3. PRODUCT ITEMS TABLE:
    - Extract EVERY product row from the table across all pages.
    - For each item, accurately isolate:
-     * Product Name: Clean description of goods.
-     * Product Code / SKU: e.g. [PROD-1646000204], if present.
-     * HSN / SAC Code: 2 to 8 digits.
+     * Product Name: Clean, accurate description of goods as printed.
+     * Product Code / SKU: Only if explicitly printed on invoice.
+     * HSN / SAC Code: 2 to 8 digits if printed.
      * Quantity: Numeric quantity.
-     * Unit of Measure: Piece, Box, Bag, Kg, Liter, etc.
+     * Unit of Measure: Piece, Box, Bag, Kg, Liter, etc. as stated on invoice.
      * Purchase Price: The unit rate or purchase price.
-     * MRP: Maximum Retail Price if explicitly printed (do NOT guess if absent).
-     * GST Rate: Tax percentage (0, 5, 12, 18, 28).
+     * MRP: Maximum Retail Price ONLY if explicitly printed (never guess).
+     * GST Rate: Tax percentage (0, 5, 12, 18, 28) if specified.
      * Line Total Amount: Total amount for this item.
    - Do NOT swap or confuse Quantity, Rate, MRP, and Line Amount.
-   - Do NOT invent or fabricate missing values. If MRP is not stated, use 0.
 
 Output strictly valid JSON conforming to the schema.
 EOT;
@@ -290,7 +376,6 @@ EOT;
 
             $price = (float) ($it['purchase_price'] ?? 0.00);
             $mrp   = (float) ($it['mrp'] ?? 0.00);
-            $csp   = (float) ($it['csp'] ?? 0.00);
             $gst   = (float) ($it['gst_rate'] ?? 0.00);
             $lineAmt = (float) ($it['line_amount'] ?? round($qty * $price, 2));
 
@@ -300,16 +385,10 @@ EOT;
 
             $calculatedItemsTotal += $lineAmt;
 
-            // Compute CSP if absent but MRP and Price are known:
-            // CSP = purchase_price + ((mrp - purchase_price) / 2)
-            $isCspMissing = false;
-            $isMrpMissing = false;
-
-            if ($csp <= 0 && $mrp > $price && $price > 0) {
-                $csp = round($price + (($mrp - $price) / 2), 2);
-            } elseif ($csp <= 0) {
-                $isCspMissing = true;
-            }
+            // CSP must NOT be automatically calculated or extracted; user must enter it manually
+            $csp = null;
+            $isCspMissing = true;
+            $isMrpMissing = ($mrp <= 0);
 
             if ($mrp <= 0) {
                 $isMrpMissing = true;
@@ -345,8 +424,8 @@ EOT;
             : "Difference of ₹" . number_format($diff, 2) . " between calculated items total (₹" . number_format($calculatedItemsTotal, 2) . ") and stated grand total (₹" . number_format($totalAmount, 2) . ")";
 
         return [
-            'engine'              => 'gemini',
-            'engine_label'        => 'Google Gemini AI (' . $this->model . ')',
+            'engine'              => 'ai',
+            'engine_label'        => 'AI',
             'duration_seconds'    => $duration,
             'supplier_name'       => $supplierName,
             'supplier_mobile'     => $supplierMobile,

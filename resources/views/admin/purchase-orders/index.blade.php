@@ -169,22 +169,36 @@
                                                 <div class="text-muted small" style="font-size: 10px;">Main Seller Account</div>
                                             @endif
                                         </td>
-                                        <td>
-                                            @if($po->pickupStore)
-                                                <div class="fw-semibold text-slate-800">{{ $po->pickupStore->pickup_store_name }}</div>
-                                                <div class="small d-flex align-items-center gap-1 mt-0.5 flex-wrap">
-                                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-1.5 py-0.5 fs-10 font-monospace" title="Pickup Store Code">
-                                                        <iconify-icon icon="solar:shop-bold-duotone" class="align-middle me-0.5"></iconify-icon>{{ $po->pickupStore->pickup_store_code }}
-                                                    </span>
-                                                    @if($po->pickupStore->can_receive_payment_and_dispatch)
-                                                        <span class="badge bg-info-subtle text-info px-1 py-0 fs-10">Authorized</span>
+                                        <td id="cell-pickup-store-{{ $po->id }}">
+                                            <div class="d-flex align-items-center justify-content-between gap-1">
+                                                <div id="po-store-display-{{ $po->id }}">
+                                                    @if($po->pickupStore)
+                                                        <div class="fw-semibold text-slate-800 po-store-name">{{ $po->pickupStore->pickup_store_name }}</div>
+                                                        <div class="small d-flex align-items-center gap-1 mt-0.5 flex-wrap">
+                                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-1.5 py-0.5 fs-10 font-monospace po-store-code" title="Pickup Store Code">
+                                                                <iconify-icon icon="solar:shop-bold-duotone" class="align-middle me-0.5"></iconify-icon>{{ $po->pickupStore->pickup_store_code }}
+                                                            </span>
+                                                            @if($po->pickupStore->can_receive_payment_and_dispatch)
+                                                                <span class="badge bg-info-subtle text-info px-1 py-0 fs-10 po-store-auth">Authorized</span>
+                                                            @else
+                                                                <span class="badge bg-light text-muted px-1 py-0 fs-10 po-store-auth">Unauthorized</span>
+                                                            @endif
+                                                        </div>
                                                     @else
-                                                        <span class="badge bg-light text-muted px-1 py-0 fs-10">Unauthorized</span>
+                                                        <span class="text-muted small po-store-none">None (Seller Direct)</span>
                                                     @endif
                                                 </div>
-                                            @else
-                                                <span class="text-muted small">None (Seller Direct)</span>
-                                            @endif
+                                                <button type="button" 
+                                                        class="btn btn-xs btn-outline-primary rounded-2 p-1 d-inline-flex align-items-center justify-content-center btn-change-pickup-store"
+                                                        data-po-id="{{ $po->id }}"
+                                                        data-po-number="{{ $po->po_number }}"
+                                                        data-seller-name="{{ $po->seller?->company_name ?: ($po->seller?->name ?? 'Seller') }}"
+                                                        data-current-store-id="{{ $po->pickup_store_id ?? '' }}"
+                                                        title="Change Pickup Store Code / Location"
+                                                        style="width: 28px; height: 28px; flex-shrink: 0;">
+                                                    <iconify-icon icon="solar:pen-bold-duotone" class="fs-14"></iconify-icon>
+                                                </button>
+                                            </div>
                                         </td>
                                         <td class="text-center text-nowrap">
                                             <div class="fw-bold text-slate-800" title="Ordered Amount">₹{{ number_format($po->total_amount, 2) }}</div>
@@ -266,60 +280,74 @@
             </div>
         </div>
     </div>
+
+    @include('admin.purchase-orders._change_pickup_store_modal')
 @endsection
 
 @push('scripts')
 <script>
-    $(document).ready(function () {
-        $(document).on('change', '.po-show-order-toggle', function () {
-            const switchEl = this;
-            const poId = $(this).data('po-id');
-            const toggleUrl = $(this).data('url');
+    document.addEventListener('DOMContentLoaded', function () {
+        // ── Show Order Visibility Switch Toggle (Vanilla JS) ──
+        document.addEventListener('change', function (e) {
+            const switchEl = e.target.closest('.po-show-order-toggle');
+            if (!switchEl) return;
+
+            const poId = switchEl.getAttribute('data-po-id');
+            const toggleUrl = switchEl.getAttribute('data-url');
             const isChecked = switchEl.checked;
-            const badgeEl = $('#poBadge' + poId);
+            const badgeEl = document.getElementById('poBadge' + poId);
 
             switchEl.disabled = true;
 
-            $.ajax({
-                url: toggleUrl,
-                type: 'POST',
+            fetch(toggleUrl, {
+                method: 'POST',
                 headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                dataType: 'json',
-                success: function (res) {
-                    switchEl.disabled = false;
-                    if (res.success) {
-                        const newStatus = (res.status || '').toLowerCase();
-                        if (newStatus === 'yes' || newStatus === 'active') {
-                            switchEl.checked = true;
-                            badgeEl.removeClass('bg-danger').addClass('bg-success').text('YES');
-                        } else {
-                            switchEl.checked = false;
-                            badgeEl.removeClass('bg-success').addClass('bg-danger').text('NO');
-                        }
-
-                        if (typeof Swal !== 'undefined') {
-                            Swal.fire({
-                                toast: true,
-                                position: 'top-end',
-                                icon: 'success',
-                                title: res.message || 'Order visibility updated successfully',
-                                showConfirmButton: false,
-                                timer: 2500
-                            });
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(res => res.json())
+            .then(res => {
+                switchEl.disabled = false;
+                if (res.success) {
+                    const newStatus = (res.status || '').toLowerCase();
+                    if (newStatus === 'yes' || newStatus === 'active') {
+                        switchEl.checked = true;
+                        if (badgeEl) {
+                            badgeEl.classList.remove('bg-danger');
+                            badgeEl.classList.add('bg-success');
+                            badgeEl.textContent = 'YES';
                         }
                     } else {
-                        switchEl.checked = !isChecked;
-                        alert(res.message || 'Failed to update order visibility.');
+                        switchEl.checked = false;
+                        if (badgeEl) {
+                            badgeEl.classList.remove('bg-success');
+                            badgeEl.classList.add('bg-danger');
+                            badgeEl.textContent = 'NO';
+                        }
                     }
-                },
-                error: function (xhr) {
-                    switchEl.disabled = false;
+
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: res.message || 'Order visibility updated successfully',
+                            showConfirmButton: false,
+                            timer: 2500
+                        });
+                    }
+                } else {
                     switchEl.checked = !isChecked;
-                    const msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Error updating order visibility.';
-                    alert(msg);
+                    alert(res.message || 'Failed to update order visibility.');
                 }
+            })
+            .catch(err => {
+                switchEl.disabled = false;
+                switchEl.checked = !isChecked;
+                alert('Error updating order visibility: ' + err.message);
             });
         });
     });

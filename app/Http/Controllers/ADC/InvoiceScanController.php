@@ -65,7 +65,7 @@ class InvoiceScanController extends Controller
             if (!$this->geminiService->isConfigured()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Gemini AI is not configured. Please set GEMINI_API_KEY in the .env file.',
+                    'message' => 'AI is not configured. Please set the API key in the .env file.',
                 ], 422);
             }
 
@@ -87,12 +87,12 @@ class InvoiceScanController extends Controller
                 ], 422);
             }
 
-            // Extract structured data using Google Gemini AI Multimodal Vision
+            // Extract structured data using AI Multimodal Vision
             $parsed = $this->geminiService->extract($fileData['full_path'], $fileData['mime_type']);
 
-            $extractionEngine = 'gemini';
-            $engineLabel = 'Google Gemini AI (' . $this->geminiService->getModel() . ')';
-            $engineNotice = 'Extracted using Google Gemini AI multimodal vision.';
+            $extractionEngine = 'ai';
+            $engineLabel = 'AI';
+            $engineNotice = 'Extracted using AI vision.';
 
             // Match extracted products against local & central product masters
             $matchedProducts = $this->matchingService->matchProducts($parsed['products'] ?? [], $adcId);
@@ -111,36 +111,36 @@ class InvoiceScanController extends Controller
             }
 
             return response()->json([
-                'success'             => true,
-                'engine'              => $extractionEngine,
-                'engine_label'        => $engineLabel,
-                'engine_notice'       => $engineNotice,
-                'preview_url'         => $fileData['preview_url'],
-                'file_name'           => $fileData['file_name'],
-                'file_path'           => $fileData['file_path'],
-                'is_pdf'              => $fileData['is_pdf'],
-                'page_count'          => 1,
-                'method'              => 'GEMINI_AI_VISION',
-                'supplier_name'       => $parsed['supplier_name'],
-                'supplier_mobile'     => $parsed['supplier_mobile'],
-                'supplier_gstin'      => $parsed['supplier_gstin'],
-                'invoice_number'      => $parsed['invoice_number'],
-                'invoice_date'        => $parsed['invoice_date'],
-                'purchase_date'       => $parsed['purchase_date'],
-                'total_amount'        => $parsed['total_amount'],
-                'is_reconciled'       => $parsed['is_reconciled'],
-                'items_calculated'    => $parsed['items_calculated'],
+                'success' => true,
+                'engine' => $extractionEngine,
+                'engine_label' => $engineLabel,
+                'engine_notice' => $engineNotice,
+                'preview_url' => $fileData['preview_url'],
+                'file_name' => $fileData['file_name'],
+                'file_path' => $fileData['file_path'],
+                'is_pdf' => $fileData['is_pdf'],
+                'page_count' => 1,
+                'method' => 'AI_VISION',
+                'supplier_name' => $parsed['supplier_name'],
+                'supplier_mobile' => $parsed['supplier_mobile'],
+                'supplier_gstin' => $parsed['supplier_gstin'],
+                'invoice_number' => $parsed['invoice_number'],
+                'invoice_date' => $parsed['invoice_date'],
+                'purchase_date' => $parsed['purchase_date'],
+                'total_amount' => $parsed['total_amount'],
+                'is_reconciled' => $parsed['is_reconciled'],
+                'items_calculated' => $parsed['items_calculated'],
                 'reconciliation_diff' => $parsed['reconciliation_diff'],
                 'reconciliation_note' => $parsed['reconciliation_note'],
-                'products'            => $matchedProducts,
-                'duplicate_warning'   => $duplicateWarning,
+                'products' => $matchedProducts,
+                'duplicate_warning' => $duplicateWarning,
             ]);
 
         } catch (\Throwable $e) {
             Log::error('Invoice Scan Process Error: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to process invoice via Gemini AI: ' . $e->getMessage(),
+                'message' => 'Failed to process invoice via AI: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -160,12 +160,12 @@ class InvoiceScanController extends Controller
         $isPdf = ($extension === 'pdf' || str_contains($mime, 'pdf'));
 
         return [
-            'file_name'   => $file->getClientOriginalName(),
-            'file_path'   => $path,
-            'full_path'   => $fullPath,
+            'file_name' => $file->getClientOriginalName(),
+            'file_path' => $path,
+            'full_path' => $fullPath,
             'preview_url' => $publicUrl,
-            'is_pdf'      => $isPdf,
-            'mime_type'   => $isPdf ? 'application/pdf' : ($extension === 'png' ? 'image/png' : ($extension === 'webp' ? 'image/webp' : 'image/jpeg')),
+            'is_pdf' => $isPdf,
+            'mime_type' => $isPdf ? 'application/pdf' : ($extension === 'png' ? 'image/png' : ($extension === 'webp' ? 'image/webp' : 'image/jpeg')),
         ];
     }
 
@@ -177,7 +177,8 @@ class InvoiceScanController extends Controller
         if (preg_match('/^data:image\/(\w+);base64,/', $base64Data, $type)) {
             $base64Data = substr($base64Data, strpos($base64Data, ',') + 1);
             $ext = strtolower($type[1]);
-            if ($ext === 'jpeg') $ext = 'jpg';
+            if ($ext === 'jpeg')
+                $ext = 'jpg';
         } else {
             $ext = 'jpg';
         }
@@ -201,12 +202,12 @@ class InvoiceScanController extends Controller
         $publicUrl = asset("storage/{$path}");
 
         return [
-            'file_name'   => $filename,
-            'file_path'   => $path,
-            'full_path'   => $fullPath,
+            'file_name' => $filename,
+            'file_path' => $path,
+            'full_path' => $fullPath,
             'preview_url' => $publicUrl,
-            'is_pdf'      => false,
-            'mime_type'   => ($ext === 'png') ? 'image/png' : 'image/jpeg',
+            'is_pdf' => false,
+            'mime_type' => ($ext === 'png') ? 'image/png' : 'image/jpeg',
         ];
     }
 
@@ -218,30 +219,35 @@ class InvoiceScanController extends Controller
         $adcId = Auth::guard('adc')->id();
 
         $request->validate([
-            'purchase_date'            => 'required|date',
-            'supplier_name'            => 'required|string|max:255',
-            'supplier_mobile'          => 'nullable|string|max:20',
-            'invoice_number'           => 'nullable|string|max:100',
-            'invoice_date'             => 'nullable|date',
-            'remarks'                  => 'nullable|string',
-            'prevent_duplicate'        => 'nullable|boolean',
+            'purchase_date' => 'required|date',
+            'supplier_name' => 'required|string|max:255',
+            'supplier_mobile' => 'nullable|string|max:20',
+            'invoice_number' => 'nullable|string|max:100',
+            'invoice_date' => 'nullable|date',
+            'remarks' => 'nullable|string',
+            'prevent_duplicate' => 'nullable|boolean',
 
-            'items'                    => 'required|array|min:1',
-            'items.*.product_name'     => 'required|string|max:255',
+            'items' => 'required|array|min:1',
+            'items.*.product_name' => 'required|string|max:255',
             'items.*.local_product_id' => 'nullable|string',
-            'items.*.category_id'      => 'required|integer',
-            'items.*.brand_id'         => 'nullable|integer',
-            'items.*.unit_of_measure'  => 'required|string',
-            'items.*.hsn_code'         => 'nullable|string|max:50',
-            'items.*.gst_rate'         => 'nullable|numeric|min:0|max:100',
-            'items.*.quantity'         => 'required|numeric|min:0.001',
-            'items.*.mrp'              => 'required|numeric|min:0',
-            'items.*.purchase_price'   => 'required|numeric|min:0',
-            'items.*.csp'              => 'required|numeric|min:0',
-            'items.*.barcode'          => 'nullable|string|max:100',
-            'items.*.batch_number'     => 'nullable|string|max:100',
-            'items.*.mfg_date'         => 'nullable|date',
-            'items.*.expire_date'      => 'nullable|date',
+            'items.*.category_id' => 'required|integer|exists:categories,id',
+            'items.*.brand_id' => 'nullable|integer',
+            'items.*.unit_of_measure' => 'required|string',
+            'items.*.hsn_code' => 'nullable|string|max:50',
+            'items.*.gst_rate' => 'nullable|numeric|min:0|max:100',
+            'items.*.quantity' => 'required|numeric|min:0.001',
+            'items.*.mrp' => 'required|numeric|min:0',
+            'items.*.purchase_price' => 'required|numeric|min:0',
+            'items.*.csp' => 'required|numeric|min:0.01',
+            'items.*.barcode' => 'nullable|string|max:100',
+            'items.*.batch_number' => 'nullable|string|max:100',
+            'items.*.mfg_date' => 'nullable|date',
+            'items.*.expire_date' => 'nullable|date',
+        ], [
+            'items.*.category_id.required' => 'Please select a Category for all products (cannot be left as No Selection).',
+            'items.*.category_id.exists' => 'The selected Category is invalid.',
+            'items.*.csp.required' => 'Customer Sale Price (CSP) must be entered manually for all items.',
+            'items.*.csp.min' => 'Customer Sale Price (CSP) must be greater than 0 for all items.',
         ]);
 
         // Duplicate Submission Check: Ensure same invoice isn't submitted simultaneously twice
@@ -254,9 +260,9 @@ class InvoiceScanController extends Controller
 
             if ($duplicateCheck && !$request->boolean('allow_duplicate')) {
                 return response()->json([
-                    'success'            => false,
+                    'success' => false,
                     'is_duplicate_error' => true,
-                    'message'            => "This invoice (#{$request->invoice_number}) was already saved just moments ago (Purchase #{$duplicateCheck->purchase_no}). Stock has already been added.",
+                    'message' => "This invoice (#{$request->invoice_number}) was already saved just moments ago (Purchase #{$duplicateCheck->purchase_no}). Stock has already been added.",
                 ], 422);
             }
         }
@@ -274,37 +280,35 @@ class InvoiceScanController extends Controller
 
             // Create Local Purchase Record
             $purchase = AdcLocalPurchase::create([
-                'adc_id'                    => $adcId,
-                'purchase_no'               => $purchaseNo,
-                'purchase_date'             => $request->purchase_date,
-                'supplier_name'             => $request->supplier_name,
-                'supplier_mobile'           => $request->supplier_mobile,
-                'invoice_number'            => $request->invoice_number,
-                'invoice_date'              => $request->invoice_date,
-                'freight_charges'           => 0,
+                'adc_id' => $adcId,
+                'purchase_no' => $purchaseNo,
+                'purchase_date' => $request->purchase_date,
+                'supplier_name' => $request->supplier_name,
+                'supplier_mobile' => $request->supplier_mobile,
+                'invoice_number' => $request->invoice_number,
+                'invoice_date' => $request->invoice_date,
+                'freight_charges' => 0,
                 'loading_unloading_charges' => 0,
-                'other_charges'             => 0,
-                'total_amount'              => round($totalAmount, 2),
-                'remarks'                   => $request->remarks ?: 'Imported via Smart Invoice Scanner',
+                'other_charges' => 0,
+                'total_amount' => round($totalAmount, 2),
+                'remarks' => $request->remarks ?: 'Imported via Smart Invoice Scanner',
             ]);
 
             foreach ($request->items as $itemData) {
-                $productId     = $itemData['local_product_id'] ?? null;
-                $pName         = trim($itemData['product_name']);
-                $qty           = (float) $itemData['quantity'];
-                $mrp           = (float) $itemData['mrp'];
+                $productId = $itemData['local_product_id'] ?? null;
+                $pName = trim($itemData['product_name']);
+                $qty = (float) $itemData['quantity'];
+                $mrp = (float) $itemData['mrp'];
                 $purchasePrice = (float) $itemData['purchase_price'];
-                $csp           = (float) $itemData['csp'];
-                $barcode       = !empty($itemData['barcode']) ? trim($itemData['barcode']) : null;
-                $hsn           = !empty($itemData['hsn_code']) ? trim($itemData['hsn_code']) : null;
-                $gstRate       = (float) ($itemData['gst_rate'] ?? 0);
-                $uom           = $itemData['unit_of_measure'] ?? 'Piece';
-                $categoryId    = (int) ($itemData['category_id'] ?: 1);
-                $brandId       = !empty($itemData['brand_id']) ? (int) $itemData['brand_id'] : null;
+                $csp = (float) $itemData['csp'];
+                $barcode = !empty($itemData['barcode']) ? trim($itemData['barcode']) : null;
+                $hsn = !empty($itemData['hsn_code']) ? trim($itemData['hsn_code']) : null;
+                $gstRate = (float) ($itemData['gst_rate'] ?? 0);
+                $uom = $itemData['unit_of_measure'] ?? 'Piece';
+                $categoryId = (int) $itemData['category_id'];
+                $brandId = !empty($itemData['brand_id']) ? (int) $itemData['brand_id'] : null;
 
-                if ($csp <= 0 && $mrp > 0 && $purchasePrice > 0) {
-                    $csp = round($purchasePrice + (($mrp - $purchasePrice) / 2), 2);
-                }
+                // CSP is strictly entered manually by the user; no auto-calculation fallback
 
                 $product = null;
 
@@ -322,13 +326,13 @@ class InvoiceScanController extends Controller
                             ['adc_id' => $adcId, 'product_name' => $inv->product_name],
                             [
                                 'local_product_code' => AdcLocalProduct::generateLocalProductCode(),
-                                'category_id'        => $categoryId,
-                                'brand_id'           => $brandId,
-                                'hsn_code'           => $hsn ?: ($inv->hsn_code ?? 'N/A'),
-                                'gst_rate'           => $gstRate,
-                                'unit_of_measure'    => $uom,
-                                'barcode'            => $barcode ?: $inv->barcode,
-                                'status'             => 'Active',
+                                'category_id' => $categoryId,
+                                'brand_id' => $brandId,
+                                'hsn_code' => $hsn ?: ($inv->hsn_code ?? 'N/A'),
+                                'gst_rate' => $gstRate,
+                                'unit_of_measure' => $uom,
+                                'barcode' => $barcode ?: $inv->barcode,
+                                'status' => 'Active',
                             ]
                         );
                     }
@@ -344,16 +348,16 @@ class InvoiceScanController extends Controller
                     if (!$product) {
                         $code = AdcLocalProduct::generateLocalProductCode();
                         $product = AdcLocalProduct::create([
-                            'adc_id'             => $adcId,
+                            'adc_id' => $adcId,
                             'local_product_code' => $code,
-                            'product_name'       => $pName,
-                            'category_id'        => $categoryId,
-                            'brand_id'           => $brandId,
-                            'hsn_code'           => $hsn,
-                            'gst_rate'           => $gstRate,
-                            'unit_of_measure'    => $uom,
-                            'barcode'            => $barcode,
-                            'status'             => 'Active',
+                            'product_name' => $pName,
+                            'category_id' => $categoryId,
+                            'brand_id' => $brandId,
+                            'hsn_code' => $hsn,
+                            'gst_rate' => $gstRate,
+                            'unit_of_measure' => $uom,
+                            'barcode' => $barcode,
+                            'status' => 'Active',
                         ]);
                     }
                 }
@@ -363,53 +367,53 @@ class InvoiceScanController extends Controller
 
                 // Create ADC Inventory record with inventory_source = 'LOCAL'
                 $inventory = AdcInventory::create([
-                    'adc_id'               => $adcId,
-                    'inventory_source'     => 'LOCAL',
-                    'product_id'           => null,
+                    'adc_id' => $adcId,
+                    'inventory_source' => 'LOCAL',
+                    'product_id' => null,
                     'adc_local_product_id' => $product->id,
-                    'product_name'         => $product->product_name,
-                    'product_code'         => $product->local_product_code,
-                    'barcode'              => $barcode ?: $product->barcode,
-                    'unit_of_measure'      => $uom,
-                    'quantity'             => (int) $qty,
-                    'reserved_quantity'    => 0,
-                    'sold_quantity'        => 0,
-                    'returned_quantity'    => 0,
-                    'mrp'                  => $mrp,
-                    'purchase_price'       => $purchasePrice,
-                    'landing_cost'         => $purchasePrice,
-                    'msp'                  => $csp,
-                    'adc_price'            => $csp,
-                    'csp'                  => $csp,
-                    'adc_margin'           => $cspMargin,
-                    'csp_margin'           => $cspMargin,
-                    'gst_rate'             => $gstRate,
-                    'batch_number'         => $itemData['batch_number'] ?? null,
-                    'mfg_date'             => $itemData['mfg_date'] ?? null,
-                    'expire_date'          => $itemData['expire_date'] ?? null,
-                    'reference_type'       => 'LOCAL_PURCHASE',
-                    'reference_id'         => $purchase->id,
-                    'pos_status'           => 'Active',
+                    'product_name' => $product->product_name,
+                    'product_code' => $product->local_product_code,
+                    'barcode' => $barcode ?: $product->barcode,
+                    'unit_of_measure' => $uom,
+                    'quantity' => (int) $qty,
+                    'reserved_quantity' => 0,
+                    'sold_quantity' => 0,
+                    'returned_quantity' => 0,
+                    'mrp' => $mrp,
+                    'purchase_price' => $purchasePrice,
+                    'landing_cost' => $purchasePrice,
+                    'msp' => $csp,
+                    'adc_price' => $csp,
+                    'csp' => $csp,
+                    'adc_margin' => $cspMargin,
+                    'csp_margin' => $cspMargin,
+                    'gst_rate' => $gstRate,
+                    'batch_number' => $itemData['batch_number'] ?? null,
+                    'mfg_date' => $itemData['mfg_date'] ?? null,
+                    'expire_date' => $itemData['expire_date'] ?? null,
+                    'reference_type' => 'LOCAL_PURCHASE',
+                    'reference_id' => $purchase->id,
+                    'pos_status' => 'Active',
                 ]);
 
                 // Create Local Purchase Item
                 AdcLocalPurchaseItem::create([
                     'adc_local_purchase_id' => $purchase->id,
-                    'adc_local_product_id'  => $product->id,
-                    'quantity'              => (int) $qty,
-                    'purchase_price'        => $purchasePrice,
-                    'freight_share'         => 0,
-                    'loading_share'         => 0,
-                    'other_share'           => 0,
-                    'landing_cost'          => $purchasePrice,
-                    'mrp'                   => $mrp,
-                    'csp'                   => $csp,
-                    'msp'                   => $csp,
-                    'gst_rate'              => $gstRate,
-                    'batch_number'          => $itemData['batch_number'] ?? null,
-                    'mfg_date'              => $itemData['mfg_date'] ?? null,
-                    'expire_date'           => $itemData['expire_date'] ?? null,
-                    'adc_inventory_id'      => $inventory->id,
+                    'adc_local_product_id' => $product->id,
+                    'quantity' => (int) $qty,
+                    'purchase_price' => $purchasePrice,
+                    'freight_share' => 0,
+                    'loading_share' => 0,
+                    'other_share' => 0,
+                    'landing_cost' => $purchasePrice,
+                    'mrp' => $mrp,
+                    'csp' => $csp,
+                    'msp' => $csp,
+                    'gst_rate' => $gstRate,
+                    'batch_number' => $itemData['batch_number'] ?? null,
+                    'mfg_date' => $itemData['mfg_date'] ?? null,
+                    'expire_date' => $itemData['expire_date'] ?? null,
+                    'adc_inventory_id' => $inventory->id,
                 ]);
 
                 if ($product->status !== 'Active') {
@@ -420,9 +424,9 @@ class InvoiceScanController extends Controller
             DB::commit();
 
             return response()->json([
-                'success'      => true,
-                'message'      => "Invoice #{$purchaseNo} successfully recorded and " . count($request->items) . " items stocked into Local Inventory.",
-                'purchase_id'  => $purchase->id,
+                'success' => true,
+                'message' => "Invoice #{$purchaseNo} successfully recorded and " . count($request->items) . " items stocked into Local Inventory.",
+                'purchase_id' => $purchase->id,
                 'redirect_url' => route('adc.local-purchases.show', $purchase->id),
             ]);
 
@@ -434,5 +438,35 @@ class InvoiceScanController extends Controller
                 'message' => 'Failed to save invoice & stock in: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Create a new Brand directly from the invoice scan interface
+     */
+    public function storeBrand(Request $request): JsonResponse
+    {
+        $request->validate([
+            'name' => 'required|string|max:100',
+        ]);
+
+        $name = trim($request->name);
+
+        $brand = Brand::whereRaw('LOWER(TRIM(name)) = ?', [strtolower($name)])->first();
+        if (!$brand) {
+            $brand = Brand::create([
+                'name' => $name,
+                'status' => '1',
+                'created_by' => Auth::guard('adc')->id() ?? Auth::id(),
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Brand '{$brand->name}' saved successfully.",
+            'brand' => [
+                'id' => $brand->id,
+                'name' => $brand->name,
+            ],
+        ]);
     }
 }

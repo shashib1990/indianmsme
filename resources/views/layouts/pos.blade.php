@@ -285,6 +285,20 @@
                 <span
                     class="badge bg-primary-subtle text-primary px-2.5 py-1 fs-12 fw-bold text-uppercase">{{ $terminalLabel }}</span>
                 <h5 class="fw-bold text-slate-800 mb-0 fs-15 d-none d-md-block">{{ $user?->name }}</h5>
+                @if(!$isAdc)
+                    @php
+                        $posHeaderBal = (float) ($user?->ddcProfile?->wallet_balance ?? 0);
+                    @endphp
+                    @if($posHeaderBal <= 0)
+                        <span class="badge bg-danger text-white px-2 py-0.5 fs-11 fw-bold">
+                            <iconify-icon icon="solar:close-circle-bold" class="align-middle me-0.5"></iconify-icon> Sales Deactivated
+                        </span>
+                    @elseif($posHeaderBal <= 100)
+                        <span class="badge bg-warning text-dark px-2 py-0.5 fs-11 fw-bold">
+                            <iconify-icon icon="solar:danger-triangle-bold" class="align-middle me-0.5"></iconify-icon> Low Wallet (₹{{ number_format($posHeaderBal, 2) }})
+                        </span>
+                    @endif
+                @endif
             </div>
         </div>
 

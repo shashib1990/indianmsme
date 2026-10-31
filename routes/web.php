@@ -43,6 +43,7 @@ Route::get('/vendors', [VendorController::class, 'index'])->name('vendors');
 Route::get('/vendor/{imv_code}', [VendorController::class, 'products'])->name('vendor.products');
 Route::get('/vendor/{imv_code}/ajax', [VendorController::class, 'products'])->name('vendor.products.ajax');
 Route::get('/vendor/{imv_code}/sub-sellers', [VendorController::class, 'subSellers'])->name('vendor.sub-sellers');
+Route::get('/vendor/{imv_code}/catalog', [VendorController::class, 'downloadCatalog'])->name('vendor.catalog');
 
 // ── Public Order / POS Receipt View (Accessible via WhatsApp Invoice Link) ──
 Route::get('/receipt/order/{id}', [\App\Http\Controllers\ADC\PosController::class, 'publicReceipt'])->name('pos.receipt.public');

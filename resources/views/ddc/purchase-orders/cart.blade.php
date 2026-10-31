@@ -13,7 +13,16 @@
                             <h4 class="fw-bold text-slate-800 mb-1" style="font-family: 'Outfit', sans-serif;">Purchase Order Cart</h4>
                             <p class="text-muted small mb-0">Review items, adjust quantities, and place your purchase order.</p>
                         </div>
-                        <div class="col-md-6 text-md-end">
+                        <div class="col-md-6 text-md-end d-flex align-items-center justify-content-md-end gap-2 flex-wrap">
+                            @if(!empty($cart))
+                                <form action="{{ route('ddc.purchase-orders.cart.clear') }}" method="POST" class="d-inline mb-0" onsubmit="return confirm('Are you sure you want to clear your entire cart? All items will be removed.');">
+                                    @csrf
+                                    <button type="submit" class="btn btn-outline-danger">
+                                        <iconify-icon icon="solar:trash-bin-trash-bold-duotone" class="align-middle me-1 fs-18"></iconify-icon>
+                                        Clear Entire Cart
+                                    </button>
+                                </form>
+                            @endif
                             <a href="{{ route('ddc.purchase-orders.create') }}" class="btn btn-outline-primary">
                                 <iconify-icon icon="solar:arrow-left-bold-duotone" class="align-middle me-1 fs-18"></iconify-icon>
                                 Back to Products
@@ -47,8 +56,17 @@
             <!-- Left: Cart Items List -->
             <div class="col-xl-8">
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-white border-0 py-3 border-bottom">
+                    <div class="card-header bg-white border-0 py-3 border-bottom d-flex align-items-center justify-content-between">
                         <h6 class="fw-bold text-slate-800 mb-0">Cart Items</h6>
+                        @if(!empty($cart))
+                            <form action="{{ route('ddc.purchase-orders.cart.clear') }}" method="POST" class="d-inline mb-0" onsubmit="return confirm('Are you sure you want to clear your entire cart? All items will be removed.');">
+                                @csrf
+                                <button type="submit" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1">
+                                    <iconify-icon icon="solar:trash-bin-trash-bold-duotone" class="fs-16"></iconify-icon>
+                                    <span>Clear All Cart</span>
+                                </button>
+                            </form>
+                        @endif
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -81,11 +99,32 @@
                                     @endphp
 
                                     @foreach($groupedCart as $sellerName => $items)
+                                        @php
+                                            $firstItem = reset($items);
+                                            $currentSellerId = $firstItem['seller_id'] ?? null;
+                                        @endphp
                                         <!-- Group Header for Seller -->
                                         <tr class="table-light">
-                                            <td colspan="9" class="ps-3 fw-bold text-slate-800 py-2">
-                                                <iconify-icon icon="solar:shop-bold-duotone" class="align-middle me-1 text-primary fs-18"></iconify-icon>
-                                                {{ $sellerName }}
+                                            <td colspan="9" class="ps-3 pe-3 py-2">
+                                                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <span class="fw-bold text-slate-800">
+                                                            <iconify-icon icon="solar:shop-bold-duotone" class="align-middle me-1 text-primary fs-18"></iconify-icon>
+                                                            {{ $sellerName }}
+                                                        </span>
+                                                        <span class="badge bg-secondary-subtle text-secondary fs-11 fw-medium">{{ count($items) }} {{ count($items) === 1 ? 'item' : 'items' }}</span>
+                                                    </div>
+                                                    @if($currentSellerId)
+                                                        <form action="{{ route('ddc.purchase-orders.cart.clear-seller') }}" method="POST" class="d-inline mb-0" onsubmit="return confirm('Are you sure you want to remove all items from &quot;{{ addslashes($sellerName) }}&quot;?');">
+                                                            @csrf
+                                                            <input type="hidden" name="seller_id" value="{{ $currentSellerId }}">
+                                                            <button type="submit" class="btn btn-outline-danger btn-sm py-1 px-2 d-inline-flex align-items-center gap-1" style="font-size: 11px;">
+                                                                <iconify-icon icon="solar:trash-bin-trash-bold-duotone" class="fs-14"></iconify-icon>
+                                                                <span>Clear Seller Cart</span>
+                                                            </button>
+                                                        </form>
+                                                    @endif
+                                                </div>
                                             </td>
                                         </tr>
 

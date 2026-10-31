@@ -40,6 +40,7 @@ class DdcProfile extends Model
         'pan_no',
         'wallet_balance',
         'per_user_daily_charge',
+        'deactivation_reason',
         'force_change_password',
         'parent_id',
         'department_id',

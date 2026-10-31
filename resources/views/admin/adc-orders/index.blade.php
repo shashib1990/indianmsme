@@ -150,6 +150,7 @@
                         <thead class="bg-light bg-opacity-50 border-top border-bottom">
                             <tr>
                                 <x-admin.table-header field="order_number" :sort="$sort" :order="$order" class="ps-3">Order Number</x-admin.table-header>
+                                <th>Invoice No.</th>
                                 <x-admin.table-header field="created_at" :sort="$sort" :order="$order">Date</x-admin.table-header>
                                 <th>ADC Coordinator</th>
                                 <th>Destination / District</th>
@@ -157,20 +158,36 @@
                                 <x-admin.table-header field="total_amount" :sort="$sort" :order="$order" class="text-center">Total Amount</x-admin.table-header>
                                 <x-admin.table-header field="payment_status" :sort="$sort" :order="$order" class="text-center">Payment</x-admin.table-header>
                                 <x-admin.table-header field="status" :sort="$sort" :order="$order" class="text-center">Status</x-admin.table-header>
-                                <th class="text-end pe-3" style="width: 100px;">Actions</th>
+                                <th class="text-end pe-3" style="width: 120px;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($orders as $ord)
                                 <tr>
                                     <td class="ps-3 fw-bold text-slate-800">
-                                        #{{ $ord->order_number }}
+                                        <a href="{{ route('admin.adc-orders.show', $ord->id) }}" class="text-decoration-none text-slate-800">
+                                            #{{ $ord->order_number }}
+                                        </a>
                                         @if($ord->purchaseOrders->count() > 0)
                                             <div class="mt-0.5">
                                                 <span class="badge bg-secondary-subtle text-secondary fs-10" title="Generated Purchase Orders">
                                                     {{ $ord->purchaseOrders->count() }} PO(s)
                                                 </span>
                                             </div>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($ord->invoice && $ord->invoice->invoice_number)
+                                            <a href="{{ route('admin.adc-orders.invoice', $ord->id) }}" target="_blank" class="badge bg-success-subtle text-success border border-success-subtle fw-semibold font-monospace text-decoration-none" title="View / Print Tax Invoice">
+                                                <iconify-icon icon="solar:document-text-bold" class="align-middle me-0.5"></iconify-icon>
+                                                {{ $ord->invoice->invoice_number }}
+                                            </a>
+                                        @elseif(in_array($ord->status, ['Dispatched', 'Partially Dispatched', 'Received', 'Delivered', 'Completed']))
+                                            <a href="{{ route('admin.adc-orders.invoice', $ord->id) }}" target="_blank" class="badge bg-light text-primary border border-primary-subtle fw-medium text-decoration-none" title="Generate / Print Tax Invoice">
+                                                <iconify-icon icon="solar:printer-bold" class="align-middle me-0.5"></iconify-icon> Print
+                                            </a>
+                                        @else
+                                            <span class="text-muted small">—</span>
                                         @endif
                                     </td>
                                     <td class="text-muted small">{{ $ord->created_at->format('d M Y, h:i A') }}</td>
@@ -230,14 +247,19 @@
                                         @endif
                                     </td>
                                     <td class="text-end pe-3">
-                                        <a href="{{ route('admin.adc-orders.show', $ord->id) }}" class="btn btn-sm btn-outline-primary py-1 px-2" title="View Details">
-                                            <iconify-icon icon="solar:eye-bold-duotone" class="align-middle me-1"></iconify-icon> Details
-                                        </a>
+                                        <div class="d-flex justify-content-end gap-1">
+                                            <a href="{{ route('admin.adc-orders.show', $ord->id) }}" class="btn btn-sm btn-outline-primary py-1 px-2" title="View Details">
+                                                <iconify-icon icon="solar:eye-bold-duotone" class="align-middle me-1"></iconify-icon> Details
+                                            </a>
+                                            <a href="{{ route('admin.adc-orders.invoice', $ord->id) }}" target="_blank" class="btn btn-sm btn-outline-success py-1 px-2" title="View / Print Tax Invoice">
+                                                <iconify-icon icon="solar:printer-bold" class="align-middle"></iconify-icon>
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="9" class="text-center py-4 text-muted small">No ADC Orders found matching the criteria.</td>
+                                    <td colspan="10" class="text-center py-4 text-muted small">No ADC Orders found matching the criteria.</td>
                                 </tr>
                             @endforelse
                         </tbody>

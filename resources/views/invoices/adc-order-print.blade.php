@@ -504,18 +504,81 @@
                     $dispatchGstin = $ddcProfile?->ddc_gst_number ?? ($ddcProfile?->adpl_gst_number ?? ($ddcProfile?->gst_number ?? 'N/A'));
                 }
             }
+
+            // Determine if this is a DL series invoice
+            $isDlInvoice = str_starts_with(strtoupper($invoice->invoice_number ?? ''), 'DL');
+
+            // Determine if billing was done by DDC to ADC
+            $isDdcBilling = !$isDlInvoice && (
+                $invoice->type === 'ddc_to_adc'
+                || $isPhysicalDdcOrder
+                || !empty($order->selected_ddc_id)
+                || !empty($order->assigned_ddc_id)
+                || (!empty($order->fulfillment_type) && $order->fulfillment_type === 'physical')
+                || (!empty($ddc) && $invoice->type !== 'adc_virtual_po')
+            );
+
+            // Resolve DDC details for billing
+            $billingDdc = ($isPhysicalDdcOrder && !empty($physicalDdc)) ? $physicalDdc : ($ddc ?? ($order->selectedDdc ?? $order->assignedDdc ?? $order->virtualDdc ?? null));
+            if (!$billingDdc) {
+                $firstDdcId = $order->items->pluck('ddc_id')->filter()->first() ?? $order->items->pluck('virtual_ddc_id')->filter()->first();
+                if ($firstDdcId) {
+                    $billingDdc = \App\Models\User::with(['profile', 'ddcProfile'])->find($firstDdcId);
+                }
+            }
+            $billingDdcProfile = $billingDdc?->ddcProfile ?? $billingDdc?->profile ?? null;
+
+            $ddcCompanyName = $billingDdcProfile?->company_name ?: ($billingDdcProfile?->trade_name ?: ($billingDdcProfile?->adpl_company_name ?: ($billingDdc?->name ?: 'DDC Hub')));
+            $ddcCode = $billingDdcProfile?->ddc_code ?: ($billingDdc?->code ?: null);
+            $ddcAddress = $billingDdcProfile?->address ?: ($billingDdcProfile?->ddc_address ?: ($billingDdcProfile?->adpl_address ?: ($billingDdc?->address ?: 'Address not available')));
+            $ddcDistrict = $billingDdcProfile?->district ?: ($billingDdcProfile?->ddc_district ?: ($billingDdc?->district ?: ''));
+            $ddcState = $billingDdcProfile?->state ?: ($billingDdcProfile?->ddc_state ?: ($billingDdc?->state ?: ''));
+            $ddcPincode = $billingDdcProfile?->pincode ?: ($billingDdcProfile?->ddc_pincode ?: ($billingDdc?->pincode ?: ''));
+            $ddcGstin = (!empty($billingDdcProfile?->ddc_gst_number) && $billingDdcProfile->ddc_gst_number !== 'N/A')
+                ? $billingDdcProfile->ddc_gst_number
+                : ((!empty($billingDdc?->profile?->ddc_gst_number) && $billingDdc->profile->ddc_gst_number !== 'N/A')
+                    ? $billingDdc->profile->ddc_gst_number
+                    : ((!empty($billingDdc?->ddcProfile?->ddc_gst_number) && $billingDdc->ddcProfile->ddc_gst_number !== 'N/A')
+                        ? $billingDdc->ddcProfile->ddc_gst_number
+                        : ((!empty($invoice->dispatch_from_gstin) && $invoice->dispatch_from_gstin !== 'N/A')
+                            ? $invoice->dispatch_from_gstin
+                            : ((!empty($invoice->supplier_gstin) && $invoice->supplier_gstin !== 'N/A')
+                                ? $invoice->supplier_gstin
+                                : ($billingDdcProfile?->adpl_gst_number && $billingDdcProfile->adpl_gst_number !== '19DEFAULTGST123' && $billingDdcProfile->adpl_gst_number !== 'N/A'
+                                    ? $billingDdcProfile->adpl_gst_number
+                                    : ($billingDdcProfile?->gst_number && $billingDdcProfile->gst_number !== 'N/A'
+                                        ? $billingDdcProfile->gst_number
+                                        : ($billingDdc?->gst_number && $billingDdc->gst_number !== 'N/A'
+                                            ? $billingDdc->gst_number
+                                            : 'N/A')))))));
+
+            if ($invoice && ($invoice->supplier_gstin === 'N/A' || empty($invoice->supplier_gstin)) && $ddcGstin !== 'N/A') {
+                $invoice->update(['supplier_gstin' => $ddcGstin]);
+            }
         @endphp
 
         <!-- Info Grid -->
         <div class="info-grid">
             <div class="info-box">
                 <h3>Invoice From</h3>
-                <p><strong>ASC Distributor Pvt. Ltd.</strong></p>
-                <p><strong>Head Office:</strong> No. 82, Block C, Pocket - 7, Sector 8, Rohini, New Delhi, Delhi, India 110085</p>
-                <p><strong>Gst No.:</strong> 07AAZCA4502F1ZM</p>
-                <p><strong>Call Us:</strong> 8800001240/50/60</p>
-                <p><strong>Mail Us:</strong> home@ardhsainik.com</p>
-                <p><strong>Website:</strong> www.ardhsainikmall.com</p>
+                @if($isDdcBilling)
+                    <p><strong>{{ $ddcCompanyName }}</strong></p>
+                    @if(!empty($ddcCode))
+                        <p><strong>DDC Code:</strong> {{ $ddcCode }}</p>
+                    @endif
+                    <p><strong>Address:</strong> {{ $ddcAddress }}</p>
+                    @if($ddcDistrict || $ddcState || $ddcPincode)
+                        <p>{{ $ddcDistrict }}{{ ($ddcDistrict && $ddcState) ? ', ' : '' }}{{ $ddcState }}{{ $ddcPincode ? ' - ' . $ddcPincode : '' }}</p>
+                    @endif
+                    <p><strong>Gst No.:</strong> {{ $ddcGstin ?: 'N/A' }}</p>
+                @else
+                    <p><strong>ASC Distributor Pvt. Ltd.</strong></p>
+                    <p><strong>Head Office:</strong> No. 82, Block C, Pocket - 7, Sector 8, Rohini, New Delhi, Delhi, India 110085</p>
+                    <p><strong>Gst No.:</strong> 07AAZCA4502F1ZM</p>
+                    <p><strong>Call Us:</strong> 8800001240/50/60</p>
+                    <p><strong>Mail Us:</strong> home@ardhsainik.com</p>
+                    <p><strong>Website:</strong> www.ardhsainikmall.com</p>
+                @endif
             </div>
             
             <div class="info-box">
@@ -550,7 +613,9 @@
                 <p>
                     {{ $canteenDistrict }}{{ ($canteenDistrict && $canteenState) ? ', ' : '' }}{{ $canteenState }}{{ $canteenPincode ? ' - ' . $canteenPincode : '' }}
                 </p>
-                <p><strong>Phone:</strong> {{ $canteenPhone }}</p>
+                @if(!$isDdcBilling && !empty($canteenPhone) && $canteenPhone !== 'N/A')
+                    <p><strong>Phone:</strong> {{ $canteenPhone }}</p>
+                @endif
                 <p><strong>GSTIN:</strong> {{ $canteenGstin }}</p>
             </div>
             
@@ -561,7 +626,7 @@
                 <p>
                     {{ $dispatchDistrict }}{{ ($dispatchDistrict && $dispatchState) ? ', ' : '' }}{{ $dispatchState }}{{ $dispatchPincode ? ' - ' . $dispatchPincode : '' }}
                 </p>
-                @if(!auth('adc')->check() && !empty($dispatchPhone) && $dispatchPhone !== 'N/A')
+                @if(!$isDdcBilling && !auth('adc')->check() && !empty($dispatchPhone) && $dispatchPhone !== 'N/A')
                     <p><strong>Phone:</strong> {{ $dispatchPhone }}</p>
                 @endif
                 <p><strong>GSTIN:</strong> {{ $dispatchGstin }}</p>
@@ -763,7 +828,7 @@
             </div>
             
             <div class="signature-box">
-                <p>For <strong>ASC Distributor Pvt. Ltd.</strong></p>
+                <p>For <strong>{{ $isDdcBilling ? $ddcCompanyName : 'ASC Distributor Pvt. Ltd.' }}</strong></p>
                 <div class="signature-line">
                     Authorized Signatory
                 </div>

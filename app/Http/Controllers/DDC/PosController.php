@@ -243,6 +243,14 @@ class PosController extends Controller
     public function checkout(Request $request)
     {
         $ddcId = Auth::guard('ddc')->id();
+        $ddcUser = User::with('ddcProfile')->find($ddcId);
+        $ddcProfile = $ddcUser?->ddcProfile;
+        $walletBal = (float) ($ddcProfile?->wallet_balance ?? 0);
+
+        if (!$ddcUser || $ddcUser->status == 0 || $ddcUser->status === '0' || $walletBal <= 0) {
+            $reason = $ddcProfile?->deactivation_reason ?: 'POS sales are deactivated because your wallet balance has reached ₹0.00. Please recharge your wallet to resume sales.';
+            return response()->json(['status' => false, 'message' => 'Checkout failed: ' . $reason], 403);
+        }
 
         $request->validate([
             'mode' => 'required|in:retail,wholesale',

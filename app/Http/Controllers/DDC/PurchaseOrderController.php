@@ -548,7 +548,7 @@ class PurchaseOrderController extends Controller
         }
 
         if ($isAjax) {
-            $cartCount = \App\Models\DdcCartItem::where('ddc_id', $ddc->id)->sum('quantity');
+            $cartCount = \App\Models\DdcCartItem::where('ddc_id', $ddc->id)->count();
             return response()->json([
                 'status' => 'success',
                 'message' => 'Product added to cart successfully!',
@@ -824,6 +824,44 @@ class PurchaseOrderController extends Controller
         }
 
         return redirect()->back()->with('error', 'Item not found in cart.');
+    }
+
+    public function clearCart(Request $request)
+    {
+        $ddc = auth('ddc')->user();
+        \App\Models\DdcCartItem::where('ddc_id', $ddc->id)->delete();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Cart cleared successfully.',
+            ]);
+        }
+
+        return redirect()->route('ddc.purchase-orders.cart.view')->with('success', 'All items have been removed from your cart.');
+    }
+
+    public function clearSellerCart(Request $request)
+    {
+        $request->validate([
+            'seller_id' => 'required',
+        ]);
+
+        $sellerId = $request->input('seller_id');
+        $ddc = auth('ddc')->user();
+
+        \App\Models\DdcCartItem::where('ddc_id', $ddc->id)
+            ->where('seller_id', $sellerId)
+            ->delete();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Seller items removed from cart successfully.',
+            ]);
+        }
+
+        return redirect()->route('ddc.purchase-orders.cart.view')->with('success', 'All items for this seller have been removed.');
     }
 
     public function store(Request $request)

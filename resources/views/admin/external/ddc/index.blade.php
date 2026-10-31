@@ -281,7 +281,7 @@
 
     <!-- Reusable Table Filters -->
     <x-admin.table-filters action="{{ route('admin.external.ddc.index') }}" :search="$search"
-        placeholder="Search name, email, phone, state..." :limit="$limit" :sort="$sort" :order="$order"
+        placeholder="Search DDB code, name, email, phone, state..." :limit="$limit" :sort="$sort" :order="$order"
         :bulk-actions="[
                     'delete' => 'Delete Selected',
                     'status_active' => 'Activate Selected',
@@ -313,7 +313,8 @@
                                     <th class="ps-2" style="width: 60px;">#</th>
                                     <x-admin.table-header field="name" :sort="$sort"
                                         :order="$order">Name</x-admin.table-header>
-                                    <th>DDB Code</th>
+                                    <x-admin.table-header field="ddc_code" :sort="$sort"
+                                        :order="$order">DDB Code</x-admin.table-header>
                                     <x-admin.table-header field="email" :sort="$sort"
                                         :order="$order">Email</x-admin.table-header>
                                     <th>Phone</th>
@@ -321,7 +322,7 @@
                                     <th>District</th>
                                     <th>State</th>
                                     <th>Assigned Pincodes</th>
-                                    <x-admin.table-header field="is_active" :sort="$sort"
+                                    <x-admin.table-header field="status" :sort="$sort"
                                         :order="$order">Status</x-admin.table-header>
                                     <x-admin.table-header field="created_at" :sort="$sort"
                                         :order="$order">Joined</x-admin.table-header>

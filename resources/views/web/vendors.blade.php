@@ -394,6 +394,93 @@
       color: #ffffff !important;
     }
 
+    /* DDC Subscribed Card Highlight */
+    .vendor-card.is-ddc-subscribed {
+      border: 1.5px solid #f59e0b;
+      box-shadow: 0 4px 16px rgba(245, 158, 11, 0.12);
+      background: linear-gradient(180deg, #fffdf8 0%, #ffffff 100%);
+    }
+
+    .vendor-card.is-ddc-subscribed:hover {
+      border-color: #d97706;
+      box-shadow: 0 10px 28px rgba(217, 119, 6, 0.2);
+    }
+
+    .vendor-ddc-badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 10;
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      color: #92400e;
+      border: 1px solid #f59e0b;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      letter-spacing: 0.2px;
+      box-shadow: 0 2px 5px rgba(245, 158, 11, 0.2);
+    }
+
+    .vendor-ddc-badge i {
+      font-size: 11px;
+      color: #d97706;
+    }
+
+    /* Quick Action Top Corner Catalog Download Button */
+    .seller-quick-catalog-btn {
+      position: absolute;
+      top: 10px;
+      right: 46px;
+      z-index: 10;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #dc2626;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+
+    .seller-quick-catalog-btn:hover {
+      background: #dc2626;
+      border-color: #dc2626;
+      color: #ffffff !important;
+      transform: scale(1.08);
+      box-shadow: 0 3px 8px rgba(220, 38, 38, 0.25);
+    }
+
+    /* Card Footer Catalog Pill */
+    .vendor-card-catalog-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #dc2626 !important;
+      text-decoration: none;
+      padding: 3px 8px;
+      background-color: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .vendor-card-catalog-pill:hover {
+      background-color: #dc2626;
+      color: #ffffff !important;
+      border-color: #dc2626;
+    }
+
     /* Stats Section */
     .vendor-stats-container {
       max-width: 100% !important;

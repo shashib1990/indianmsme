@@ -16,7 +16,7 @@ class AdcOrderController extends Controller
 {
     public function index(Request $request)
     {
-        $query = AdcOrder::with(['adc.profile', 'selectedDdc.ddcProfile', 'virtualDdc.ddcProfile', 'assignedDdc.ddcProfile', 'items.product', 'purchaseOrders']);
+        $query = AdcOrder::with(['adc.profile', 'selectedDdc.ddcProfile', 'virtualDdc.ddcProfile', 'assignedDdc.ddcProfile', 'items.product', 'purchaseOrders', 'invoice']);
 
         // Search Filter
         if ($request->filled('search')) {
@@ -26,6 +26,9 @@ class AdcOrderController extends Controller
                     ->orWhere('shipping_address', 'like', "%{$search}%")
                     ->orWhere('delivery_district', 'like', "%{$search}%")
                     ->orWhere('delivery_pincode', 'like', "%{$search}%")
+                    ->orWhereHas('invoice', function ($iq) use ($search) {
+                        $iq->where('invoice_number', 'like', "%{$search}%");
+                    })
                     ->orWhereHas('adc', function ($sq) use ($search) {
                         $sq->where('name', 'like', "%{$search}%")
                             ->orWhere('mobile', 'like', "%{$search}%")
@@ -94,6 +97,7 @@ class AdcOrderController extends Controller
             'selectedDdc',
             'virtualDdc',
             'assignedDdc',
+            'invoice',
             'items.product',
             'items.seller',
             'items.ddc',
@@ -185,6 +189,7 @@ class AdcOrderController extends Controller
                 'financial_year' => $invoiceDetails['financial_year'],
                 'serial_number' => $invoiceDetails['serial_number'],
                 'invoice_date' => $invoiceDetails['invoice_date'],
+                'type' => $isPhysicalDdcOrder ? 'ddc_to_adc' : 'adc_order',
             ], $extractedDetails));
         }
 

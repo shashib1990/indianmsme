@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use App\Services\TheekHaiService;
+use App\Services\NotificationService;
 
 class DDCUsersController extends Controller
 {
@@ -29,7 +30,7 @@ class DDCUsersController extends Controller
         $activeDdcCount = DDC::where('users.status', '1')->count();
         $inactiveDdcCount = max(0, $totalDdcCount - $activeDdcCount);
 
-        $query = DDC::query()->withCount('assignedPincodes');
+        $query = DDC::query()->with('profile')->withCount('assignedPincodes');
 
         if ($filterStatus === 'active') {
             $query->where('users.status', '1');
@@ -42,30 +43,54 @@ class DDCUsersController extends Controller
 
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('mobile', 'like', "%{$search}%")
+                $q->where('users.name', 'like', "%{$search}%")
+                    ->orWhere('users.email', 'like', "%{$search}%")
+                    ->orWhere('users.mobile', 'like', "%{$search}%")
                     ->orWhereHas('profile', function ($profileQuery) use ($search) {
-                        $profileQuery->where('district', 'like', "%{$search}%")
+                        $profileQuery->where('ddc_code', 'like', "%{$search}%")
+                            ->orWhere('company_name', 'like', "%{$search}%")
+                            ->orWhere('trade_name', 'like', "%{$search}%")
+                            ->orWhere('ddc_owner_name', 'like', "%{$search}%")
+                            ->orWhere('district', 'like', "%{$search}%")
                             ->orWhere('state', 'like', "%{$search}%");
+                    })
+                    ->orWhereExists(function ($sub) use ($search) {
+                        $sub->select(DB::raw(1))
+                            ->from('ddc_codes')
+                            ->whereColumn('ddc_codes.assigned_to_user_id', 'users.id')
+                            ->where('ddc_codes.code', 'like', "%{$search}%");
                     });
             });
+        }
+
+        $sortField = $sort;
+        if ($sort === 'is_active') {
+            $sortField = 'status';
         }
 
         if ($request->has('export')) {
             $selectedIds = $request->get('ids');
             if ($selectedIds) {
-                $query->whereIn('id', explode(',', $selectedIds));
+                $query->whereIn('users.id', explode(',', $selectedIds));
             }
-            $records = $query->orderBy($sort, $order)->get();
+            if ($sort === 'ddc_code') {
+                $records = (clone $query)
+                    ->leftJoin('ddc_profiles', 'ddc_profiles.user_id', '=', 'users.id')
+                    ->select('users.*')
+                    ->orderBy('ddc_profiles.ddc_code', $order)
+                    ->get();
+            } else {
+                $records = (clone $query)->orderBy('users.' . $sortField, $order)->get();
+            }
 
             return response()->streamDownload(function () use ($records) {
                 $file = fopen('php://output', 'w');
                 fputs($file, "\xEF\xBB\xBF");
-                fputcsv($file, ['ID', 'Name', 'Email', 'Phone', 'District', 'State', 'Status', 'Created At']);
+                fputcsv($file, ['ID', 'DDB Code', 'Name', 'Email', 'Phone', 'District', 'State', 'Status', 'Created At']);
                 foreach ($records as $row) {
                     fputcsv($file, [
                         $row->id,
+                        $row->profile?->ddc_code ?? '—',
                         $row->name,
                         $row->email,
                         $row->mobile ?? $row->phone ?? '—',
@@ -79,7 +104,15 @@ class DDCUsersController extends Controller
             }, 'ddc_users_export_' . date('Y-m-d_H-i-s') . '.csv', ['Content-Type' => 'text/csv']);
         }
 
-        $users = $query->orderBy($sort, $order)->paginate($limit)->withQueryString();
+        if ($sort === 'ddc_code') {
+            $query->leftJoin('ddc_profiles', 'ddc_profiles.user_id', '=', 'users.id')
+                ->select('users.*')
+                ->orderBy('ddc_profiles.ddc_code', $order);
+        } else {
+            $query->orderBy('users.' . $sortField, $order);
+        }
+
+        $users = $query->paginate($limit)->withQueryString();
 
         return view('admin.external.ddc.index', compact(
             'users', 
@@ -773,9 +806,14 @@ class DDCUsersController extends Controller
             $profile = $ddc->profile ?: $ddc->profile()->create([]);
 
             // Increment profile balance
-            $oldBalance = $profile->wallet_balance ?? 0;
+            $oldBalance = (float) ($profile->wallet_balance ?? 0);
             $newBalance = $oldBalance + $walletRequest->amount;
-            $profile->update(['wallet_balance' => $newBalance]);
+            $updateData = ['wallet_balance' => $newBalance];
+
+            if ($newBalance > 0 && str_contains($profile->deactivation_reason ?? '', 'Wallet balance')) {
+                $updateData['deactivation_reason'] = null;
+            }
+            $profile->update($updateData);
 
             // Create credit transaction in ddc_wallets
             DdcWallet::create([
@@ -784,6 +822,13 @@ class DDCUsersController extends Controller
                 'type' => 'credit',
                 'description' => 'Top-up Approved. UTR: ' . $walletRequest->utr_number,
             ]);
+
+            NotificationService::notifyDdc(
+                $ddc->id,
+                'Wallet Recharged - POS Sales Active',
+                'Your wallet has been credited with ₹' . number_format($walletRequest->amount, 2) . '. Available balance: ₹' . number_format($newBalance, 2) . '. POS sales are now active.',
+                route('ddc.wallet.index')
+            );
         });
 
         return back()->with('success', 'DDC Wallet request approved successfully. Amount has been credited.');
