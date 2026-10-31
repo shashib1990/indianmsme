@@ -789,17 +789,23 @@
                                         value="{{ old('gst_number', $profile?->gst_number ?? '') }}" maxlength="15"
                                         oninput="this.value = this.value.toUpperCase().slice(0, 15)" placeholder="15-digit GST Number">
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <label class="form-label text-slate-700 fw-semibold">PAN Number</label>
                                     <input type="text" name="pan_no" class="form-control text-uppercase"
                                         value="{{ old('pan_no', $profile?->pan_no ?? '') }}" maxlength="10"
                                         oninput="this.value = this.value.toUpperCase().slice(0, 10)" placeholder="10-digit PAN">
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <label class="form-label text-slate-700 fw-semibold">Aadhaar Number</label>
                                     <input type="text" name="aadhaar_no" class="form-control font-monospace"
                                         value="{{ old('aadhaar_no', $profile?->aadhaar_no ?? '') }}" maxlength="12"
                                         oninput="this.value = this.value.replace(/[^0-9]/g,'').slice(0, 12)" placeholder="12-digit Aadhaar">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-slate-700 fw-semibold">CA Mail Id</label>
+                                    <input type="text" name="ca_email" class="form-control font-monospace"
+                                        value="{{ old('ca_email', $profile?->ca_email ?? '') }}"
+                                        placeholder="CA Mail Id">
                                 </div>
 
                                 <div class="col-md-4">
