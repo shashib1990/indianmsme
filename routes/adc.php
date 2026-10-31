@@ -155,6 +155,7 @@ Route::name('adc.')->group(function () {
         Route::get('/pos/orders', [\App\Http\Controllers\ADC\PosController::class, 'orders'])->name('pos.orders');
         Route::get('/pos/orders/{id}', [\App\Http\Controllers\ADC\PosController::class, 'showOrder'])->name('pos.orders.show');
         Route::get('/pos/orders/{id}/print', [\App\Http\Controllers\ADC\PosController::class, 'printReceipt'])->name('pos.orders.print');
+        Route::get('/pos/orders/{id}/challan', [\App\Http\Controllers\ADC\PosController::class, 'printChallan'])->name('pos.orders.challan');
 
         // ── POS Sales Returns ──
         Route::get('/pos/returns', [\App\Http\Controllers\ADC\PosController::class, 'salesReturnsList'])->name('pos.returns.index');

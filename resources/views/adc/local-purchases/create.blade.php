@@ -3,6 +3,145 @@
 @section('title', 'Regional Purchase & Stock In')
 @section('page-title', 'Regional Purchase & Stock In')
 
+@push('styles')
+    <style>
+        /* Desktop Table Styling */
+        #items-table th,
+        #items-table td {
+            vertical-align: middle;
+        }
+
+        /* Mobile View: Vertical Card Layout (Screens <= 768px) */
+        @media (max-width: 768px) {
+            .table-responsive {
+                overflow-x: visible !important;
+                padding: 10px 10px 0 !important;
+            }
+
+            #items-table,
+            #items-table tbody,
+            #items-table-body {
+                display: block !important;
+                width: 100% !important;
+                min-width: 0 !important;
+                border: none !important;
+            }
+
+            /* Hide horizontal table header on mobile */
+            #items-table thead {
+                display: none !important;
+            }
+
+            /* Each item row becomes a clean, touch-friendly vertical Card */
+            #items-table tr.stock-item-row {
+                display: flex !important;
+                flex-wrap: wrap !important;
+                background: #ffffff !important;
+                border: 1.5px solid #e2e8f0 !important;
+                border-radius: 14px !important;
+                padding: 14px !important;
+                margin-bottom: 16px !important;
+                box-shadow: 0 3px 10px rgba(15, 23, 42, 0.05) !important;
+            }
+
+            /* Product dropdown: Full width */
+            #items-table tr.stock-item-row td.cell-product {
+                width: 100% !important;
+                padding: 0 0 12px 0 !important;
+                border: none !important;
+            }
+
+            /* Qty & MRP: 50% - 50% side-by-side */
+            #items-table tr.stock-item-row td.cell-qty {
+                width: 50% !important;
+                padding: 0 6px 12px 0 !important;
+                border: none !important;
+            }
+
+            #items-table tr.stock-item-row td.cell-mrp {
+                width: 50% !important;
+                padding: 0 0 12px 6px !important;
+                border: none !important;
+            }
+
+            /* Purchase Price & CSP: 50% - 50% side-by-side */
+            #items-table tr.stock-item-row td.cell-purchase-price {
+                width: 50% !important;
+                padding: 0 6px 0 0 !important;
+                border: none !important;
+            }
+
+            #items-table tr.stock-item-row td.cell-csp {
+                width: 50% !important;
+                padding: 0 0 0 6px !important;
+                border: none !important;
+            }
+
+            /* Hide desktop action column cell on mobile */
+            #items-table tr.stock-item-row td.cell-action {
+                display: none !important;
+            }
+
+            /* Remove number stepper arrows to maximize typing area on touch */
+            #items-table input[type="number"]::-webkit-inner-spin-button,
+            #items-table input[type="number"]::-webkit-outer-spin-button {
+                -webkit-appearance: none !important;
+                margin: 0 !important;
+            }
+            #items-table input[type="number"] {
+                -moz-appearance: textfield !important;
+                appearance: textfield !important;
+            }
+
+            /* Large comfortable input sizes for mobile fingers */
+            #items-table .form-control,
+            #items-table .form-select {
+                height: 42px !important;
+                font-size: 15px !important;
+                border-radius: 8px !important;
+            }
+
+            #items-table .quantity-input,
+            #items-table .mrp-input,
+            #items-table .purchase-price-input,
+            #items-table .csp-input {
+                font-size: 15px !important;
+                font-weight: 600 !important;
+                min-width: 0 !important;
+            }
+
+            /* Action Buttons on Mobile: Clean horizontal pair with comfortable 44px height */
+            .form-action-group {
+                display: flex !important;
+                gap: 10px !important;
+                width: 100% !important;
+                margin-bottom: 95px !important;
+            }
+
+            .form-action-group .btn-cancel {
+                flex: 0 0 32% !important;
+                height: 44px !important;
+                font-size: 14px !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                padding: 0 8px !important;
+            }
+
+            .form-action-group .btn-submit-stock {
+                flex: 1 1 68% !important;
+                height: 44px !important;
+                font-size: 13.5px !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                padding: 0 10px !important;
+                white-space: nowrap !important;
+            }
+        }
+    </style>
+@endpush
+
 @section('content')
     <!-- Header Card -->
     <div class="row mb-3">
@@ -117,18 +256,18 @@
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table align-middle mb-0" id="items-table">
-                        <thead class="bg-light fs-11 text-uppercase fw-bold text-muted border-bottom">
+                        <thead class="bg-light fs-11 text-uppercase fw-bold text-muted border-bottom d-none d-md-table-header-group">
                             <tr>
-                                <th style="width: 35%;" class="ps-4">Product Master <span class="text-danger">*</span></th>
+                                <th class="ps-4" style="width: 34%;">Product Master <span class="text-danger">*</span></th>
                                 <th style="width: 12%;">Qty <span class="text-danger">*</span></th>
-                                <th style="width: 15%;">MRP <span class="text-danger">*</span></th>
-                                <th style="width: 15%;">Purch. Price <span class="text-danger">*</span></th>
-                                <th style="width: 15%;">CSP / Price <span class="text-danger">*</span></th>
-                                <th style="width: 8%;" class="pe-4 text-center">Action</th>
+                                <th style="width: 14%;">MRP <span class="text-danger">*</span></th>
+                                <th style="width: 14%;">Purch. Price <span class="text-danger">*</span></th>
+                                <th style="width: 14%;">CSP / Price <span class="text-danger">*</span></th>
+                                <th class="pe-4 text-center" style="width: 12%;">Action</th>
                             </tr>
                         </thead>
                         <tbody id="items-table-body" class="fs-13">
-                            <!-- Dynamic Item Rows -->
+                            <!-- Dynamic Item Rows / Cards -->
                         </tbody>
                     </table>
                 </div>
@@ -138,11 +277,11 @@
             </div>
         </div>
 
-        <div class="d-flex align-items-center justify-content-end gap-3 mb-5">
-            <a href="{{ route('adc.local-purchases.index') }}" class="btn btn-light rounded-3 px-4 fw-semibold">Cancel</a>
-            <button type="submit" class="btn btn-success btn-lg rounded-3 px-5 fw-bold shadow-sm">
-                <iconify-icon icon="solar:check-circle-bold-duotone" class="align-middle me-1 fs-20"></iconify-icon>
-                Perform Stock In & Save Invoice
+        <div class="d-flex align-items-center justify-content-end gap-2 gap-md-3 mb-5 form-action-group">
+            <a href="{{ route('adc.local-purchases.index') }}" class="btn btn-light rounded-3 px-3 px-md-4 fw-semibold btn-cancel">Cancel</a>
+            <button type="submit" class="btn btn-success rounded-3 px-3 px-md-5 fw-bold shadow-sm btn-submit-stock">
+                <iconify-icon icon="solar:check-circle-bold-duotone" class="align-middle me-1 fs-18"></iconify-icon>
+                <span class="d-none d-sm-inline">Perform </span>Stock In & Save<span class="d-none d-sm-inline"> Invoice</span>
             </button>
         </div>
     </form>
@@ -155,10 +294,19 @@
 
         let itemIndex = 0;
 
+        function updateCardNumbers() {
+            const rows = document.querySelectorAll('#items-table-body tr.stock-item-row');
+            rows.forEach((r, idx) => {
+                const badge = r.querySelector('.item-card-num');
+                if (badge) badge.textContent = `Product #${idx + 1}`;
+            });
+        }
+
         function addRow(selectedId = '') {
             const tbody = document.getElementById('items-table-body');
             const tr = document.createElement('tr');
             tr.id = `item-row-${itemIndex}`;
+            tr.className = 'stock-item-row';
 
             let optionsHtml = '<option value="">Select Regional Product</option>';
             localProducts.forEach(p => {
@@ -167,40 +315,70 @@
             });
 
             tr.innerHTML = `
-                <td class="ps-4">
+                <td class="cell-product ps-md-4">
+                    <!-- Mobile Card Top Bar (Item # & Remove Button) -->
+                    <div class="d-flex align-items-center justify-content-between d-md-none mb-2 pb-1 border-bottom">
+                        <span class="badge bg-primary-subtle text-primary fw-bold fs-12 px-2.5 py-1">
+                            <iconify-icon icon="solar:box-minimalistic-bold-duotone" class="align-middle me-1"></iconify-icon>
+                            <span class="item-card-num">Product #${document.querySelectorAll('#items-table-body tr.stock-item-row').length + 1}</span>
+                        </span>
+                        <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2.5 fs-12 d-inline-flex align-items-center gap-1 rounded-2" onclick="removeRow(${itemIndex})">
+                            <iconify-icon icon="solar:trash-bin-trash-bold-duotone" class="fs-14"></iconify-icon> Remove
+                        </button>
+                    </div>
+
+                    <label class="form-label d-md-none fw-semibold text-slate-700 fs-12 mb-1">
+                        Product Master <span class="text-danger">*</span>
+                    </label>
                     <select name="items[${itemIndex}][local_product_id]" class="form-select product-select" required>
                         ${optionsHtml}
                     </select>
                 </td>
-                <td>
-                    <input type="number" step="0.001" name="items[${itemIndex}][quantity]" class="form-control quantity-input" placeholder="Qty" value="1" required>
+                <td class="cell-qty">
+                    <label class="form-label d-md-none fw-semibold text-slate-700 fs-12 mb-1">
+                        Qty <span class="text-danger">*</span>
+                    </label>
+                    <input type="number" step="any" min="0.001" inputmode="decimal" name="items[${itemIndex}][quantity]" class="form-control quantity-input" placeholder="Qty" value="1" required onclick="this.select()" onfocus="this.select()">
                 </td>
-                <td>
-                    <input type="number" step="0.01" name="items[${itemIndex}][mrp]" class="form-control mrp-input" placeholder="MRP" value="0.00" required>
+                <td class="cell-mrp">
+                    <label class="form-label d-md-none fw-semibold text-slate-700 fs-12 mb-1">
+                        MRP (₹) <span class="text-danger">*</span>
+                    </label>
+                    <input type="number" step="any" min="0" inputmode="decimal" name="items[${itemIndex}][mrp]" class="form-control mrp-input" placeholder="MRP" value="0.00" required onclick="this.select()" onfocus="this.select()">
                 </td>
-                <td>
-                    <input type="number" step="0.01" name="items[${itemIndex}][purchase_price]" class="form-control purchase-price-input" placeholder="Purch. Price" value="0.00" required>
+                <td class="cell-purchase-price">
+                    <label class="form-label d-md-none fw-semibold text-slate-700 fs-12 mb-1">
+                        Purch. Price (₹) <span class="text-danger">*</span>
+                    </label>
+                    <input type="number" step="any" min="0" inputmode="decimal" name="items[${itemIndex}][purchase_price]" class="form-control purchase-price-input" placeholder="Purch. Price" value="0.00" required onclick="this.select()" onfocus="this.select()">
                 </td>
-                <td>
-                    <input type="number" step="0.01" name="items[${itemIndex}][csp]" class="form-control csp-input" placeholder="CSP" value="0.00" required>
+                <td class="cell-csp">
+                    <label class="form-label d-md-none fw-semibold text-slate-700 fs-12 mb-1">
+                        CSP / Price (₹) <span class="text-danger">*</span>
+                    </label>
+                    <input type="number" step="any" min="0" inputmode="decimal" name="items[${itemIndex}][csp]" class="form-control csp-input" placeholder="CSP" value="0.00" required onclick="this.select()" onfocus="this.select()">
                 </td>
-                <td class="pe-4 text-center">
-                    <button type="button" class="btn btn-sm btn-outline-danger btn-remove-row" onclick="removeRow(${itemIndex})">
+                <td class="pe-md-4 text-center cell-action d-none d-md-table-cell">
+                    <button type="button" class="btn btn-sm btn-outline-danger btn-remove-row" onclick="removeRow(${itemIndex})" title="Remove product">
                         <iconify-icon icon="solar:trash-bin-trash-bold-duotone" class="fs-16 align-middle"></iconify-icon>
                     </button>
                 </td>
             `;
 
             tbody.appendChild(tr);
+            updateCardNumbers();
 
-            // Add change event listeners for calculation
+            // Add change and input event listeners for real-time calculation
             const pInput = tr.querySelector('.purchase-price-input');
             const qInput = tr.querySelector('.quantity-input');
             const mInput = tr.querySelector('.mrp-input');
             const cInput = tr.querySelector('.csp-input');
 
             [qInput, mInput, pInput, cInput].forEach(inp => {
-                if (inp) inp.addEventListener('input', calculateGrandTotal);
+                if (inp) {
+                    inp.addEventListener('input', calculateGrandTotal);
+                    inp.addEventListener('change', calculateGrandTotal);
+                }
             });
 
             itemIndex++;
@@ -210,6 +388,7 @@
         function removeRow(idx) {
             const tr = document.getElementById(`item-row-${idx}`);
             if (tr) tr.remove();
+            updateCardNumbers();
             calculateGrandTotal();
         }
 

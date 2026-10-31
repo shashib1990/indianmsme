@@ -3,6 +3,31 @@
 @section('title', 'Regional Purchase & Stock In')
 @section('page-title', 'Regional Purchase & Stock In')
 
+@push('styles')
+    <style>
+        .table-responsive {
+            -webkit-overflow-scrolling: touch;
+            overflow-x: auto;
+        }
+
+        #items-table {
+            min-width: 900px;
+        }
+
+        @media (max-width: 768px) {
+            #items-table input[type="number"]::-webkit-inner-spin-button,
+            #items-table input[type="number"]::-webkit-outer-spin-button {
+                -webkit-appearance: none !important;
+                margin: 0 !important;
+            }
+            #items-table input[type="number"] {
+                -moz-appearance: textfield !important;
+                appearance: textfield !important;
+            }
+        }
+    </style>
+@endpush
+
 @section('content')
     <!-- Header Card -->
     <div class="row mb-3">

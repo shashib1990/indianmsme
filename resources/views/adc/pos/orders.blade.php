@@ -69,7 +69,7 @@
                             <th class="text-center">Items</th>
                             <th class="text-end">Total Amount</th>
                             <th class="text-center">Payment Mode</th>
-                            <th class="text-center" style="width: 180px;">Action</th>
+                            <th class="text-center" style="width: 195px;">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -127,6 +127,11 @@
                                         {{-- Print Sales Receipt --}}
                                         <a href="{{ route('adc.pos.orders.print', $ord->id) }}" target="_blank" class="btn btn-sm btn-outline-primary btn-icon rounded-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Print Tax Invoice (80mm)">
                                             <iconify-icon icon="solar:printer-bold-duotone" class="fs-16"></iconify-icon>
+                                        </a>
+
+                                        {{-- Delivery Challan (A4) --}}
+                                        <a href="{{ route('adc.pos.orders.challan', $ord->id) }}" target="_blank" class="btn btn-sm btn-outline-dark btn-icon rounded-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Delivery Challan">
+                                            <iconify-icon icon="solar:document-text-bold-duotone" class="fs-16"></iconify-icon>
                                         </a>
 
                                         {{-- View Return Details & Receipt (ONLY if returned) --}}
@@ -265,6 +270,9 @@
                         <iconify-icon icon="solar:restart-bold-duotone" class="align-middle me-1"></iconify-icon> Process Sales Return
                     </button>
                     <button type="button" class="btn btn-sm btn-secondary px-3" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-sm btn-outline-dark px-3" id="modalChallanBtn">
+                        <iconify-icon icon="solar:document-text-bold-duotone" class="align-middle me-1"></iconify-icon> Delivery Challan
+                    </button>
                     <button type="button" class="btn btn-sm btn-primary px-3" id="modalPrintBtn">
                         <iconify-icon icon="solar:printer-bold-duotone" class="align-middle me-1"></iconify-icon> Print Receipt
                     </button>
@@ -465,6 +473,14 @@
                 document.getElementById('modalPrintBtn').onclick = function() {
                     window.open(printUrl, '_blank');
                 };
+
+                let challanUrl = "{{ route('adc.pos.orders.challan', ['id' => 999999]) }}".replace('999999', ord.id);
+                let modalChallanBtn = document.getElementById('modalChallanBtn');
+                if (modalChallanBtn) {
+                    modalChallanBtn.onclick = function() {
+                        window.open(challanUrl, '_blank');
+                    };
+                }
 
                 let tbody = document.getElementById('modalItemsTableBody');
                 tbody.innerHTML = '';
