@@ -9,14 +9,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('adc_profiles', function (Blueprint $table) {
-            $table->string('ca_email', 255)->nullable();
+            if (!Schema::hasColumn('adc_profiles', 'ca_email')) {
+                $table->string('ca_email', 255)->nullable();
+            }
         });
     }
 
     public function down(): void
     {
         Schema::table('adc_profiles', function (Blueprint $table) {
-            $table->dropColumn('ca_email');
+            if (Schema::hasColumn('adc_profiles', 'ca_email')) {
+                $table->dropColumn('ca_email');
+            }
         });
     }
 };
