@@ -1085,6 +1085,119 @@ class PosController extends Controller
         return view('adc.pos.print', compact('order'));
     }
 
+    public function printChallan($id)
+    {
+        $adcId = Auth::guard('adc')->id();
+        $order = AdcPosOrder::where('id', $id)
+            ->where('adc_id', $adcId)
+            ->with(['items.product', 'items.localProduct', 'items.inventory.product', 'items.inventory.localProduct', 'customer', 'adc.adcProfile', 'adc.profile', 'invoice'])
+            ->firstOrFail();
+
+        $invoice = $order->invoice;
+        if (!$invoice) {
+            $adcUser = User::with(['adcProfile', 'profile'])->find($order->adc_id);
+            $adcGstin = $adcUser?->adcProfile?->gst_number ?: ($adcUser?->profile?->gst_number ?: ($adcUser?->gst_number ?: 'N/A'));
+
+            $invoiceDetails = \App\Models\Invoice::generateNextInvoiceNumber($order->created_at, $adcGstin, 'INV', 'retail');
+
+            $invoice = \App\Models\Invoice::create([
+                'invoice_number' => $invoiceDetails['invoice_number'],
+                'pos_order_id' => $order->id,
+                'adc_order_id' => null,
+                'purchase_order_id' => null,
+                'type' => 'adc_pos_retail',
+                'financial_year' => $invoiceDetails['financial_year'],
+                'serial_number' => $invoiceDetails['serial_number'],
+                'invoice_date' => $order->created_at ? $order->created_at->format('Y-m-d') : now()->format('Y-m-d'),
+                'supplier_gstin' => $adcGstin,
+                'ddc_invoice_number' => $invoiceDetails['invoice_number'],
+                'ddc_invoice_date' => $order->created_at ?: now(),
+                'bill_to_name' => $order->customer_name ?: 'Walk-in Customer',
+                'bill_to_company' => null,
+                'bill_to_phone' => $order->customer_mobile,
+                'bill_to_gstin' => 'N/A',
+                'dispatch_from_name' => $adcUser?->name,
+                'dispatch_from_address' => $adcUser?->adcProfile?->address ?? ($adcUser?->profile?->address ?? 'ADC Store'),
+                'dispatch_from_district' => $adcUser?->adcProfile?->district ?? $adcUser?->profile?->district,
+                'dispatch_from_state' => $adcUser?->adcProfile?->state ?? $adcUser?->profile?->state,
+                'dispatch_from_pincode' => $adcUser?->adcProfile?->pincode ?? $adcUser?->profile?->pincode,
+                'dispatch_from_phone' => $adcUser?->mobile,
+                'dispatch_from_gstin' => $adcGstin,
+            ]);
+        }
+        $order->setRelation('invoice', $invoice);
+
+        $orderSubtotal = (float) ($order->subtotal > 0 ? $order->subtotal : $order->items->sum('total_price'));
+        $orderSpecialDisc = (float) ($order->special_discount_amount ?? 0);
+
+        $order->items->transform(function ($item) use ($orderSubtotal, $orderSpecialDisc) {
+            $grossPrice = (float) ($item->unit_price > 0 ? $item->unit_price : ($item->quantity > 0 ? $item->total_price / $item->quantity : 0));
+            $itemSubtotal = (float) ($item->total_price > 0 ? $item->total_price : ($item->quantity * $grossPrice));
+            $itemDisc = ($orderSubtotal > 0 && $orderSpecialDisc > 0) ? ($orderSpecialDisc * ($itemSubtotal / $orderSubtotal)) : 0;
+            $netItemBilledTotal = max(0, $itemSubtotal - $itemDisc);
+            $effectiveUnitPrice = $item->quantity > 0 ? ($netItemBilledTotal / (float) $item->quantity) : $grossPrice;
+
+            $item->unit_of_measure = $item->product?->unit_of_measure
+                ?: ($item->localProduct?->unit_of_measure
+                    ?: ($item->inventory?->product?->unit_of_measure
+                        ?: ($item->inventory?->localProduct?->unit_of_measure ?: 'Pcs')));
+            $item->hsn_code = $item->product?->hsn_code
+                ?: ($item->localProduct?->hsn_code
+                    ?: ($item->inventory?->product?->hsn_code
+                        ?: ($item->inventory?->localProduct?->hsn_code ?: '')));
+            $item->effective_rate = round($effectiveUnitPrice, 2);
+            $item->line_amount = round($netItemBilledTotal, 2);
+            return $item;
+        });
+
+        $roundedTotal = round($order->total_amount);
+        $amountInWords = $this->numberToWords($roundedTotal) . ' Rupees Only';
+
+        // Challan number: convert INV/ to DC/
+        $challanNo = $invoice ? str_replace(['INV/R/', 'INV/'], ['DC/R/', 'DC/'], $invoice->invoice_number) : ('DC-' . $order->order_no);
+
+        return view('adc.pos.challan', compact('order', 'challanNo', 'amountInWords'));
+    }
+
+    protected function numberToWords($number): string
+    {
+        $no = (int) round($number);
+        if ($no == 0) {
+            return 'Zero';
+        }
+        $i = 0;
+        $str = [];
+        $words = [
+            0 => '', 1 => 'One', 2 => 'Two', 3 => 'Three', 4 => 'Four', 5 => 'Five',
+            6 => 'Six', 7 => 'Seven', 8 => 'Eight', 9 => 'Nine', 10 => 'Ten',
+            11 => 'Eleven', 12 => 'Twelve', 13 => 'Thirteen', 14 => 'Fourteen', 15 => 'Fifteen',
+            16 => 'Sixteen', 17 => 'Seventeen', 18 => 'Eighteen', 19 => 'Nineteen', 20 => 'Twenty',
+            30 => 'Thirty', 40 => 'Forty', 50 => 'Fifty', 60 => 'Sixty', 70 => 'Seventy',
+            80 => 'Eighty', 90 => 'Ninety'
+        ];
+        $digits = ['', 'Hundred', 'Thousand', 'Lakh', 'Crore'];
+        $digits_length = strlen((string) $no);
+
+        while ($i < $digits_length) {
+            $divider = ($i == 2) ? 10 : 100;
+            $number = floor($no % $divider);
+            $no = floor($no / $divider);
+            $i += ($divider == 10) ? 1 : 2;
+            if ($number) {
+                $counter = count($str);
+                $hundred = ($counter == 1 && !empty($str[0])) ? ' and ' : '';
+                $unitWord = isset($digits[$counter]) && $digits[$counter] !== '' ? ' ' . $digits[$counter] : '';
+                $str[] = ($number < 21) ? $words[$number] . $unitWord . $hundred
+                    : $words[floor($number / 10) * 10] . ' ' . $words[$number % 10] . $unitWord . $hundred;
+            } else {
+                $str[] = '';
+            }
+        }
+
+        $result = trim(implode(' ', array_reverse(array_filter($str))));
+        return preg_replace('/\s+/', ' ', $result);
+    }
+
     /**
      * List POS Sales Returns for ADC
      */
