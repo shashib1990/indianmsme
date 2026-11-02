@@ -114,6 +114,10 @@ Route::name('adc.')->group(function () {
         Route::get('/reports/pnl/export-csv', [\App\Http\Controllers\ADC\ProfitLossReportController::class, 'exportCsv'])->name('reports.pnl.export-csv');
         Route::get('/reports/pnl/print', [\App\Http\Controllers\ADC\ProfitLossReportController::class, 'print'])->name('reports.pnl.print');
 
+        Route::get('/reports/gst', [\App\Http\Controllers\ADC\GstReportController::class, 'index'])->name('reports.gst');
+        Route::get('/reports/gst/export-csv', [\App\Http\Controllers\ADC\GstReportController::class, 'exportCsv'])->name('reports.gst.export-csv');
+        Route::post('/reports/gst/send-email', [\App\Http\Controllers\ADC\GstReportController::class, 'sendEmail'])->name('reports.gst.send-email');
+
         // ── Staff & Departments Module ──
         Route::resource('staff', \App\Http\Controllers\ADC\StaffController::class)->except(['show']);
         Route::resource('departments', \App\Http\Controllers\ADC\DepartmentController::class)->except(['create', 'show', 'edit']);

@@ -1391,6 +1391,10 @@
                                     <a class="sub-nav-link {{ request()->routeIs('adc.reports.pnl') ? 'active' : '' }}"
                                         href="{{ route('adc.reports.pnl') }}">P&L Report</a>
                                 </li>
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link {{ request()->routeIs('adc.reports.gst*') ? 'active' : '' }}"
+                                        href="{{ route('adc.reports.gst') }}">GST Report</a>
+                                </li>
                             </ul>
                         </div>
                     </li>
