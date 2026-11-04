@@ -94,7 +94,7 @@
                                                 </div>
                                             </td>
                                             <td class="text-center fw-medium">{{ $item->quantity }}</td>
-                                            <td class="text-center text-success fw-medium">{{ $item->quantity - $itemDiscrepancyQty }}</td>
+                                            <td class="text-center text-success fw-medium">{{ max(0, (int)$item->quantity - (int)($item->shortage_qty ?? 0)) }}</td>
                                             <td class="text-center">
                                                 @if($item->shortage_qty > 0)
                                                     <span class="badge bg-danger-subtle text-danger px-2 py-1 fs-12">{{ $item->shortage_qty }}</span>
