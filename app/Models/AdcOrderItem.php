@@ -118,4 +118,94 @@ class AdcOrderItem extends Model
     {
         return $this->belongsTo(PurchaseOrder::class, 'purchase_order_id');
     }
+
+    /**
+     * Dynamically resolve HSN Code if missing in database
+     */
+    public function getHsnCodeAttribute($value)
+    {
+        if (!empty($value) && strtoupper(trim($value)) !== 'N/A') {
+            return trim($value);
+        }
+
+        // 1. Check Product relationship if product_id is set
+        if ($this->product && !empty($this->product->hsn_code)) {
+            return trim($this->product->hsn_code);
+        }
+
+        // 2. Lookup by product_code in products table
+        if (!empty($this->product_code)) {
+            $prod = Product::where('product_code', $this->product_code)->first();
+            if ($prod && !empty($prod->hsn_code)) {
+                return trim($prod->hsn_code);
+            }
+
+            // 3. Lookup by local_product_code in ddc_local_products
+            $ddcLocal = DdcLocalProduct::where('local_product_code', $this->product_code)->first();
+            if ($ddcLocal && !empty($ddcLocal->hsn_code)) {
+                return trim($ddcLocal->hsn_code);
+            }
+
+            // 4. Lookup by local_product_code in adc_local_products
+            $adcLocal = AdcLocalProduct::where('local_product_code', $this->product_code)->first();
+            if ($adcLocal && !empty($adcLocal->hsn_code)) {
+                return trim($adcLocal->hsn_code);
+            }
+
+            // 5. Lookup in ddc_inventories by product_code
+            $ddcInv = DdcInventory::with(['product', 'localProduct'])->where('product_code', $this->product_code)->first();
+            if ($ddcInv) {
+                if ($ddcInv->product && !empty($ddcInv->product->hsn_code)) {
+                    return trim($ddcInv->product->hsn_code);
+                }
+                if ($ddcInv->localProduct && !empty($ddcInv->localProduct->hsn_code)) {
+                    return trim($ddcInv->localProduct->hsn_code);
+                }
+                if (!empty($ddcInv->barcode)) {
+                    $prodByBc = Product::where('barcode', $ddcInv->barcode)->whereNotNull('hsn_code')->first();
+                    if ($prodByBc && !empty($prodByBc->hsn_code)) {
+                        return trim($prodByBc->hsn_code);
+                    }
+                }
+            }
+        }
+
+        // 6. Lookup by product_name
+        if (!empty($this->product_name)) {
+            $prodByName = Product::where('product_name', $this->product_name)->whereNotNull('hsn_code')->first();
+            if ($prodByName && !empty($prodByName->hsn_code)) {
+                return trim($prodByName->hsn_code);
+            }
+
+            $localByName = DdcLocalProduct::where('product_name', $this->product_name)->whereNotNull('hsn_code')->first();
+            if ($localByName && !empty($localByName->hsn_code)) {
+                return trim($localByName->hsn_code);
+            }
+        }
+
+        return $value ?: 'N/A';
+    }
+
+    /**
+     * Dynamically resolve product model even if product_id is null
+     */
+    public function getResolvedProductAttribute()
+    {
+        if ($this->relationLoaded('product') && $this->getRelation('product')) {
+            return $this->getRelation('product');
+        }
+        if ($this->product_id) {
+            $p = Product::find($this->product_id);
+            if ($p) return $p;
+        }
+        if (!empty($this->product_code)) {
+            $p = Product::where('product_code', $this->product_code)->first();
+            if ($p) return $p;
+        }
+        if (!empty($this->product_name)) {
+            $p = Product::where('product_name', $this->product_name)->first();
+            if ($p) return $p;
+        }
+        return null;
+    }
 }

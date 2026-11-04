@@ -57,4 +57,40 @@ class DdcPosOrderItem extends Model
     {
         return $this->belongsTo(DdcLocalProduct::class, 'product_id');
     }
+
+    /**
+     * Dynamically resolve HSN Code
+     */
+    public function getHsnCodeAttribute($value)
+    {
+        if (!empty($value) && strtoupper(trim($value)) !== 'N/A') {
+            return trim($value);
+        }
+
+        if ($this->product && !empty($this->product->hsn_code)) {
+            return trim($this->product->hsn_code);
+        }
+
+        if (!empty($this->product_code)) {
+            $prod = Product::where('product_code', $this->product_code)->first();
+            if ($prod && !empty($prod->hsn_code)) {
+                return trim($prod->hsn_code);
+            }
+            $local = DdcLocalProduct::where('local_product_code', $this->product_code)->first();
+            if ($local && !empty($local->hsn_code)) {
+                return trim($local->hsn_code);
+            }
+        }
+
+        if ($this->inventory) {
+            if ($this->inventory->product && !empty($this->inventory->product->hsn_code)) {
+                return trim($this->inventory->product->hsn_code);
+            }
+            if ($this->inventory->localProduct && !empty($this->inventory->localProduct->hsn_code)) {
+                return trim($this->inventory->localProduct->hsn_code);
+            }
+        }
+
+        return $value ?: 'N/A';
+    }
 }

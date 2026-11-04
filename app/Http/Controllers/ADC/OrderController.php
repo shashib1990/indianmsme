@@ -316,11 +316,11 @@ class OrderController extends Controller
                     continue;
                 }
             }
-            $product = $item->product;
+            $product = $item->product ?: ($item->resolved_product ?? null);
             $qty = (int) $item->quantity;
             $totalQty += $qty;
 
-            $gstRate = (float) ($item->gst_rate ?? $product?->gst_rate ?? 0);
+            $gstRate = (float) ($item->gst_rate ?? ($product?->gst_rate ?? 0));
             $totalPriceInclGst = (float) $item->total;
             $unitPriceInclGst = (float) $item->price;
 
@@ -348,10 +348,15 @@ class OrderController extends Controller
             $taxableValue = round($rawTaxableValue, 2);
             $ratePerItemTaxable = round($rawRatePerItemTaxable, 2);
 
+            $resolvedHsn = $item->hsn_code;
+            if (empty($resolvedHsn) || strtoupper(trim($resolvedHsn)) === 'N/A') {
+                $resolvedHsn = $product?->hsn_code ?: 'N/A';
+            }
+
             $processedItems[] = [
                 'name' => $item->product_name ?? $product?->product_name ?? 'Product',
                 'barcode' => $item->product_code ?? $product?->barcode ?? 'N/A',
-                'hsn_code' => $item->hsn_code ?? $product?->hsn_code ?? 'N/A',
+                'hsn_code' => $resolvedHsn,
                 'qty' => $qty,
                 'rate_per_item' => $ratePerItemTaxable,
                 'unit_price_excl_gst' => $ratePerItemTaxable,

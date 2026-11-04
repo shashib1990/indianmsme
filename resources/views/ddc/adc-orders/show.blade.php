@@ -80,8 +80,8 @@
                                             @endif
                                         </div>
                                         <div class="flex-grow-1" style="min-width: 0;">
-                                            <h6 class="mb-0 fs-14 fw-semibold text-dark text-wrap" style="word-break: break-word;">{{ $item->product_name ?? $item->product?->product_name ?? 'Product' }}</h6>
-                                            <span class="text-muted small d-block">Code: {{ $item->product_code ?? 'N/A' }} | HSN: {{ $item->hsn_code ?? 'N/A' }}</span>
+                                            <h6 class="mb-0 fs-14 fw-semibold text-dark text-wrap" style="word-break: break-word;">{{ $item->product_name ?? ($item->product?->product_name ?? 'Product') }}</h6>
+                                            <span class="text-muted small d-block">Code: {{ $item->product_code ?? 'N/A' }} | HSN: {{ $item->hsn_code ?? ($item->product?->hsn_code ?? 'N/A') }}</span>
                                         </div>
                                     </div>
                                 </td>
