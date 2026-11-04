@@ -504,13 +504,32 @@ class PosController extends Controller
                     $taxableValue = round($lineTotal / (1 + ($gstRate / 100)), 2);
                     $taxAmount = round($lineTotal - $taxableValue, 2);
 
+                    // Resolve product & HSN code reliably
+                    $matchedProduct = $inventory->product;
+                    if (!$matchedProduct && !empty($inventory->product_code)) {
+                        $matchedProduct = \App\Models\Product::where('product_code', $inventory->product_code)->first();
+                    }
+                    if (!$matchedProduct && !empty($inventory->barcode)) {
+                        $matchedProduct = \App\Models\Product::where('barcode', $inventory->barcode)->first();
+                    }
+                    $matchedLocal = $inventory->localProduct;
+                    if (!$matchedLocal && !empty($inventory->product_code)) {
+                        $matchedLocal = \App\Models\DdcLocalProduct::where('local_product_code', $inventory->product_code)->first();
+                    }
+
+                    $resolvedProductId = $inventory->product_id ?: ($matchedProduct?->id ?: null);
+                    $resolvedHsn = $inventory->hsn_code 
+                        ?: ($matchedProduct?->hsn_code 
+                        ?: ($matchedLocal?->hsn_code 
+                        ?: null));
+
                     \App\Models\AdcOrderItem::create([
                         'adc_order_id' => $adcOrder->id,
                         'seller_id' => $inventory->localProduct?->user_id ?? $inventory->product?->user_id ?? $ddcId,
-                        'product_id' => $inventory->product_id,
+                        'product_id' => $resolvedProductId,
                         'product_name' => $inventory->product_name,
                         'product_code' => $inventory->product_code,
-                        'hsn_code' => $inventory->product?->hsn_code ?? $inventory->localProduct?->hsn_code,
+                        'hsn_code' => $resolvedHsn,
                         'quantity' => $qty,
                         'mrp' => $inventory->mrp,
                         'price' => $price,
