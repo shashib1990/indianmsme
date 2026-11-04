@@ -73,7 +73,7 @@
                             <tr class="text-muted small border-bottom">
                                 <th>Product Name</th>
                                 <th class="text-center">Order Qty</th>
-                                <th class="text-center">Sound Recv</th>
+                                <th class="text-center">Received</th>
                                 <th class="text-center text-danger">Shortage</th>
                                 <th class="text-center text-warning">Damage</th>
                                 <th class="text-end">Unit Price</th>
@@ -85,7 +85,7 @@
                             @forelse($debitNote->items as $item)
                                 @php
                                     $claimedQty = $item->shortage_qty + $item->damage_qty;
-                                    $soundQty = max(0, $item->order_qty - $claimedQty);
+                                    $receivedQty = $item->received_qty ?? max(0, (int)$item->order_qty - (int)($item->shortage_qty ?? 0));
                                 @endphp
                                 <tr>
                                     <td>
@@ -95,7 +95,7 @@
                                         @endif
                                     </td>
                                     <td class="text-center fw-medium">{{ $item->order_qty }}</td>
-                                    <td class="text-center text-success fw-medium">{{ $soundQty }}</td>
+                                    <td class="text-center text-success fw-medium">{{ $receivedQty }}</td>
                                     <td class="text-center">
                                         @if($item->shortage_qty > 0)
                                             <span class="badge bg-danger-subtle text-danger px-1.5 py-0.5 fs-11">{{ $item->shortage_qty }}</span>

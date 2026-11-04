@@ -275,6 +275,12 @@
                                         @endif
                                     @elseif($item->is_stocked_in)
                                         <br><span class="badge bg-success-subtle text-success fs-11">Stocked In (Received MRP: ₹{{ number_format($item->received_mrp, 2) }})</span>
+                                        @if($item->shortage_qty > 0)
+                                            <span class="badge bg-danger-subtle text-danger fs-11 ms-1">Shortage: {{ $item->shortage_qty }}</span>
+                                        @endif
+                                        @if($item->damage_qty > 0)
+                                            <span class="badge bg-warning-subtle text-warning fs-11 ms-1">Damage: {{ $item->damage_qty }}</span>
+                                        @endif
                                     @endif
                                 </td>
                                 <td class="text-center fw-bold {{ $isPhysRejected ? 'text-danger' : '' }}">{{ $item->quantity }}</td>
@@ -432,6 +438,12 @@
                                         @endif
                                     @elseif($item->is_stocked_in)
                                         <br><span class="badge bg-success-subtle text-success fs-11">Stocked In (Received MRP: ₹{{ number_format($item->received_mrp, 2) }})</span>
+                                        @if($item->shortage_qty > 0)
+                                            <span class="badge bg-danger-subtle text-danger fs-11 ms-1">Shortage: {{ $item->shortage_qty }}</span>
+                                        @endif
+                                        @if($item->damage_qty > 0)
+                                            <span class="badge bg-warning-subtle text-warning fs-11 ms-1">Damage: {{ $item->damage_qty }}</span>
+                                        @endif
                                     @endif
                                 </td>
                                 <td class="text-center fw-bold {{ $isItemRejected ? 'text-danger' : '' }}">{{ $item->quantity }}</td>
