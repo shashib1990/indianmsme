@@ -551,12 +551,14 @@
                         <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace ms-1 fs-11">{{ $firstStore->pickup_store_code }}</span>
                     @endif
                 </p>
+                {{--
                 <p class="text-muted small mb-0">
                     {{ $firstStore?->address ?? ($firstStoreSeller?->sellerProfile?->address ?? '') }}
                     @if($firstStore?->district || $firstStore?->state || $firstStore?->pincode)
                         <br>{{ $firstStore->districtRelation?->name ?? $firstStore->district }}, {{ $firstStore->stateRelation?->name ?? $firstStore->state }} - {{ $firstStore->pincode }}
                     @endif
                 </p>
+                --}}
                 @endif
 
                 @if($order->notes)
