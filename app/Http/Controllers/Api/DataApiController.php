@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\ADC;
 use App\Models\User;
+use App\Models\AdcProfile;
 use Illuminate\Http\Request;
 
 class DataApiController extends Controller
@@ -54,6 +55,37 @@ class DataApiController extends Controller
         ], 200);
     }
 
+    public function totalAsc(Request $request)
+    {
+        $count = AdcProfile::where('type', 'ASC')->count();
 
+        return response()->json([
+            'status' => true,
+            'message' => 'ASC count fetched successfully.',
+            'asc_count' => $count
+        ], 200);
+    }
+
+    public function totalScs(Request $request)
+    {
+        $count = AdcProfile::where('type', 'SCS')->count();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'SCS count fetched successfully.',
+            'scs_count' => $count
+        ], 200);
+    }
+
+    public function totalMvs(Request $request)
+    {
+        $count = AdcProfile::where('type', 'MVS')->count();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'MVS count fetched successfully.',
+            'mvs_count' => $count
+        ], 200);
+    }
 
 }
