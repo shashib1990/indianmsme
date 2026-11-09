@@ -60,6 +60,18 @@ class AdcCreditNote extends Model
         return $this->belongsTo(AdcOrder::class, 'adc_order_id');
     }
 
+    /**
+     * Get the linked ADC order's invoice number
+     */
+    public function getInvoiceNumberAttribute(): ?string
+    {
+        $order = $this->relationLoaded('adcOrder') ? $this->adcOrder : null;
+        if (!$order && $this->adc_order_id) {
+            $order = AdcOrder::find($this->adc_order_id);
+        }
+        return $order?->invoice_number;
+    }
+
     public function adc()
     {
         return $this->belongsTo(User::class, 'adc_id');

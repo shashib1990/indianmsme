@@ -19,24 +19,30 @@
     </div>
 </div>
 
+@php
+    $currentTab = request('tab', 'ddc');
+    $isAdcTab = in_array($currentTab, ['adc', 'adc_order', 'adc-dn']);
+@endphp
+
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-white py-3 border-bottom">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <ul class="nav nav-pills card-header-pills" id="debitNotesTab" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active fw-bold" id="ddc-dn-tab" data-bs-toggle="tab" data-bs-target="#ddc-dn" type="button" role="tab">
+                    <button class="nav-link fw-bold {{ !$isAdcTab ? 'active' : '' }}" id="ddc-dn-tab" data-bs-toggle="tab" data-bs-target="#ddc-dn" type="button" role="tab">
                         <i class="bi bi-building me-1"></i> DDC PO Debit Notes ({{ $debitNotes->total() }})
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link fw-bold" id="adc-dn-tab" data-bs-toggle="tab" data-bs-target="#adc-dn" type="button" role="tab">
+                    <button class="nav-link fw-bold {{ $isAdcTab ? 'active' : '' }}" id="adc-dn-tab" data-bs-toggle="tab" data-bs-target="#adc-dn" type="button" role="tab">
                         <i class="bi bi-shop me-1"></i> ADC Order Debit Notes ({{ $adcDebitNotes->count() }})
                     </button>
                 </li>
             </ul>
 
             <form method="GET" action="{{ route('vendor.debit-notes.index') }}" class="d-flex gap-2 align-items-center">
-                <input type="text" name="search" value="{{ request('search') }}" class="form-control form-control-sm" placeholder="Search DN #, Order #...">
+                <input type="hidden" name="tab" id="debitNotesActiveTabInput" value="{{ $isAdcTab ? 'adc_order' : 'ddc' }}">
+                <input type="text" name="search" value="{{ request('search') }}" class="form-control form-control-sm" placeholder="Search DN #, Invoice #, Order #...">
                 <button type="submit" class="btn btn-sm btn-primary text-nowrap"><i class="bi bi-filter"></i> Filter</button>
             </form>
         </div>
@@ -44,7 +50,7 @@
     <div class="card-body p-0">
         <div class="tab-content" id="debitNotesTabContent">
             {{-- DDC DEBIT NOTES TAB --}}
-            <div class="tab-pane fade show active" id="ddc-dn" role="tabpanel">
+            <div class="tab-pane fade {{ !$isAdcTab ? 'show active' : '' }}" id="ddc-dn" role="tabpanel">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead class="bg-light">
@@ -122,14 +128,14 @@
             </div>
 
             {{-- ADC DEBIT NOTES TAB --}}
-            <div class="tab-pane fade" id="adc-dn" role="tabpanel">
+            <div class="tab-pane fade {{ $isAdcTab ? 'show active' : '' }}" id="adc-dn" role="tabpanel">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead class="bg-light">
                             <tr>
                                 <th class="ps-3">DN Number</th>
-                                <th>ADC Order #</th>
-                                <th>ADC Store</th>
+                                <th>Invoice No</th>
+                                {{-- <th>ADC Store</th> --}}
                                 <th>Discrepancy Type</th>
                                 <th>Short / Damaged</th>
                                 <th>Claim Amount</th>
@@ -145,9 +151,9 @@
                                         <span class="d-block text-muted small">{{ $adn->created_at->format('d M Y, h:i A') }}</span>
                                     </td>
                                     <td>
-                                        <span class="fw-semibold">#{{ $adn->order?->order_number }}</span>
+                                        <span class="fw-bold font-monospace text-dark">{{ $adn->invoice_number ?: ('#' . ($adn->order?->order_number ?? 'N/A')) }}</span>
                                     </td>
-                                    <td>{{ $adn->adc?->name ?? 'ADC #'.$adn->adc_id }}</td>
+                                    {{-- <td>{{ $adn->adc?->name ?? 'ADC #'.$adn->adc_id }}</td> --}}
                                     <td>
                                         @if($adn->discrepancy_type === 'SHORTAGE')
                                             <span class="badge bg-warning-subtle text-warning">SHORTAGE</span>
@@ -184,7 +190,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center py-4 text-muted">No ADC Debit Notes found.</td>
+                                    <td colspan="7" class="text-center py-4 text-muted">No ADC Debit Notes found.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -194,4 +200,42 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const tabButtons = document.querySelectorAll('#debitNotesTab button[data-bs-toggle="tab"]');
+        const activeTabInput = document.getElementById('debitNotesActiveTabInput');
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const tabParam = urlParams.get('tab');
+        const hash = window.location.hash;
+
+        if (tabParam === 'adc' || tabParam === 'adc_order' || tabParam === 'adc-dn' || hash === '#adc-dn') {
+            const adcTabBtn = document.getElementById('adc-dn-tab');
+            if (adcTabBtn && window.bootstrap) {
+                const tab = bootstrap.Tab.getOrCreateInstance(adcTabBtn);
+                tab.show();
+            }
+        }
+
+        tabButtons.forEach(btn => {
+            btn.addEventListener('shown.bs.tab', function (e) {
+                const targetId = e.target.getAttribute('data-bs-target');
+                if (targetId === '#adc-dn') {
+                    if (activeTabInput) activeTabInput.value = 'adc_order';
+                    const newUrl = new URL(window.location.href);
+                    newUrl.searchParams.set('tab', 'adc_order');
+                    window.history.replaceState(null, '', newUrl.toString());
+                } else {
+                    if (activeTabInput) activeTabInput.value = 'ddc';
+                    const newUrl = new URL(window.location.href);
+                    newUrl.searchParams.delete('tab');
+                    window.history.replaceState(null, '', newUrl.toString());
+                }
+            });
+        });
+    });
+</script>
+@endpush
 @endsection

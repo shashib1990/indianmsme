@@ -201,4 +201,74 @@ class DebitNoteController extends Controller
 
         return view('admin.debit-notes.show-adc', compact('debitNote'));
     }
+
+    public function verifyAdcDebitNote(Request $request, $id)
+    {
+        $debitNote = \App\Models\AdcDebitNote::with(['order', 'seller', 'ddc', 'adc'])->findOrFail($id);
+
+        if (!in_array($debitNote->status, ['PENDING', 'PENDING_ADMIN_APPROVAL'])) {
+            return redirect()->back()->with('error', 'This Debit Note has already been verified by Admin.');
+        }
+
+        $action = strtoupper($request->input('action', 'APPROVE'));
+        $remarks = $request->input('remarks');
+
+        DB::beginTransaction();
+        try {
+            if ($action === 'REJECT') {
+                $debitNote->update([
+                    'status' => 'ADMIN_REJECTED',
+                    'adpl_remarks' => $remarks ?: ($debitNote->adpl_remarks . ' | Rejected by Admin'),
+                ]);
+
+                // Notify ADC
+                NotificationService::notifyAdc(
+                    $debitNote->adc_id,
+                    'Debit Note Rejected by Admin',
+                    "Your Debit Note #{$debitNote->debit_note_number} has been reviewed and rejected by Admin." . ($remarks ? " Reason: {$remarks}" : ""),
+                    route('adc.debit-notes.show', $debitNote->id)
+                );
+
+                DB::commit();
+                return redirect()->back()->with('success', "Debit Note #{$debitNote->debit_note_number} has been rejected. It will not be forwarded to Vendor.");
+            }
+
+            // APPROVE FLOW -> Forward to Seller / DDC
+            $debitNote->update([
+                'status' => 'PENDING_SELLER_APPROVAL',
+                'adpl_remarks' => $remarks ?: $debitNote->adpl_remarks,
+            ]);
+
+            // Notify Target Supplier (Seller or DDC)
+            if ($debitNote->target_type === 'DDC' && $debitNote->ddc_id) {
+                NotificationService::notifyDdc(
+                    $debitNote->ddc_id,
+                    'New ADC Debit Note Pending Approval',
+                    "Admin has approved and forwarded ADC Debit Note #{$debitNote->debit_note_number} for your settlement.",
+                    route('ddc.debit-notes.show', $debitNote->id)
+                );
+            } elseif ($debitNote->seller_id) {
+                NotificationService::notifySeller(
+                    $debitNote->seller_id,
+                    'New ADC Debit Note Pending Approval',
+                    "Admin has approved and forwarded ADC Debit Note #{$debitNote->debit_note_number} for your settlement.",
+                    route('vendor.adc-debit-notes.show', $debitNote->id)
+                );
+            }
+
+            // Notify ADC
+            NotificationService::notifyAdc(
+                $debitNote->adc_id,
+                'Debit Note Approved by Admin',
+                "Your Debit Note #{$debitNote->debit_note_number} has been verified by Admin and forwarded to {$debitNote->target_type} for settlement.",
+                route('adc.debit-notes.show', $debitNote->id)
+            );
+
+            DB::commit();
+            return redirect()->back()->with('success', "Debit Note #{$debitNote->debit_note_number} approved and forwarded to Vendor/Supplier successfully.");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Failed to process Debit Note: ' . $e->getMessage());
+        }
+    }
 }

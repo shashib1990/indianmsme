@@ -88,12 +88,16 @@
                                 <strong>₹{{ number_format($dn->final_amount ?: $dn->total_discrepancy_amount, 2) }}</strong>
                             </td>
                             <td>
-                                @if(in_array($dn->status, ['PENDING', 'PENDING_SELLER_APPROVAL']))
-                                    <span class="badge bg-warning text-dark">PENDING APPROVAL</span>
+                                @if(in_array($dn->status, ['PENDING', 'PENDING_ADMIN_APPROVAL']))
+                                    <span class="badge bg-warning text-dark">PENDING ADMIN APPROVAL</span>
+                                @elseif($dn->status === 'ADMIN_REJECTED')
+                                    <span class="badge bg-danger">REJECTED BY ADMIN</span>
+                                @elseif($dn->status === 'PENDING_SELLER_APPROVAL')
+                                    <span class="badge bg-info text-white">FORWARDED TO VENDOR</span>
                                 @elseif($dn->status === 'SELLER_APPROVED')
-                                    <span class="badge bg-info text-white">APPROVED BY TARGET</span>
+                                    <span class="badge bg-primary text-white">APPROVED BY VENDOR</span>
                                 @elseif($dn->status === 'SELLER_REJECTED')
-                                    <span class="badge bg-danger">REJECTED BY TARGET</span>
+                                    <span class="badge bg-danger">REJECTED BY VENDOR</span>
                                 @elseif($dn->status === 'SETTLED')
                                     <span class="badge bg-success">SETTLED</span>
                                 @else

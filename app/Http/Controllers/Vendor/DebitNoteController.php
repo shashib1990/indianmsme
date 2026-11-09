@@ -40,7 +40,8 @@ class DebitNoteController extends Controller
 
         $adcQuery = \App\Models\AdcDebitNote::where('adc_debit_notes.seller_id', $sellerId)
             ->where('adc_debit_notes.discrepancy_type', '!=', 'EXCESS')
-            ->with(['order', 'items.adcOrderItem.product', 'adc', 'creditNote']);
+            ->whereNotIn('adc_debit_notes.status', ['PENDING', 'PENDING_ADMIN_APPROVAL', 'ADMIN_REJECTED', 'CANCELLED'])
+            ->with(['order.invoice', 'invoice', 'items.adcOrderItem.product', 'adc', 'creditNote']);
 
         if ($status) {
             $adcQuery->where('adc_debit_notes.status', $status);
@@ -50,7 +51,11 @@ class DebitNoteController extends Controller
             $adcQuery->where(function ($q) use ($search) {
                 $q->where('adc_debit_notes.debit_note_number', 'like', "%{$search}%")
                   ->orWhereHas('order', function ($orderQ) use ($search) {
-                      $orderQ->where('order_number', 'like', "%{$search}%");
+                      $orderQ->where('order_number', 'like', "%{$search}%")
+                             ->orWhere('received_invoice_number', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('invoice', function ($invQ) use ($search) {
+                      $invQ->where('invoice_number', 'like', "%{$search}%");
                   });
             });
         }
@@ -132,7 +137,7 @@ class DebitNoteController extends Controller
                 );
 
                 DB::commit();
-                return redirect()->route('vendor.debit-notes.index')->with('success', 'Debit Note rejected successfully.');
+                return redirect()->route('vendor.debit-notes.index', ['tab' => 'adc_order'])->with('success', 'Debit Note rejected successfully.');
             }
 
             // APPROVE FLOW (Branch A: Shortage + Damage Process)
@@ -252,7 +257,7 @@ class DebitNoteController extends Controller
             );
 
             DB::commit();
-            return redirect()->route('vendor.debit-notes.index')->with('success', 'Debit Note approved and settled successfully.');
+            return redirect()->route('vendor.debit-notes.index', ['tab' => 'adc_order'])->with('success', 'Debit Note approved and settled successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Error processing Debit Note: ' . $e->getMessage());
@@ -303,7 +308,8 @@ class DebitNoteController extends Controller
     {
         $sellerId = auth('vendor')->id();
         $debitNote = \App\Models\AdcDebitNote::where('seller_id', $sellerId)
-            ->with(['order', 'items.adcOrderItem.product', 'adc', 'creditNote'])
+            ->whereNotIn('status', ['PENDING', 'PENDING_ADMIN_APPROVAL', 'ADMIN_REJECTED', 'CANCELLED'])
+            ->with(['order.invoice', 'invoice', 'items.adcOrderItem.product', 'adc', 'creditNote'])
             ->findOrFail($id);
 
         return view('vendor.debit-notes.show-adc', compact('debitNote'));
@@ -312,10 +318,12 @@ class DebitNoteController extends Controller
     public function respondAdcDebitNote(Request $request, $id)
     {
         $sellerId = auth('vendor')->id();
-        $debitNote = \App\Models\AdcDebitNote::where('seller_id', $sellerId)->findOrFail($id);
+        $debitNote = \App\Models\AdcDebitNote::where('seller_id', $sellerId)
+            ->whereNotIn('status', ['PENDING', 'PENDING_ADMIN_APPROVAL', 'ADMIN_REJECTED', 'CANCELLED'])
+            ->findOrFail($id);
 
-        if (!in_array($debitNote->status, ['PENDING', 'PENDING_SELLER_APPROVAL'])) {
-            return redirect()->back()->with('error', 'This Debit Note has already been processed.');
+        if ($debitNote->status !== 'PENDING_SELLER_APPROVAL') {
+            return redirect()->back()->with('error', 'This Debit Note cannot be processed by Vendor at this stage.');
         }
 
         $actionInput = strtoupper($request->input('action', 'APPROVE'));
@@ -333,7 +341,7 @@ class DebitNoteController extends Controller
                 ]);
 
                 DB::commit();
-                return redirect()->route('vendor.debit-notes.index')->with('success', 'Debit Note rejected successfully.');
+                return redirect()->route('vendor.debit-notes.index', ['tab' => 'adc_order'])->with('success', 'Debit Note rejected successfully.');
             }
 
             // APPROVE FLOW
@@ -411,7 +419,7 @@ class DebitNoteController extends Controller
             }
 
             DB::commit();
-            return redirect()->route('vendor.debit-notes.index')->with('success', 'Debit Note approved and settled successfully.');
+            return redirect()->route('vendor.debit-notes.index', ['tab' => 'adc_order'])->with('success', 'Debit Note approved and settled successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Error processing Debit Note: ' . $e->getMessage());
