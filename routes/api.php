@@ -39,3 +39,7 @@ Route::post('/ddc-customer/update-abhhyam-code', [\App\Http\Controllers\Api\AdcA
 Route::get('/adc', [\App\Http\Controllers\Api\DataApiController::class, 'activeAdc'])->name('api.adc');
 Route::get('/ddc', [\App\Http\Controllers\Api\DataApiController::class, 'Ddc'])->name('api.ddc');
 Route::get('/seller', [\App\Http\Controllers\Api\DataApiController::class, 'seller'])->name('api.seller');
+
+Route::get('/total-asc', [\App\Http\Controllers\Api\DataApiController::class, 'totalAsc'])->name('api.total_asc');
+Route::get('/total-scs', [\App\Http\Controllers\Api\DataApiController::class, 'totalScs'])->name('api.total_scs');
+Route::get('/total-mvs', [\App\Http\Controllers\Api\DataApiController::class, 'totalMvs'])->name('api.total_mvs');
