@@ -12,12 +12,16 @@
             </a>
             <div>
                 <span class="fs-13 text-muted me-2">Status:</span>
-                @if(in_array($debitNote->status, ['PENDING', 'PENDING_SELLER_APPROVAL']))
-                    <span class="badge bg-warning text-dark fs-13 px-2.5 py-1">PENDING TARGET APPROVAL</span>
+                @if(in_array($debitNote->status, ['PENDING', 'PENDING_ADMIN_APPROVAL']))
+                    <span class="badge bg-warning text-dark fs-13 px-2.5 py-1">PENDING ADMIN APPROVAL</span>
+                @elseif($debitNote->status === 'ADMIN_REJECTED')
+                    <span class="badge bg-danger fs-13 px-2.5 py-1">REJECTED BY ADMIN</span>
+                @elseif($debitNote->status === 'PENDING_SELLER_APPROVAL')
+                    <span class="badge bg-info text-white fs-13 px-2.5 py-1">FORWARDED TO VENDOR</span>
                 @elseif($debitNote->status === 'SETTLED')
                     <span class="badge bg-success fs-13 px-2.5 py-1">SETTLED</span>
                 @elseif($debitNote->status === 'SELLER_REJECTED')
-                    <span class="badge bg-danger fs-13 px-2.5 py-1">REJECTED</span>
+                    <span class="badge bg-danger fs-13 px-2.5 py-1">REJECTED BY VENDOR</span>
                 @else
                     <span class="badge bg-secondary fs-13 px-2.5 py-1">{{ $debitNote->status }}</span>
                 @endif
@@ -165,12 +169,41 @@
                 <h6 class="fw-bold mb-0">Discrepancy Status & Credit Note</h6>
             </div>
             <div class="card-body">
-                <div class="alert {{ $debitNote->status === 'SETTLED' ? 'alert-success' : ($debitNote->status === 'SELLER_REJECTED' ? 'alert-danger' : 'alert-warning') }} mb-3">
-                    <strong class="d-block mb-1">Status: {{ $debitNote->status }}</strong>
-                    @if($debitNote->seller_remarks)
-                        <p class="small mb-0">Target Remarks: {{ $debitNote->seller_remarks }}</p>
-                    @endif
-                </div>
+                @if(in_array($debitNote->status, ['PENDING', 'PENDING_ADMIN_APPROVAL']))
+                    <div class="alert alert-warning mb-3">
+                        <strong class="d-block mb-1"><i class="bi bi-clock-history me-1"></i> Under Admin Verification</strong>
+                        <p class="small mb-0">Debit note generated. Admin will review and verify before forwarding it to the vendor/supplier.</p>
+                    </div>
+                @elseif($debitNote->status === 'ADMIN_REJECTED')
+                    <div class="alert alert-danger mb-3">
+                        <strong class="d-block mb-1"><i class="bi bi-x-circle-fill me-1"></i> Rejected by Admin</strong>
+                        <p class="small mb-0">This Debit Note was reviewed and rejected by Admin.</p>
+                        @if($debitNote->adpl_remarks)
+                            <p class="small mb-0 mt-1"><strong>Reason:</strong> {{ $debitNote->adpl_remarks }}</p>
+                        @endif
+                    </div>
+                @elseif($debitNote->status === 'PENDING_SELLER_APPROVAL')
+                    <div class="alert alert-info mb-3">
+                        <strong class="d-block mb-1"><i class="bi bi-arrow-right-circle-fill me-1"></i> Forwarded to Vendor</strong>
+                        <p class="small mb-0">Approved by Admin and forwarded to Vendor/Supplier for discrepancy verification.</p>
+                    </div>
+                @elseif($debitNote->status === 'SETTLED')
+                    <div class="alert alert-success mb-3">
+                        <strong class="d-block mb-1"><i class="bi bi-check-circle-fill me-1"></i> Settled</strong>
+                        <p class="small mb-0">Claim settled and credit note issued.</p>
+                    </div>
+                @elseif($debitNote->status === 'SELLER_REJECTED')
+                    <div class="alert alert-danger mb-3">
+                        <strong class="d-block mb-1"><i class="bi bi-x-circle-fill me-1"></i> Rejected by Vendor</strong>
+                        @if($debitNote->seller_remarks)
+                            <p class="small mb-0 mt-1"><strong>Vendor Remarks:</strong> {{ $debitNote->seller_remarks }}</p>
+                        @endif
+                    </div>
+                @else
+                    <div class="alert alert-secondary mb-3">
+                        <strong class="d-block mb-1">Status: {{ $debitNote->status }}</strong>
+                    </div>
+                @endif
 
                 @if($debitNote->creditNote)
                     <div class="p-3 bg-success-subtle rounded text-success border border-success-subtle mb-3">

@@ -36,8 +36,8 @@
             <div class="card-body">
                 <div class="row g-3 mb-3">
                     <div class="col-6">
-                        <span class="text-muted small d-block">ADC Order Number:</span>
-                        <strong class="fw-bold text-dark">#{{ $debitNote->adcOrder?->order_number ?? 'N/A' }}</strong>
+                        <span class="text-muted small d-block">Invoice No:</span>
+                        <strong class="fw-bold text-dark font-monospace fs-14">{{ $debitNote->invoice_number ?: ('#' . ($debitNote->adcOrder?->order_number ?? 'N/A')) }}</strong>
                     </div>
                     <div class="col-6">
                         <span class="text-muted small d-block">Reporting ADC Store:</span>
@@ -177,7 +177,7 @@
                             <button type="submit" name="action" value="APPROVE" class="btn btn-success fw-bold py-2" onclick="return confirm('Approve discrepancy claim? Agreed quantities will be deducted from your wallet and credited to ADC.');">
                                 <iconify-icon icon="solar:check-circle-bold" class="align-middle me-1 fs-16"></iconify-icon> Approve & Settle Claim
                             </button>
-                            <button type="submit" name="action" value="REJECT" class="btn btn-outline-danger py-2" onclick="return confirm('Reject this discrepancy claim?');">
+                            <button type="button" class="btn btn-outline-danger py-2" data-bs-toggle="modal" data-bs-target="#vendorRejectDebitNoteModal">
                                 <iconify-icon icon="solar:close-circle-bold" class="align-middle me-1 fs-16"></iconify-icon> Reject Claim
                             </button>
                         </div>
@@ -194,4 +194,39 @@
         </div>
     </div>
 </div>
+
+{{-- Vendor Reject Confirmation Modal --}}
+@if(in_array($debitNote->status, ['PENDING', 'PENDING_SELLER_APPROVAL']))
+<div class="modal fade" id="vendorRejectDebitNoteModal" tabindex="-1" aria-labelledby="vendorRejectDebitNoteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="POST" action="{{ route('vendor.adc-debit-notes.respond', $debitNote->id) }}">
+            @csrf
+            <input type="hidden" name="action" value="REJECT">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-danger-subtle border-bottom border-danger-subtle py-3">
+                    <h5 class="modal-title fw-bold text-danger d-flex align-items-center mb-0" id="vendorRejectDebitNoteModalLabel">
+                        <iconify-icon icon="solar:close-circle-bold" class="me-2 fs-20"></iconify-icon> Reject Discrepancy Claim
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-4">
+                    <div class="alert alert-warning border-0 bg-warning-subtle text-dark py-2 px-3 small mb-3">
+                        Are you sure you want to reject Debit Note <strong>#{{ $debitNote->debit_note_number }}</strong>?
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold text-slate-700 small">Reason for Rejection (Optional)</label>
+                        <textarea name="seller_remarks" rows="3" class="form-control" placeholder="Provide reason for rejecting this claim...">{{ old('seller_remarks') }}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light py-2 border-top">
+                    <button type="button" class="btn btn-secondary px-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger fw-semibold px-4">
+                        Confirm & Reject Claim
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+@endif
 @endsection

@@ -7,7 +7,7 @@
 <div class="row mb-3">
     <div class="col-12">
         <div class="d-flex align-items-center justify-content-between">
-            <a href="{{ route('vendor.credit-notes.index') }}" class="btn btn-sm btn-outline-secondary">
+            <a href="{{ route('vendor.credit-notes.index', ['tab' => 'adc_order']) }}" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i> Back to Credit Notes
             </a>
             <span class="badge bg-success fs-13 px-2.5 py-1"><i class="bi bi-check-circle me-1"></i> {{ $creditNote->status ?? 'SETTLED' }}</span>
@@ -25,8 +25,8 @@
             <div class="card-body">
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
-                        <small class="text-muted d-block">ADC Order Number</small>
-                        <strong class="fw-bold text-dark">#{{ $creditNote->adcOrder?->order_number ?? 'N/A' }}</strong>
+                        <small class="text-muted d-block">Invoice No</small>
+                        <strong class="fw-bold text-dark font-monospace fs-14">{{ $creditNote->invoice_number ?: ('#' . ($creditNote->adcOrder?->order_number ?? 'N/A')) }}</strong>
                     </div>
                     <div class="col-md-6">
                         <small class="text-muted d-block">ADC Store</small>

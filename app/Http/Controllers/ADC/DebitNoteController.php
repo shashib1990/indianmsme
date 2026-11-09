@@ -187,7 +187,7 @@ class DebitNoteController extends Controller
                 'seller_amount'           => $totalDiscrepancyAmount,
                 'final_amount'            => $totalDiscrepancyAmount,
                 'proof_images'            => $proofUrls,
-                'status'                  => 'PENDING_SELLER_APPROVAL',
+                'status'                  => 'PENDING',
                 'adpl_remarks'            => $request->input('remarks') ?: "Stock-in discrepancy reported by ADC {$adc->name} for Order #{$order->order_number}",
             ]);
 
@@ -209,10 +209,17 @@ class DebitNoteController extends Controller
                 ]);
             }
 
+            // Notify Admin for Verification before it is sent to Vendor
+            \App\Services\NotificationService::notifyAdmin(
+                'New ADC Debit Note Pending Verification',
+                "ADC {$adc->name} has generated Debit Note #{$debitNote->debit_note_number} for Order #{$order->order_number}. Please review and approve.",
+                route('admin.adc-debit-notes.show', $debitNote->id)
+            );
+
             \DB::commit();
 
             return redirect()->route('adc.debit-notes.show', $debitNote->id)
-                ->with('success', 'Debit Note generated successfully and sent for approval!');
+                ->with('success', 'Debit Note generated successfully and submitted for Admin verification.');
         } catch (\Exception $e) {
             \DB::rollBack();
             return redirect()->back()->with('error', 'Failed to generate Debit Note: ' . $e->getMessage());

@@ -54,6 +54,35 @@ class AdcDebitNote extends Model
         return $this->belongsTo(AdcOrder::class, 'adc_order_id');
     }
 
+    public function invoice()
+    {
+        return $this->hasOne(Invoice::class, 'adc_order_id', 'adc_order_id')->latestOfMany();
+    }
+
+    /**
+     * Get the linked ADC order's invoice number
+     */
+    public function getInvoiceNumberAttribute(): ?string
+    {
+        if ($this->relationLoaded('invoice') && $this->invoice && !empty($this->invoice->invoice_number)) {
+            return $this->invoice->invoice_number;
+        }
+
+        if ($this->adc_order_id) {
+            $inv = Invoice::where('adc_order_id', $this->adc_order_id)->whereNotNull('invoice_number')->latest('id')->first();
+            if ($inv && !empty($inv->invoice_number)) {
+                return $inv->invoice_number;
+            }
+        }
+
+        $order = $this->relationLoaded('order') ? $this->order : ($this->relationLoaded('adcOrder') ? $this->adcOrder : null);
+        if (!$order && $this->adc_order_id) {
+            $order = AdcOrder::find($this->adc_order_id);
+        }
+
+        return $order?->invoice_number;
+    }
+
     public function adc()
     {
         return $this->belongsTo(User::class, 'adc_id');

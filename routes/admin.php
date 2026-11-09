@@ -367,6 +367,7 @@ Route::name('admin.')->group(function () {
 
         // ADC Debit Notes, Credit Notes & Excess Invoices for Admin
         Route::get('adc-debit-notes/{id}', [\App\Http\Controllers\Admin\DebitNoteController::class, 'showAdcDebitNote'])->name('adc-debit-notes.show')->middleware('permission:users.view');
+        Route::post('adc-debit-notes/{id}/verify', [\App\Http\Controllers\Admin\DebitNoteController::class, 'verifyAdcDebitNote'])->name('adc-debit-notes.verify')->middleware('permission:users.manage');
         Route::get('adc-excess-invoices/{id}', [\App\Http\Controllers\Admin\ExcessInvoiceController::class, 'showAdcExcessInvoice'])->name('adc-excess-invoices.show')->middleware('permission:users.view');
         Route::get('adc-credit-notes/{id}', [\App\Http\Controllers\Admin\CreditNoteController::class, 'showAdcCreditNote'])->name('adc-credit-notes.show')->middleware('permission:users.view');
 

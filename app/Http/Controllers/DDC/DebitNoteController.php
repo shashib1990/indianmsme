@@ -40,6 +40,7 @@ class DebitNoteController extends Controller
 
         $adcQuery = \App\Models\AdcDebitNote::where('adc_debit_notes.ddc_id', $ddcId)
             ->where('adc_debit_notes.discrepancy_type', '!=', 'EXCESS')
+            ->whereNotIn('adc_debit_notes.status', ['PENDING', 'PENDING_ADMIN_APPROVAL', 'ADMIN_REJECTED', 'CANCELLED'])
             ->with(['order', 'items.adcOrderItem.product', 'adc', 'creditNote']);
 
         if ($status) {
@@ -232,6 +233,7 @@ class DebitNoteController extends Controller
     {
         $ddcId = auth('ddc')->id();
         $debitNote = \App\Models\AdcDebitNote::where('ddc_id', $ddcId)
+            ->whereNotIn('status', ['PENDING', 'PENDING_ADMIN_APPROVAL', 'ADMIN_REJECTED', 'CANCELLED'])
             ->with(['order', 'items.adcOrderItem.product', 'adc', 'creditNote'])
             ->findOrFail($id);
 
@@ -241,10 +243,12 @@ class DebitNoteController extends Controller
     public function respondAdcDebitNote(Request $request, $id)
     {
         $ddcId = auth('ddc')->id();
-        $debitNote = \App\Models\AdcDebitNote::where('ddc_id', $ddcId)->findOrFail($id);
+        $debitNote = \App\Models\AdcDebitNote::where('ddc_id', $ddcId)
+            ->whereNotIn('status', ['PENDING', 'PENDING_ADMIN_APPROVAL', 'ADMIN_REJECTED', 'CANCELLED'])
+            ->findOrFail($id);
 
-        if (!in_array($debitNote->status, ['PENDING', 'PENDING_SELLER_APPROVAL'])) {
-            return redirect()->back()->with('error', 'This Debit Note has already been processed.');
+        if ($debitNote->status !== 'PENDING_SELLER_APPROVAL') {
+            return redirect()->back()->with('error', 'This Debit Note cannot be processed at this stage.');
         }
 
         $actionInput = strtoupper($request->input('action', 'APPROVE'));

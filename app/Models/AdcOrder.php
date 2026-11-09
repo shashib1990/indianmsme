@@ -87,6 +87,35 @@ class AdcOrder extends Model
         return $this->hasOne(Invoice::class, 'adc_order_id')->latestOfMany();
     }
 
+    /**
+     * Get the official Tax/Wholesale Invoice Number for this ADC order
+     */
+    public function getInvoiceNumberAttribute(): ?string
+    {
+        if ($this->relationLoaded('invoice') && $this->invoice && !empty($this->invoice->invoice_number)) {
+            return $this->invoice->invoice_number;
+        }
+
+        $inv = Invoice::where('adc_order_id', $this->id)->whereNotNull('invoice_number')->latest('id')->first();
+        if ($inv && !empty($inv->invoice_number)) {
+            return $inv->invoice_number;
+        }
+
+        if (!empty($this->received_invoice_number)) {
+            return $this->received_invoice_number;
+        }
+
+        $poIds = $this->items()->pluck('purchase_order_id')->filter()->unique();
+        if ($poIds->isNotEmpty()) {
+            $poInv = Invoice::whereIn('purchase_order_id', $poIds)->whereNotNull('invoice_number')->latest('id')->first();
+            if ($poInv && !empty($poInv->invoice_number)) {
+                return $poInv->invoice_number;
+            }
+        }
+
+        return null;
+    }
+
     public function debitNote()
     {
         return $this->hasOne(AdcDebitNote::class, 'adc_order_id')->latestOfMany();
