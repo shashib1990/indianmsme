@@ -73,6 +73,11 @@ Route::name('adc.')->group(function () {
         // ── Inventory Routes ──
         Route::get('/inventory', [\App\Http\Controllers\ADC\InventoryController::class, 'index'])->name('inventory.index');
         Route::get('/inventory/export', [\App\Http\Controllers\ADC\InventoryController::class, 'export'])->name('inventory.export');
+        Route::get('/missing-inventories', [\App\Http\Controllers\ADC\InventoryController::class, 'missingInventories'])->name('inventory.missing');
+        Route::post('/missing-inventories/{id}/update-barcode', [\App\Http\Controllers\ADC\InventoryController::class, 'updateBarcode'])->name('inventory.update-barcode');
+        Route::post('/missing-inventories/bulk-update-barcodes', [\App\Http\Controllers\ADC\InventoryController::class, 'bulkUpdateBarcodes'])->name('inventory.bulk-update-barcodes');
+        Route::get('/barcode/generate', [\App\Http\Controllers\ADC\InventoryController::class, 'generateBarcode'])->name('barcode.generate');
+        Route::post('/barcode/check-duplicate', [\App\Http\Controllers\ADC\InventoryController::class, 'checkBarcode'])->name('barcode.check-duplicate');
         Route::put('/inventory/{id}', [\App\Http\Controllers\ADC\InventoryController::class, 'update'])->name('inventory.update');
         Route::post('/inventory/{id}/toggle-pos', [\App\Http\Controllers\ADC\InventoryController::class, 'togglePosStatus'])->name('inventory.toggle-pos');
 

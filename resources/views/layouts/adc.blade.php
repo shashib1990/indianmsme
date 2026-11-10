@@ -756,10 +756,20 @@
                 border-radius: 8px !important;
             }
             .page-content {
-                padding-bottom: 78px !important;
+                padding-bottom: 0 !important;
             }
             .footer {
-                margin-bottom: 60px !important;
+                position: relative !important;
+                bottom: auto !important;
+                left: auto !important;
+                right: auto !important;
+                margin-top: 15px !important;
+                margin-bottom: 72px !important;
+                padding: 10px 0 !important;
+                background: transparent !important;
+                border-top: none !important;
+                height: auto !important;
+                display: block !important;
             }
         }
 
@@ -1353,6 +1363,10 @@
                                         href="{{ route('adc.local-products.comparison') }}">Regional Price
                                         Comparison</a>
                                 </li>
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link {{ request()->routeIs('adc.inventory.missing') ? 'active' : '' }}"
+                                        href="{{ route('adc.inventory.missing') }}">Missing Inventories</a>
+                                </li>
                             </ul>
                         </div>
                     </li>
@@ -1564,6 +1578,9 @@
 
     <!-- TomSelect JS -->
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+
+    <!-- JsBarcode for Barcode Generation, Preview & Print (Code 128, EAN-13, EAN-8) -->
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 
     <!-- SweetAlert and Toastify Setup & Helpers -->
     <script>
@@ -1895,6 +1912,7 @@
                     { title: 'Stock In / Regional Purchase', url: '{{ route("adc.local-purchases.create") }}', icon: 'solar:box-minimalistic-bold-duotone', category: 'Regional Sourcing' },
                     { title: 'Regional Purchase History', url: '{{ route("adc.local-purchases.index") }}', icon: 'solar:bill-list-bold-duotone', category: 'Regional Sourcing' },
                     { title: 'Regional Price Comparison', url: '{{ route("adc.local-products.comparison") }}', icon: 'solar:graph-bold-duotone', category: 'Regional Sourcing' },
+                    { title: 'Missing Inventories', url: '{{ route("adc.inventory.missing") }}', icon: 'solar:barcode-bold-duotone', category: 'Regional Sourcing' },
 
                     // Reports & Analytics
                     { title: 'Sale Report', url: '{{ route("adc.reports.sales") }}', icon: 'solar:document-text-bold-duotone', category: 'Reports & Analytics' },

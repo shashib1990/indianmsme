@@ -4,6 +4,9 @@ namespace App\Http\Controllers\ADC;
 
 use App\Http\Controllers\Controller;
 use App\Models\AdcInventory;
+use App\Models\Product;
+use App\Models\AdcLocalProduct;
+use App\Services\BarcodeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -382,5 +385,274 @@ class InventoryController extends Controller
             'is_expired' => $isExpired,
             'is_near_expiry' => $isNearExpiry,
         ]);
+    }
+
+    /**
+     * Missing Inventories List (Products in adc_inventories without barcode)
+     */
+    public function missingInventories(Request $request)
+    {
+        $adc = $this->adc();
+        $source = strtoupper($request->get('source', 'ALL'));
+        if (!in_array($source, ['ALL', 'MSME', 'LOCAL'])) {
+            $source = 'ALL';
+        }
+
+        $isMissingBarcodeSql = function ($q) {
+            $q->whereNull('barcode')
+                ->orWhere('barcode', '')
+                ->orWhereRaw("UPPER(TRIM(barcode)) IN ('N/A', 'NA', '—', '-', '0', 'NULL')");
+        };
+
+        $baseQuery = AdcInventory::where('adc_id', $adc->id)
+            ->where($isMissingBarcodeSql);
+
+        // Summary Counts
+        $totalMissingCount = (clone $baseQuery)->count();
+        $msmeMissingCount = (clone $baseQuery)->where(function ($q) {
+            $q->where('inventory_source', 'MSME')->orWhereNotNull('product_id');
+        })->count();
+        $localMissingCount = (clone $baseQuery)->where(function ($q) {
+            $q->where('inventory_source', 'LOCAL')->orWhereNotNull('adc_local_product_id');
+        })->count();
+
+        $query = AdcInventory::with(['product', 'localProduct'])
+            ->where('adc_id', $adc->id)
+            ->where($isMissingBarcodeSql);
+
+        if ($source === 'MSME') {
+            $query->where(function ($q) {
+                $q->where('inventory_source', 'MSME')->orWhereNotNull('product_id');
+            });
+        } elseif ($source === 'LOCAL') {
+            $query->where(function ($q) {
+                $q->where('inventory_source', 'LOCAL')->orWhereNotNull('adc_local_product_id');
+            });
+        }
+
+        $search = trim($request->input('search', ''));
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('product_name', 'like', "%{$search}%")
+                    ->orWhere('product_code', 'like', "%{$search}%")
+                    ->orWhere('batch_number', 'like', "%{$search}%");
+            });
+        }
+
+        $perPage = (int) $request->input('per_page', 20);
+        if (!in_array($perPage, [15, 20, 50, 100])) {
+            $perPage = 20;
+        }
+
+        $inventories = $query->orderBy('id', 'desc')->paginate($perPage)->withQueryString();
+
+        $summaryStats = [
+            'total_missing' => $totalMissingCount,
+            'msme_missing'  => $msmeMissingCount,
+            'local_missing' => $localMissingCount,
+        ];
+
+        return view('adc.inventory.missing-inventories', compact('inventories', 'search', 'source', 'perPage', 'summaryStats'));
+    }
+
+    /**
+     * Generate a new unique barcode for specified format (EAN13, EAN8, CODE128)
+     */
+    public function generateBarcode(Request $request)
+    {
+        $format = strtoupper($request->input('format', 'EAN13'));
+        $adc = $this->adc();
+        $barcode = BarcodeService::generate($format, $adc ? $adc->id : 0);
+
+        return response()->json([
+            'success' => true,
+            'barcode' => $barcode,
+            'format'  => $format,
+        ]);
+    }
+
+    /**
+     * Check barcode validity, checksum & duplicate check across system
+     */
+    public function checkBarcode(Request $request)
+    {
+        $barcode = trim($request->input('barcode', ''));
+        $format = strtoupper($request->input('format', 'CODE128'));
+        $excludeId = $request->input('exclude_id');
+        $type = $request->input('type', 'inventory'); // 'inventory' or 'local_product'
+        $adc = $this->adc();
+
+        if (empty($barcode)) {
+            return response()->json([
+                'valid' => false,
+                'message' => 'Barcode cannot be empty.',
+            ]);
+        }
+
+        $fmtValidation = BarcodeService::validateFormat($barcode, $format);
+        if (!$fmtValidation['valid']) {
+            return response()->json([
+                'valid' => false,
+                'message' => $fmtValidation['message'],
+            ]);
+        }
+
+        $duplicateMsg = BarcodeService::findDuplicate($barcode, $adc ? $adc->id : 0, $excludeId, $type);
+        if ($duplicateMsg) {
+            return response()->json([
+                'valid' => false,
+                'duplicate' => true,
+                'message' => "Duplicate Barcode! Already {$duplicateMsg}",
+            ]);
+        }
+
+        return response()->json([
+            'valid' => true,
+            'message' => 'Barcode is available and valid.',
+        ]);
+    }
+
+    /**
+     * Inline update barcode for a specific inventory item
+     */
+    public function updateBarcode(Request $request, $id)
+    {
+        $adc = $this->adc();
+
+        $request->validate([
+            'barcode' => 'required|string|max:100',
+        ]);
+
+        $inv = AdcInventory::where('id', $id)
+            ->where('adc_id', $adc->id)
+            ->firstOrFail();
+
+        $newBarcode = trim($request->input('barcode'));
+        $format = strtoupper($request->input('format', ''));
+
+        // Format validation (resilient to custom typed codes and scanner input)
+        if (!empty($format) && in_array($format, ['EAN13', 'EAN8', 'CODE128'])) {
+            $fmtValidation = BarcodeService::validateFormat($newBarcode, $format);
+            if (!$fmtValidation['valid']) {
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json(['success' => false, 'message' => $fmtValidation['message']], 422);
+                }
+                return back()->with('error', $fmtValidation['message']);
+            }
+        } else {
+            if (!preg_match('/^[A-Za-z0-9\-\.\_\$\/\+\% ]{3,50}$/', $newBarcode)) {
+                $err = 'Barcode must be between 3 and 50 alphanumeric characters.';
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json(['success' => false, 'message' => $err], 422);
+                }
+                return back()->with('error', $err);
+            }
+        }
+
+        // Duplicate check
+        $duplicateMsg = BarcodeService::findDuplicate($newBarcode, $adc->id, $id, 'inventory');
+        if ($duplicateMsg) {
+            $msg = "Duplicate Barcode! Already {$duplicateMsg}";
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->with('error', $msg);
+        }
+
+        // Update all inventory entries for the same product under this ADC
+        if ($inv->product_id) {
+            AdcInventory::where('adc_id', $adc->id)
+                ->where('product_id', $inv->product_id)
+                ->update(['barcode' => $newBarcode]);
+
+            Product::where('id', $inv->product_id)
+                ->where(function ($q) {
+                    $q->whereNull('barcode')->orWhere('barcode', '')->orWhereRaw("UPPER(TRIM(barcode)) IN ('N/A', 'NA', '—', '-', '0')");
+                })
+                ->update(['barcode' => $newBarcode]);
+        } elseif ($inv->adc_local_product_id) {
+            AdcInventory::where('adc_id', $adc->id)
+                ->where('adc_local_product_id', $inv->adc_local_product_id)
+                ->update(['barcode' => $newBarcode]);
+
+            AdcLocalProduct::where('id', $inv->adc_local_product_id)
+                ->update(['barcode' => $newBarcode]);
+        } else {
+            $inv->barcode = $newBarcode;
+            $inv->save();
+        }
+
+        $msg = "Barcode '{$newBarcode}' updated successfully for '{$inv->product_name}'.";
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $msg,
+                'barcode' => $newBarcode,
+            ]);
+        }
+
+        return back()->with('success', $msg);
+    }
+
+    /**
+     * Bulk update barcodes entered in the missing inventories table
+     */
+    public function bulkUpdateBarcodes(Request $request)
+    {
+        $adc = $this->adc();
+        $barcodes = $request->input('barcodes', []);
+        $updatedCount = 0;
+        $skippedDuplicates = 0;
+
+        if (is_array($barcodes)) {
+            foreach ($barcodes as $invId => $barcode) {
+                $barcode = trim($barcode);
+                if (!empty($barcode) && !in_array(strtoupper($barcode), ['N/A', 'NA', '—', '-', '0', 'NULL'])) {
+                    // Check duplicate
+                    $dup = BarcodeService::findDuplicate($barcode, $adc->id, $invId, 'inventory');
+                    if ($dup) {
+                        $skippedDuplicates++;
+                        continue;
+                    }
+
+                    $inv = AdcInventory::where('id', $invId)
+                        ->where('adc_id', $adc->id)
+                        ->first();
+
+                    if ($inv) {
+                        if ($inv->product_id) {
+                            AdcInventory::where('adc_id', $adc->id)
+                                ->where('product_id', $inv->product_id)
+                                ->update(['barcode' => $barcode]);
+
+                            Product::where('id', $inv->product_id)
+                                ->where(function ($q) {
+                                    $q->whereNull('barcode')->orWhere('barcode', '')->orWhereRaw("UPPER(TRIM(barcode)) IN ('N/A', 'NA', '—', '-', '0')");
+                                })
+                                ->update(['barcode' => $barcode]);
+                        } elseif ($inv->adc_local_product_id) {
+                            AdcInventory::where('adc_id', $adc->id)
+                                ->where('adc_local_product_id', $inv->adc_local_product_id)
+                                ->update(['barcode' => $barcode]);
+
+                            AdcLocalProduct::where('id', $inv->adc_local_product_id)
+                                ->update(['barcode' => $barcode]);
+                        } else {
+                            $inv->barcode = $barcode;
+                            $inv->save();
+                        }
+                        $updatedCount++;
+                    }
+                }
+            }
+        }
+
+        $msg = "{$updatedCount} barcode(s) saved successfully!";
+        if ($skippedDuplicates > 0) {
+            $msg .= " ({$skippedDuplicates} skipped due to duplicate barcodes).";
+        }
+
+        return back()->with('success', $msg);
     }
 }

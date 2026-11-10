@@ -582,7 +582,11 @@
                                             </div>
                                             <div class="prod-meta">
                                                 <span>{{ $inv->product_code ?? '—' }}</span>
-                                                @if($inv->barcode) &nbsp;·&nbsp;<span>{{ $inv->barcode }}</span> @endif
+                                                @if($inv->barcode && !in_array(strtoupper(trim($inv->barcode)), ['N/A', 'NA', '—', '-', '0', 'NULL']))
+                                                    &nbsp;·&nbsp;<a href="javascript:void(0)" onclick="openBarcodeModalForInventory('{{ addslashes($inv->product_name ?? ($inv->product?->product_name ?? 'Product')) }}', '{{ $inv->barcode }}', '{{ $inv->mrp }}')" class="badge bg-light text-dark border px-1.5 py-0.5 text-decoration-none" title="Click to View & Download Barcode">
+                                                        <iconify-icon icon="solar:barcode-bold" class="align-middle me-0.5 text-primary"></iconify-icon>{{ $inv->barcode }}
+                                                    </a>
+                                                @endif
                                                 &nbsp;·&nbsp;<span class="badge bg-info-subtle text-info fw-bold fs-10 px-1.5 py-0.5 rounded-pill">GST {{ number_format($gstRateVal, 0) }}%</span>
                                             </div>
                                         </div>
@@ -732,9 +736,169 @@
         </div>
     @endif
 
+    <!-- Inventory Barcode View & Download Modal -->
+    <div class="modal fade" id="invBarcodeViewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header bg-light py-3 border-bottom">
+                    <h5 class="modal-title fw-bold text-slate-800 d-flex align-items-center gap-2">
+                        <iconify-icon icon="solar:barcode-bold-duotone" class="text-primary fs-22"></iconify-icon>
+                        Product Barcode
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <!-- Product Info Box -->
+                    <div class="p-2.5 rounded-3 bg-light border mb-3">
+                        <div class="fw-bold text-dark fs-13" id="inv_modal_prod_name">Product Name</div>
+                        <div class="d-flex align-items-center justify-content-between text-muted fs-11 mt-1">
+                            <span>MRP: <strong class="text-dark fs-12" id="inv_modal_prod_mrp">₹0.00</strong></span>
+                            <span class="badge bg-success-subtle text-success px-2 py-0.5">ADC POS Active</span>
+                        </div>
+                    </div>
+
+                    <!-- Label Visual Preview (Exact high contrast EAN-13 preview) -->
+                    <div class="text-center p-3 rounded-3 border shadow-xs mb-3" style="background: #ffffff !important;">
+                        <div class="fw-bold text-dark fs-13 text-truncate mb-2" id="inv_modal_label_title" style="max-width: 320px; margin: 0 auto;"></div>
+                        <div class="d-flex justify-content-center align-items-center py-2" style="background: #ffffff; min-height: 130px;">
+                            <svg id="inv_modal_barcode_svg" style="max-width: 100%; height: auto;"></svg>
+                        </div>
+                        <canvas id="inv_modal_barcode_canvas" class="d-none"></canvas>
+                        <div class="fs-12 text-muted mt-2 fw-semibold" id="inv_modal_label_price"></div>
+                    </div>
+
+                    <!-- Download & Print Actions -->
+                    <div class="row g-2">
+                        <div class="col-7">
+                            <button type="button" class="btn btn-success fw-bold w-100 py-2 d-flex align-items-center justify-content-center gap-1.5 shadow-sm" onclick="invModalDownloadPNG()">
+                                <iconify-icon icon="solar:download-square-bold" class="fs-18"></iconify-icon> Download Barcode (PNG)
+                            </button>
+                        </div>
+                        <div class="col-5">
+                            <button type="button" class="btn btn-outline-dark fw-semibold w-100 py-2 d-flex align-items-center justify-content-center gap-1.5" onclick="invModalPrintLabel()">
+                                <iconify-icon icon="solar:printer-bold" class="fs-18"></iconify-icon> Print Sticker
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')
+    <script>
+        let invModalCurrentCode = '';
+        let invModalCurrentName = '';
+        let invModalCurrentMrp = '';
+
+        function openBarcodeModalForInventory(name, code, mrp) {
+            invModalCurrentCode = code;
+            invModalCurrentName = name;
+            invModalCurrentMrp = mrp;
+
+            document.getElementById('inv_modal_prod_name').textContent = name;
+            document.getElementById('inv_modal_prod_mrp').textContent = '₹' + parseFloat(mrp || 0).toFixed(2);
+            document.getElementById('inv_modal_label_title').textContent = name;
+            document.getElementById('inv_modal_label_price').textContent = 'MRP: ₹' + parseFloat(mrp || 0).toFixed(2);
+
+            const cleanCode = String(code).trim().replace(/\s+/g, '');
+            let jsFmt = 'CODE128';
+            if (/^\d{12,13}$/.test(cleanCode)) jsFmt = 'EAN13';
+            else if (/^\d{7,8}$/.test(cleanCode)) jsFmt = 'EAN8';
+
+            try {
+                if (typeof JsBarcode === 'function') {
+                    JsBarcode('#inv_modal_barcode_svg', cleanCode, {
+                        format: jsFmt,
+                        lineColor: '#000000',
+                        width: 2.6,
+                        height: 95,
+                        displayValue: true,
+                        font: 'Arial, Helvetica, sans-serif',
+                        fontSize: 18,
+                        textMargin: 8,
+                        background: '#ffffff',
+                        margin: 10
+                    });
+
+                    JsBarcode('#inv_modal_barcode_canvas', cleanCode, {
+                        format: jsFmt,
+                        lineColor: '#000000',
+                        width: 3.5,
+                        height: 130,
+                        displayValue: true,
+                        font: 'Arial, Helvetica, sans-serif',
+                        fontSize: 22,
+                        textMargin: 10,
+                        background: '#ffffff',
+                        margin: 25
+                    });
+                }
+            } catch (e) {
+                console.warn('JsBarcode render error in inventory modal:', e);
+                try {
+                    JsBarcode('#inv_modal_barcode_svg', cleanCode, { format: 'CODE128', lineColor: '#000000', width: 2, height: 80, displayValue: true, background: '#ffffff', margin: 10 });
+                    JsBarcode('#inv_modal_barcode_canvas', cleanCode, { format: 'CODE128', lineColor: '#000000', width: 3, height: 110, displayValue: true, background: '#ffffff', margin: 20 });
+                } catch (e2) {}
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('invBarcodeViewModal'));
+            modal.show();
+        }
+
+        function invModalDownloadPNG() {
+            const canvas = document.getElementById('inv_modal_barcode_canvas');
+            if (!canvas) return;
+            const a = document.createElement('a');
+            a.download = 'barcode-' + invModalCurrentCode + '.png';
+            a.href = canvas.toDataURL('image/png');
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function invModalPrintLabel() {
+            const canvas = document.getElementById('inv_modal_barcode_canvas');
+            if (!canvas || !invModalCurrentCode) return;
+            const dataUrl = canvas.toDataURL('image/png');
+            const mrpText = invModalCurrentMrp ? ('MRP: ₹' + parseFloat(invModalCurrentMrp).toFixed(2)) : '';
+
+            const printWin = window.open('', '_blank', 'width=450,height=380');
+            printWin.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Print Barcode - ${invModalCurrentCode}</title>
+                    <style>
+                        @page { size: 50mm 25mm; margin: 0; }
+                        body {
+                            margin: 0;
+                            padding: 4px;
+                            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                            text-align: center;
+                            display: flex;
+                            flex-direction: column;
+                            justify-content: center;
+                            align-items: center;
+                            height: 100vh;
+                            box-sizing: border-box;
+                        }
+                        .title { font-size: 11px; font-weight: bold; max-width: 175px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+                        img { max-width: 175px; max-height: 60px; object-fit: contain; }
+                        .price { font-size: 10px; font-weight: bold; margin-top: 1px; }
+                    </style>
+                </head>
+                <body onload="window.print(); window.close();">
+                    <div class="title">${invModalCurrentName}</div>
+                    <img src="${dataUrl}">
+                    ${mrpText ? `<div class="price">${mrpText}</div>` : ''}
+                </body>
+                </html>
+            `);
+            printWin.document.close();
+        }
+    </script>
     <script>
         (function () {
             const CSRF = document.querySelector('meta[name="csrf-token"]')?.content ?? '';

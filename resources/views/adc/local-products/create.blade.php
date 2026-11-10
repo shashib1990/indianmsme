@@ -133,10 +133,76 @@
                                 </select>
                             </div>
 
-                            <!-- Barcode -->
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold text-slate-700">Barcode / EAN <span class="text-muted font-normal">(Optional)</span></label>
-                                <input type="text" name="barcode" id="barcode_input" class="form-control" placeholder="Scan or enter barcode" value="{{ old('barcode') }}">
+                            <!-- Barcode Generator Section -->
+                            <div class="col-12 mt-2">
+                                <div class="p-3 rounded-3 border bg-light-subtle">
+                                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                                        <label class="form-label fw-bold text-slate-800 mb-0 d-flex align-items-center gap-1.5">
+                                            <iconify-icon icon="solar:barcode-bold-duotone" class="text-primary fs-18"></iconify-icon>
+                                            Barcode / EAN Generator
+                                            <span class="text-muted fw-normal fs-12">(Optional)</span>
+                                        </label>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="fs-12 text-muted fw-semibold">Format:</span>
+                                            <select name="barcode_format" id="barcode_format_select" class="form-select form-select-sm py-1 px-2 fw-semibold text-dark border-secondary-subtle" style="width: 155px;">
+                                                <option value="EAN13" {{ old('barcode_format', 'EAN13') === 'EAN13' ? 'selected' : '' }}>EAN-13 (Standard Retail)</option>
+                                                <option value="CODE128" {{ old('barcode_format') === 'CODE128' ? 'selected' : '' }}>Code 128 (Alpha)</option>
+                                                <option value="EAN8" {{ old('barcode_format') === 'EAN8' ? 'selected' : '' }}>EAN-8 (8 Digits)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0 text-muted">
+                                            <iconify-icon icon="solar:scanner-bold-duotone" class="fs-18"></iconify-icon>
+                                        </span>
+                                        <input type="text" name="barcode" id="barcode_input"
+                                            class="form-control border-start-0 fw-bold text-dark font-monospace"
+                                            placeholder="Enter barcode or click 'Generate'..."
+                                            value="{{ old('barcode') }}"
+                                            autocomplete="off">
+                                        <button type="button" class="btn btn-primary fw-semibold px-3" id="btn_generate_barcode">
+                                            <iconify-icon icon="solar:magic-stick-3-bold-duotone" class="align-middle me-1 fs-16"></iconify-icon> Generate Barcode
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary fw-semibold px-2.5" id="btn_toggle_preview" title="Toggle Preview">
+                                            <iconify-icon icon="solar:eye-bold-duotone" class="align-middle me-1 fs-16"></iconify-icon> Preview
+                                        </button>
+                                    </div>
+
+                                    <!-- Feedback message (validation / duplicate status) -->
+                                    <div id="barcode_feedback" class="mt-1 small fw-semibold">
+                                        @error('barcode')
+                                            <span class="text-danger d-flex align-items-center gap-1">
+                                                <iconify-icon icon="solar:danger-triangle-bold" class="fs-15"></iconify-icon> {{ $message }}
+                                            </span>
+                                        @enderror
+                                    </div>
+
+                                    <!-- Live Preview & Action Container -->
+                                    <div id="barcode_preview_card" class="mt-3 p-3 bg-white rounded-3 border d-none">
+                                        <div class="row align-items-center g-3">
+                                            <div class="col-md-7 text-center">
+                                                <div class="border rounded-2 p-2 bg-white d-inline-block shadow-xs" style="max-width: 100%;">
+                                                    <div class="fw-bold text-truncate text-slate-800 small mb-1" id="preview_label_title" style="max-width: 260px;">Product Barcode</div>
+                                                    <!-- Barcode Canvas / SVG -->
+                                                    <svg id="barcode_svg"></svg>
+                                                    <div class="d-none"><canvas id="barcode_canvas"></canvas></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="d-flex flex-column gap-2">
+                                                    <span class="text-muted fs-11 fw-semibold text-uppercase">Barcode Actions</span>
+                                                    <button type="button" class="btn btn-outline-dark btn-sm fw-semibold w-100 text-start" id="btn_download_barcode">
+                                                        <iconify-icon icon="solar:download-square-bold-duotone" class="align-middle me-1 text-primary fs-16"></iconify-icon> Download Barcode (PNG)
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-secondary btn-sm fw-semibold w-100 text-start" id="btn_print_barcode">
+                                                        <iconify-icon icon="solar:printer-bold-duotone" class="align-middle me-1 text-success fs-16"></iconify-icon> Print Label Sticker
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -615,6 +681,288 @@
                         }
                     });
                 }
+            }
+
+            // ── Barcode Generator & Live Preview Logic ──
+            const barcodeInput = document.getElementById('barcode_input');
+            const formatSelect = document.getElementById('barcode_format_select');
+            const btnGenerateBarcode = document.getElementById('btn_generate_barcode');
+            const btnTogglePreview = document.getElementById('btn_toggle_preview');
+            const previewCard = document.getElementById('barcode_preview_card');
+            const previewTitle = document.getElementById('preview_label_title');
+            const barcodeFeedback = document.getElementById('barcode_feedback');
+            const btnDownloadBarcode = document.getElementById('btn_download_barcode');
+            const btnPrintBarcode = document.getElementById('btn_print_barcode');
+            const nameInput = document.getElementById('product_name_input');
+
+            function getSelectedFormat() {
+                return formatSelect ? formatSelect.value : 'CODE128';
+            }
+
+            function updatePreviewTitle() {
+                if (previewTitle) {
+                    const nameVal = nameInput ? nameInput.value.trim() : '';
+                    previewTitle.textContent = nameVal || 'Regional Product';
+                }
+            }
+
+            function renderLiveBarcode() {
+                const rawCode = barcodeInput ? barcodeInput.value.trim() : '';
+                if (!rawCode) {
+                    if (previewCard) previewCard.classList.add('d-none');
+                    return;
+                }
+
+                updatePreviewTitle();
+                const cleanCode = rawCode.replace(/\s+/g, '');
+                const fmt = getSelectedFormat();
+                let jsFmt = fmt;
+
+                if (/^\d{12,13}$/.test(cleanCode)) {
+                    jsFmt = 'EAN13';
+                } else if (/^\d{7,8}$/.test(cleanCode)) {
+                    jsFmt = 'EAN8';
+                } else if (fmt === 'EAN13' && !/^\d+$/.test(cleanCode)) {
+                    jsFmt = 'CODE128';
+                }
+
+                try {
+                    if (typeof JsBarcode === 'function') {
+                        // High-contrast clean preview
+                        JsBarcode('#barcode_svg', cleanCode, {
+                            format: jsFmt,
+                            lineColor: '#000000',
+                            width: 2.5,
+                            height: 85,
+                            displayValue: true,
+                            font: 'Arial, Helvetica, sans-serif',
+                            fontSize: 17,
+                            textMargin: 8,
+                            background: '#ffffff',
+                            margin: 10
+                        });
+
+                        // High-resolution for download
+                        JsBarcode('#barcode_canvas', cleanCode, {
+                            format: jsFmt,
+                            lineColor: '#000000',
+                            width: 3.5,
+                            height: 120,
+                            displayValue: true,
+                            font: 'Arial, Helvetica, sans-serif',
+                            fontSize: 22,
+                            textMargin: 10,
+                            background: '#ffffff',
+                            margin: 25
+                        });
+
+                        if (previewCard) previewCard.classList.remove('d-none');
+                    }
+                } catch (err) {
+                    console.warn('JsBarcode preview warning:', err);
+                    try {
+                        JsBarcode('#barcode_svg', cleanCode, {
+                            format: 'CODE128',
+                            lineColor: '#000000',
+                            width: 2.2,
+                            height: 75,
+                            displayValue: true,
+                            fontSize: 15,
+                            background: '#ffffff',
+                            margin: 8
+                        });
+                        JsBarcode('#barcode_canvas', cleanCode, {
+                            format: 'CODE128',
+                            lineColor: '#000000',
+                            width: 3.2,
+                            height: 110,
+                            displayValue: true,
+                            fontSize: 20,
+                            background: '#ffffff',
+                            margin: 20
+                        });
+                        if (previewCard) previewCard.classList.remove('d-none');
+                    } catch (e2) {}
+                }
+            }
+
+            let checkTimeout = null;
+            function triggerDuplicateCheck() {
+                const code = barcodeInput ? barcodeInput.value.trim() : '';
+                if (!code) {
+                    if (barcodeFeedback) barcodeFeedback.innerHTML = '';
+                    return;
+                }
+
+                if (barcodeFeedback) {
+                    barcodeFeedback.className = 'mt-1 small fw-semibold text-muted d-flex align-items-center gap-1';
+                    barcodeFeedback.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Validating barcode...';
+                }
+
+                fetch("{{ route('adc.barcode.check-duplicate') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        barcode: code,
+                        format: getSelectedFormat(),
+                        type: 'local_product'
+                    })
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (!barcodeFeedback) return;
+                    if (data.valid) {
+                        barcodeFeedback.className = 'mt-1 small fw-semibold text-success d-flex align-items-center gap-1';
+                        barcodeFeedback.innerHTML = '<iconify-icon icon="solar:check-circle-bold" class="fs-15"></iconify-icon> ' + data.message;
+                    } else {
+                        barcodeFeedback.className = 'mt-1 small fw-semibold text-danger d-flex align-items-center gap-1';
+                        barcodeFeedback.innerHTML = '<iconify-icon icon="solar:danger-triangle-bold" class="fs-15"></iconify-icon> ' + data.message;
+                    }
+                })
+                .catch(err => {
+                    console.error('Check duplicate error:', err);
+                });
+            }
+
+            if (btnGenerateBarcode) {
+                btnGenerateBarcode.addEventListener('click', function () {
+                    const fmt = getSelectedFormat();
+                    btnGenerateBarcode.disabled = true;
+                    btnGenerateBarcode.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Generating...';
+
+                    fetch("{{ route('adc.barcode.generate') }}?format=" + encodeURIComponent(fmt), {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        btnGenerateBarcode.disabled = false;
+                        btnGenerateBarcode.innerHTML = '<iconify-icon icon="solar:magic-stick-3-bold-duotone" class="align-middle me-1 fs-16"></iconify-icon> Generate Barcode';
+
+                        if (data.success && data.barcode) {
+                            if (barcodeInput) {
+                                barcodeInput.value = data.barcode;
+                                renderLiveBarcode();
+                                triggerDuplicateCheck();
+                            }
+                        }
+                    })
+                    .catch(err => {
+                        btnGenerateBarcode.disabled = false;
+                        btnGenerateBarcode.innerHTML = '<iconify-icon icon="solar:magic-stick-3-bold-duotone" class="align-middle me-1 fs-16"></iconify-icon> Generate Barcode';
+                        console.error('Generate barcode error:', err);
+                    });
+                });
+            }
+
+            if (barcodeInput) {
+                barcodeInput.addEventListener('input', function () {
+                    renderLiveBarcode();
+                    clearTimeout(checkTimeout);
+                    checkTimeout = setTimeout(triggerDuplicateCheck, 400);
+                });
+            }
+
+            if (formatSelect) {
+                formatSelect.addEventListener('change', function () {
+                    renderLiveBarcode();
+                    triggerDuplicateCheck();
+                });
+            }
+
+            if (btnTogglePreview) {
+                btnTogglePreview.addEventListener('click', function () {
+                    if (previewCard) {
+                        if (previewCard.classList.contains('d-none')) {
+                            renderLiveBarcode();
+                            previewCard.classList.remove('d-none');
+                        } else {
+                            previewCard.classList.add('d-none');
+                        }
+                    }
+                });
+            }
+
+            if (btnDownloadBarcode) {
+                btnDownloadBarcode.addEventListener('click', function () {
+                    const code = barcodeInput ? barcodeInput.value.trim() : 'barcode';
+                    const canvas = document.getElementById('barcode_canvas');
+                    if (!canvas) {
+                        alert('No barcode available to download.');
+                        return;
+                    }
+                    const a = document.createElement('a');
+                    a.download = 'barcode-' + code + '.png';
+                    a.href = canvas.toDataURL('image/png');
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                });
+            }
+
+            if (btnPrintBarcode) {
+                btnPrintBarcode.addEventListener('click', function () {
+                    const code = barcodeInput ? barcodeInput.value.trim() : '';
+                    const canvas = document.getElementById('barcode_canvas');
+                    if (!canvas || !code) return;
+                    const dataUrl = canvas.toDataURL('image/png');
+                    const prodName = nameInput ? nameInput.value.trim() : 'Regional Product';
+
+                    const printWin = window.open('', '_blank', 'width=450,height=380');
+                    printWin.document.write(`
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <title>Print Barcode - ${code}</title>
+                            <style>
+                                @page { size: 50mm 25mm; margin: 0; }
+                                body {
+                                    margin: 0;
+                                    padding: 4px;
+                                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                                    text-align: center;
+                                    display: flex;
+                                    flex-direction: column;
+                                    justify-content: center;
+                                    align-items: center;
+                                    height: 100vh;
+                                    box-sizing: border-box;
+                                }
+                                .title {
+                                    font-size: 11px;
+                                    font-weight: bold;
+                                    max-width: 175px;
+                                    white-space: nowrap;
+                                    overflow: hidden;
+                                    text-overflow: ellipsis;
+                                    margin-bottom: 2px;
+                                }
+                                img {
+                                    max-width: 175px;
+                                    max-height: 65px;
+                                    object-fit: contain;
+                                }
+                            </style>
+                        </head>
+                        <body onload="window.print(); window.close();">
+                            <div class="title">${prodName}</div>
+                            <img src="${dataUrl}">
+                        </body>
+                        </html>
+                    `);
+                    printWin.document.close();
+                });
+            }
+
+            // Initial render if value exists on page load
+            if (barcodeInput && barcodeInput.value.trim()) {
+                renderLiveBarcode();
             }
         });
     </script>
