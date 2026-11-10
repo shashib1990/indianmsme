@@ -28,15 +28,12 @@ class GstReportController extends Controller
     public function index(Request $request)
     {
         $adcId = $this->getAdcId();
-        $startDate = $request->input('start_date', Carbon::now()->subMonth()->startOfMonth()->format('Y-m-d'));
-        $endDate   = $request->input('end_date', Carbon::now()->endOfMonth()->format('Y-m-d'));
-
-        $request->merge([
-            'start_date' => $startDate,
-            'end_date'   => $endDate,
-        ]);
+        $startDate = $request->input('start_date');
+        $endDate   = $request->input('end_date');
 
         $filters = $request->only(['start_date', 'end_date', 'tax_rate', 'tax_type', 'search']);
+        $filters['start_date'] = $startDate;
+        $filters['end_date']   = $endDate;
         $filters['tax_rate'] = $request->input('tax_rate', 'all');
         $filters['tax_type'] = $request->input('tax_type', 'all'); // all, intra, inter
 
@@ -74,8 +71,8 @@ class GstReportController extends Controller
     public function exportCsv(Request $request)
     {
         $adcId = $this->getAdcId();
-        $startDate = $request->input('start_date', Carbon::now()->subMonth()->startOfMonth()->format('Y-m-d'));
-        $endDate   = $request->input('end_date', Carbon::now()->endOfMonth()->format('Y-m-d'));
+        $startDate = $request->input('start_date');
+        $endDate   = $request->input('end_date');
 
         $gstRecords = $this->getGstReportRecords($adcId, $request);
         $filename = 'ADC_GST_Report_' . date('Ymd_His') . '.csv';
@@ -97,6 +94,7 @@ class GstReportController extends Controller
             fputcsv($file, [
                 'Invoice Date',
                 'Invoice No',
+                'Product Name',
                 'GSTIN OF RECEIPIENT',
                 'RECEIVER NAME',
                 'PLACE OF SUPPLY',
@@ -113,6 +111,7 @@ class GstReportController extends Controller
                 fputcsv($file, [
                     $row['invoice_date'],
                     $row['invoice_no'],
+                    $row['product_name'] ?? '',
                     $row['recipient_gstin'],
                     $row['receiver_name'],
                     $row['place_of_supply'],
@@ -129,6 +128,7 @@ class GstReportController extends Controller
             // Total summary row at the bottom
             fputcsv($file, [
                 'TOTAL',
+                '',
                 '',
                 '',
                 '',
@@ -257,7 +257,7 @@ class GstReportController extends Controller
         if ($startDate) $posQuery->whereDate('created_at', '>=', $startDate);
         if ($endDate)   $posQuery->whereDate('created_at', '<=', $endDate);
 
-        $orders = $posQuery->orderBy('created_at', 'asc')->get();
+        $orders = $posQuery->orderBy('created_at', 'desc')->orderBy('id', 'desc')->get();
         $groupedLines = [];
 
         foreach ($orders as $order) {
@@ -311,6 +311,7 @@ class GstReportController extends Controller
                 $localProd = $item->localProduct ?: ($inv ? $inv->localProduct : null);
                 $prod = $item->product ?: ($inv ? $inv->product : null);
 
+                $productName = trim($item->product_name ?: ($prod?->product_name ?: ($localProd?->product_name ?: ($inv?->product_name ?: 'General Item'))));
                 $hsnCode = trim($localProd?->hsn_code ?: ($prod?->hsn_code ?: ($item->hsn_code ?: 'N/A')));
                 $gstRate = (float) ($inv?->gst_rate ?? ($localProd?->gst_rate ?? ($prod?->gst_rate ?? ($item->gst_rate ?? 0))));
 
@@ -332,13 +333,15 @@ class GstReportController extends Controller
                     $igst = 0.00;
                 }
 
-                // Group by (Invoice No, HSN Code, Tax Rate) to match GSTR-1 format
-                $groupKey = "{$invoiceNo}|{$hsnCode}|{$gstRate}";
+                // Group by (Order ID, Product Name, HSN Code, Tax Rate)
+                $groupKey = "{$order->id}|{$productName}|{$hsnCode}|{$gstRate}";
 
                 if (!isset($groupedLines[$groupKey])) {
                     $groupedLines[$groupKey] = [
+                        'order_id'         => $order->id,
                         'invoice_date'     => $invoiceDate,
                         'invoice_no'       => $invoiceNo,
+                        'product_name'     => $productName,
                         'recipient_gstin'  => $recipientGstin,
                         'receiver_name'    => $receiverName,
                         'place_of_supply'  => $placeOfSupply,
@@ -371,11 +374,12 @@ class GstReportController extends Controller
             });
         }
 
-        // Filter by Search Keywords (Invoice No, HSN Code, Receiver Name, GSTIN, Place of Supply)
+        // Filter by Search Keywords (Invoice No, Product Name, HSN Code, Receiver Name, GSTIN, Place of Supply)
         if (!empty($search)) {
             $searchLower = strtolower($search);
             $collection = $collection->filter(function ($row) use ($searchLower) {
                 return str_contains(strtolower($row['invoice_no']), $searchLower)
+                    || str_contains(strtolower($row['product_name'] ?? ''), $searchLower)
                     || str_contains(strtolower($row['hsn_code']), $searchLower)
                     || str_contains(strtolower($row['receiver_name']), $searchLower)
                     || str_contains(strtolower($row['recipient_gstin']), $searchLower)

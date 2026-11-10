@@ -5,8 +5,8 @@
 
 @section('content')
     @php
-        $startDate = $filters['start_date'] ?? \Carbon\Carbon::now()->startOfMonth()->format('Y-m-d');
-        $endDate   = $filters['end_date'] ?? \Carbon\Carbon::now()->endOfMonth()->format('Y-m-d');
+        $startDate = $filters['start_date'] ?? '';
+        $endDate   = $filters['end_date'] ?? '';
         $taxRate   = $filters['tax_rate'] ?? 'all';
         $taxType   = $filters['tax_type'] ?? 'all';
         $search    = $filters['search'] ?? '';
@@ -161,6 +161,7 @@
                             <th class="ps-3" style="width: 45px;">#</th>
                             <th style="min-width: 130px;">Invoice Date</th>
                             <th style="min-width: 140px;">Invoice No</th>
+                            <th style="min-width: 180px;">Product Name</th>
                             <th style="min-width: 150px;">GSTIN OF RECEIPIENT</th>
                             <th style="min-width: 180px;">RECEIVER NAME</th>
                             <th style="min-width: 130px;">PLACE OF SUPPLY</th>
@@ -182,8 +183,21 @@
                                 <td class="fw-semibold text-slate-800 text-nowrap">
                                     {{ $row['invoice_date'] }}
                                 </td>
+                                <td class="text-nowrap">
+                                    @if(!empty($row['order_id']))
+                                        <a href="{{ route('adc.pos.orders.print', $row['order_id']) }}" target="_blank"
+                                            class="fw-bold text-primary text-decoration-none"
+                                            title="View Tax Invoice">
+                                            {{ $row['invoice_no'] }}
+                                        </a>
+                                    @else
+                                        <span class="fw-bold text-primary">{{ $row['invoice_no'] }}</span>
+                                    @endif
+                                </td>
                                 <td>
-                                    <span class="fw-bold text-primary">{{ $row['invoice_no'] }}</span>
+                                    <div class="fw-semibold text-dark text-truncate" style="max-width: 220px;" title="{{ $row['product_name'] ?? '—' }}">
+                                        {{ $row['product_name'] ?? '—' }}
+                                    </div>
                                 </td>
                                 <td>
                                     @if($row['recipient_gstin'] === 'REGISTERED/URP' || $row['recipient_gstin'] === 'URP')
@@ -226,7 +240,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="13" class="text-center py-5 text-muted">
+                                <td colspan="14" class="text-center py-5 text-muted">
                                     <iconify-icon icon="solar:box-minimalistic-broken" class="fs-48 text-muted mb-2 d-block mx-auto"></iconify-icon>
                                     <p class="mb-1 fw-semibold fs-14">No GST Sales Records Found</p>
                                     <span class="text-muted small">No outward supplies matching the selected dates and filters.</span>
@@ -237,7 +251,7 @@
                     @if($paginatedRecords->isNotEmpty())
                         <tfoot class="bg-light fw-bold border-top border-2">
                             <tr>
-                                <td colspan="8" class="text-end text-uppercase fs-12 ps-3">Total (Current Filter):</td>
+                                <td colspan="9" class="text-end text-uppercase fs-12 ps-3">Total (Current Filter):</td>
                                 <td class="text-end text-dark">₹{{ number_format($summaryStats['total_taxable'], 2) }}</td>
                                 <td class="text-end text-info">₹{{ number_format($summaryStats['total_sgst'], 2) }}</td>
                                 <td class="text-end text-primary">₹{{ number_format($summaryStats['total_cgst'], 2) }}</td>

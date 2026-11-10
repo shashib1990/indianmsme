@@ -8,6 +8,7 @@ use App\Models\Brand;
 use App\Models\AdcInventory;
 use App\Models\AdcLocalProduct;
 use App\Models\Product;
+use App\Services\BarcodeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -95,6 +96,19 @@ class LocalProductController extends Controller
             'product_image'   => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
+        if ($request->filled('barcode')) {
+            $barcodeVal = trim($request->barcode);
+            $barcodeFormat = $request->input('barcode_format', 'CODE128');
+            $fmtCheck = BarcodeService::validateFormat($barcodeVal, $barcodeFormat);
+            if (!$fmtCheck['valid']) {
+                return back()->withInput()->withErrors(['barcode' => $fmtCheck['message']]);
+            }
+            $dupMsg = BarcodeService::findDuplicate($barcodeVal, $adcId, null, 'local_product');
+            if ($dupMsg) {
+                return back()->withInput()->withErrors(['barcode' => "Duplicate Barcode! Already {$dupMsg}"]);
+            }
+        }
+
         $code = AdcLocalProduct::generateLocalProductCode();
 
         $msmeProductId = $request->msme_product_id;
@@ -177,6 +191,19 @@ class LocalProductController extends Controller
             'product_image'   => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
+        if ($request->filled('barcode')) {
+            $barcodeVal = trim($request->barcode);
+            $barcodeFormat = $request->input('barcode_format', 'CODE128');
+            $fmtCheck = BarcodeService::validateFormat($barcodeVal, $barcodeFormat);
+            if (!$fmtCheck['valid']) {
+                return back()->withInput()->withErrors(['barcode' => $fmtCheck['message']]);
+            }
+            $dupMsg = BarcodeService::findDuplicate($barcodeVal, $adcId, $id, 'local_product');
+            if ($dupMsg) {
+                return back()->withInput()->withErrors(['barcode' => "Duplicate Barcode! Already {$dupMsg}"]);
+            }
+        }
+
         $imagePath = $product->product_image;
         if ($request->hasFile('product_image')) {
             $file = $request->file('product_image');
@@ -199,6 +226,8 @@ class LocalProductController extends Controller
             }
         }
 
+        $newBarcode = $request->barcode ? trim($request->barcode) : null;
+
         $product->update([
             'product_name'    => trim($request->product_name),
             'msme_product_id' => $request->msme_product_id ?: $product->msme_product_id,
@@ -207,9 +236,14 @@ class LocalProductController extends Controller
             'gst_rate'        => $request->gst_rate,
             'brand_id'        => $validatedBrandId,
             'unit_of_measure' => $request->unit_of_measure,
-            'barcode'         => $request->barcode ? trim($request->barcode) : null,
+            'barcode'         => $newBarcode,
             'product_image'   => $imagePath,
         ]);
+
+        // Keep ADC Inventories barcode in sync
+        AdcInventory::where('adc_id', $adcId)
+            ->where('adc_local_product_id', $product->id)
+            ->update(['barcode' => $newBarcode]);
 
         return redirect()->route('adc.local-products.index')
             ->with('success', "Regional Product '{$product->product_name}' updated successfully.");
