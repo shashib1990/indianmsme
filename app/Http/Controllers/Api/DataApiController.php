@@ -7,6 +7,7 @@ use App\Models\ADC;
 use App\Models\User;
 use App\Models\AdcProfile;
 use Illuminate\Http\Request;
+use App\Models\AdcPosOrder;
 
 class DataApiController extends Controller
 {
@@ -87,5 +88,50 @@ class DataApiController extends Controller
             'mvs_count' => $count
         ], 200);
     }
+    public function totalActiveAdc(Request $request)
+{
+    $count = AdcProfile::whereNotNull('first_sale_at')->count();
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Active ADC count fetched successfully.',
+        'active_adc_count' => $count
+    ], 200);
+}
+
+
+
+public function todayPosSale(Request $request)
+{
+    $today = \Carbon\Carbon::today('Asia/Kolkata');
+
+    $totalAmount = AdcPosOrder::whereDate('created_at', $today->toDateString())
+        ->sum('total_amount');
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Today POS Sale fetched successfully.',
+        'today_pos_sale' => (float) $totalAmount
+    ], 200);
+}
+
+
+public function monthlyPosSale(Request $request)
+{
+    $month = \Carbon\Carbon::now('Asia/Kolkata')->month;
+    $year = \Carbon\Carbon::now('Asia/Kolkata')->year;
+
+    $query = AdcPosOrder::whereYear('created_at', $year)
+        ->whereMonth('created_at', $month);
+
+    $totalAmount = (clone $query)->sum('total_amount');
+    $totalOrders = (clone $query)->count();
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Monthly POS Sale fetched successfully.',
+        'monthly_pos_sale' => (float) $totalAmount,
+    ], 200);
+}
 
 }
