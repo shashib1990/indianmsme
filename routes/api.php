@@ -43,3 +43,6 @@ Route::get('/seller', [\App\Http\Controllers\Api\DataApiController::class, 'sell
 Route::get('/total-asc', [\App\Http\Controllers\Api\DataApiController::class, 'totalAsc'])->name('api.total_asc');
 Route::get('/total-scs', [\App\Http\Controllers\Api\DataApiController::class, 'totalScs'])->name('api.total_scs');
 Route::get('/total-mvs', [\App\Http\Controllers\Api\DataApiController::class, 'totalMvs'])->name('api.total_mvs');
+Route::get('/total-active-adc', [\App\Http\Controllers\Api\DataApiController::class, 'totalActiveAdc'])->name('api.total_active_adc');
+Route::get('/today-pos-sale', [\App\Http\Controllers\Api\DataApiController::class, 'todayPosSale'])->name('api.today_pos_sale');
+Route::get('/monthly-pos-sale', [\App\Http\Controllers\Api\DataApiController::class, 'monthlyPosSale'])->name('api.monthly_pos_sale');
