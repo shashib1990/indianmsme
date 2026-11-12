@@ -50,13 +50,14 @@ class GstReportController extends Controller
         );
 
         $summaryStats = [
-            'total_rows'    => $gstRecords->count(),
-            'total_taxable' => (float) $gstRecords->sum('taxable_amount'),
-            'total_cgst'    => (float) $gstRecords->sum('cgst_amount'),
-            'total_sgst'    => (float) $gstRecords->sum('sgst_amount'),
-            'total_igst'    => (float) $gstRecords->sum('igst_amount'),
-            'total_tax'     => (float) ($gstRecords->sum('cgst_amount') + $gstRecords->sum('sgst_amount') + $gstRecords->sum('igst_amount')),
-            'total_amount'  => (float) $gstRecords->sum('total_amount'),
+            'total_rows'     => $gstRecords->count(),
+            'total_quantity' => (float) $gstRecords->sum('quantity'),
+            'total_taxable'  => (float) $gstRecords->sum('taxable_amount'),
+            'total_cgst'     => (float) $gstRecords->sum('cgst_amount'),
+            'total_sgst'     => (float) $gstRecords->sum('sgst_amount'),
+            'total_igst'     => (float) $gstRecords->sum('igst_amount'),
+            'total_tax'      => (float) ($gstRecords->sum('cgst_amount') + $gstRecords->sum('sgst_amount') + $gstRecords->sum('igst_amount')),
+            'total_amount'   => (float) $gstRecords->sum('total_amount'),
         ];
 
         $adcUser = User::with(['adcProfile', 'profile'])->find($adcId);
@@ -98,6 +99,7 @@ class GstReportController extends Controller
                 'GSTIN OF RECEIPIENT',
                 'RECEIVER NAME',
                 'PLACE OF SUPPLY',
+                'Quantity',
                 'Tax Rate',
                 'HSN CODE',
                 'Taxable Amount',
@@ -115,6 +117,7 @@ class GstReportController extends Controller
                     $row['recipient_gstin'],
                     $row['receiver_name'],
                     $row['place_of_supply'],
+                    (float) $row['quantity'] == (int) $row['quantity'] ? (int) $row['quantity'] : number_format($row['quantity'], 2, '.', ''),
                     $row['tax_rate'],
                     $row['hsn_code'],
                     number_format($row['taxable_amount'], 2, '.', ''),
@@ -133,6 +136,7 @@ class GstReportController extends Controller
                 '',
                 '',
                 '',
+                (float) $gstRecords->sum('quantity') == (int) $gstRecords->sum('quantity') ? (int) $gstRecords->sum('quantity') : number_format($gstRecords->sum('quantity'), 2, '.', ''),
                 '',
                 '',
                 number_format($gstRecords->sum('taxable_amount'), 2, '.', ''),
@@ -345,6 +349,7 @@ class GstReportController extends Controller
                         'recipient_gstin'  => $recipientGstin,
                         'receiver_name'    => $receiverName,
                         'place_of_supply'  => $placeOfSupply,
+                        'quantity'         => 0,
                         'tax_rate'         => $gstRate,
                         'hsn_code'         => $hsnCode,
                         'taxable_amount'   => 0.00,
@@ -356,6 +361,7 @@ class GstReportController extends Controller
                     ];
                 }
 
+                $groupedLines[$groupKey]['quantity']       += $netQty;
                 $groupedLines[$groupKey]['taxable_amount'] += $taxable;
                 $groupedLines[$groupKey]['sgst_amount']    += $sgst;
                 $groupedLines[$groupKey]['cgst_amount']    += $cgst;

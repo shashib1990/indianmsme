@@ -165,6 +165,7 @@
                             <th style="min-width: 150px;">GSTIN OF RECEIPIENT</th>
                             <th style="min-width: 180px;">RECEIVER NAME</th>
                             <th style="min-width: 130px;">PLACE OF SUPPLY</th>
+                            <th class="text-center" style="width: 80px;">Quantity</th>
                             <th class="text-center" style="width: 80px;">Tax Rate</th>
                             <th class="text-center" style="min-width: 100px;">HSN CODE</th>
                             <th class="text-end" style="min-width: 120px;">Taxable Amount</th>
@@ -216,6 +217,9 @@
                                         {{ $row['place_of_supply'] }}
                                     </span>
                                 </td>
+                                <td class="text-center fw-bold text-slate-800">
+                                    {{ (float) $row['quantity'] == (int) $row['quantity'] ? (int) $row['quantity'] : number_format($row['quantity'], 2) }}
+                                </td>
                                 <td class="text-center fw-bold text-slate-700">
                                     {{ (float) $row['tax_rate'] }}%
                                 </td>
@@ -240,7 +244,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="14" class="text-center py-5 text-muted">
+                                <td colspan="15" class="text-center py-5 text-muted">
                                     <iconify-icon icon="solar:box-minimalistic-broken" class="fs-48 text-muted mb-2 d-block mx-auto"></iconify-icon>
                                     <p class="mb-1 fw-semibold fs-14">No GST Sales Records Found</p>
                                     <span class="text-muted small">No outward supplies matching the selected dates and filters.</span>
@@ -251,7 +255,11 @@
                     @if($paginatedRecords->isNotEmpty())
                         <tfoot class="bg-light fw-bold border-top border-2">
                             <tr>
-                                <td colspan="9" class="text-end text-uppercase fs-12 ps-3">Total (Current Filter):</td>
+                                <td colspan="7" class="text-end text-uppercase fs-12 ps-3">Total (Current Filter):</td>
+                                <td class="text-center fw-bold text-dark">
+                                    {{ (float) ($summaryStats['total_quantity'] ?? 0) == (int) ($summaryStats['total_quantity'] ?? 0) ? (int) ($summaryStats['total_quantity'] ?? 0) : number_format($summaryStats['total_quantity'] ?? 0, 2) }}
+                                </td>
+                                <td colspan="2"></td>
                                 <td class="text-end text-dark">₹{{ number_format($summaryStats['total_taxable'], 2) }}</td>
                                 <td class="text-end text-info">₹{{ number_format($summaryStats['total_sgst'], 2) }}</td>
                                 <td class="text-end text-primary">₹{{ number_format($summaryStats['total_cgst'], 2) }}</td>
