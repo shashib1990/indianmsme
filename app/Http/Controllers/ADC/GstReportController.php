@@ -100,6 +100,7 @@ class GstReportController extends Controller
                 'RECEIVER NAME',
                 'PLACE OF SUPPLY',
                 'Quantity',
+                'Unit of Measurement',
                 'Tax Rate',
                 'HSN CODE',
                 'Taxable Amount',
@@ -118,6 +119,7 @@ class GstReportController extends Controller
                     $row['receiver_name'],
                     $row['place_of_supply'],
                     (float) $row['quantity'] == (int) $row['quantity'] ? (int) $row['quantity'] : number_format($row['quantity'], 2, '.', ''),
+                    $row['unit_of_measure'] ?? 'PCS',
                     $row['tax_rate'],
                     $row['hsn_code'],
                     number_format($row['taxable_amount'], 2, '.', ''),
@@ -137,6 +139,7 @@ class GstReportController extends Controller
                 '',
                 '',
                 (float) $gstRecords->sum('quantity') == (int) $gstRecords->sum('quantity') ? (int) $gstRecords->sum('quantity') : number_format($gstRecords->sum('quantity'), 2, '.', ''),
+                '',
                 '',
                 '',
                 number_format($gstRecords->sum('taxable_amount'), 2, '.', ''),
@@ -318,6 +321,10 @@ class GstReportController extends Controller
                 $productName = trim($item->product_name ?: ($prod?->product_name ?: ($localProd?->product_name ?: ($inv?->product_name ?: 'General Item'))));
                 $hsnCode = trim($localProd?->hsn_code ?: ($prod?->hsn_code ?: ($item->hsn_code ?: 'N/A')));
                 $gstRate = (float) ($inv?->gst_rate ?? ($localProd?->gst_rate ?? ($prod?->gst_rate ?? ($item->gst_rate ?? 0))));
+                $uom = trim((string) ($inv?->unit_of_measure ?: ($prod?->unit_of_measure ?: ($localProd?->unit_of_measure ?: ($item->unit_of_measure ?? 'PCS')))));
+                if (empty($uom)) {
+                    $uom = 'PCS';
+                }
 
                 if ($gstRate > 0) {
                     $taxable = round($lineTotal / (1.0 + ($gstRate / 100.0)), 2);
@@ -337,8 +344,8 @@ class GstReportController extends Controller
                     $igst = 0.00;
                 }
 
-                // Group by (Order ID, Product Name, HSN Code, Tax Rate)
-                $groupKey = "{$order->id}|{$productName}|{$hsnCode}|{$gstRate}";
+                // Group by (Order ID, Product Name, HSN Code, Tax Rate, UOM)
+                $groupKey = "{$order->id}|{$productName}|{$hsnCode}|{$gstRate}|{$uom}";
 
                 if (!isset($groupedLines[$groupKey])) {
                     $groupedLines[$groupKey] = [
@@ -350,6 +357,7 @@ class GstReportController extends Controller
                         'receiver_name'    => $receiverName,
                         'place_of_supply'  => $placeOfSupply,
                         'quantity'         => 0,
+                        'unit_of_measure'  => $uom,
                         'tax_rate'         => $gstRate,
                         'hsn_code'         => $hsnCode,
                         'taxable_amount'   => 0.00,
@@ -380,13 +388,14 @@ class GstReportController extends Controller
             });
         }
 
-        // Filter by Search Keywords (Invoice No, Product Name, HSN Code, Receiver Name, GSTIN, Place of Supply)
+        // Filter by Search Keywords (Invoice No, Product Name, HSN Code, Receiver Name, GSTIN, Place of Supply, UOM)
         if (!empty($search)) {
             $searchLower = strtolower($search);
             $collection = $collection->filter(function ($row) use ($searchLower) {
                 return str_contains(strtolower($row['invoice_no']), $searchLower)
                     || str_contains(strtolower($row['product_name'] ?? ''), $searchLower)
                     || str_contains(strtolower($row['hsn_code']), $searchLower)
+                    || str_contains(strtolower($row['unit_of_measure'] ?? ''), $searchLower)
                     || str_contains(strtolower($row['receiver_name']), $searchLower)
                     || str_contains(strtolower($row['recipient_gstin']), $searchLower)
                     || str_contains(strtolower($row['place_of_supply']), $searchLower);
