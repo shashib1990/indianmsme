@@ -166,6 +166,7 @@
                             <th style="min-width: 180px;">RECEIVER NAME</th>
                             <th style="min-width: 130px;">PLACE OF SUPPLY</th>
                             <th class="text-center" style="width: 80px;">Quantity</th>
+                            <th class="text-center" style="min-width: 90px;">Unit of Measurement</th>
                             <th class="text-center" style="width: 80px;">Tax Rate</th>
                             <th class="text-center" style="min-width: 100px;">HSN CODE</th>
                             <th class="text-end" style="min-width: 120px;">Taxable Amount</th>
@@ -220,6 +221,11 @@
                                 <td class="text-center fw-bold text-slate-800">
                                     {{ (float) $row['quantity'] == (int) $row['quantity'] ? (int) $row['quantity'] : number_format($row['quantity'], 2) }}
                                 </td>
+                                <td class="text-center">
+                                    <span class="badge bg-light text-slate-700 border text-uppercase px-2 py-0.5 fs-11 fw-semibold">
+                                        {{ $row['unit_of_measure'] ?? 'PCS' }}
+                                    </span>
+                                </td>
                                 <td class="text-center fw-bold text-slate-700">
                                     {{ (float) $row['tax_rate'] }}%
                                 </td>
@@ -244,7 +250,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="15" class="text-center py-5 text-muted">
+                                <td colspan="16" class="text-center py-5 text-muted">
                                     <iconify-icon icon="solar:box-minimalistic-broken" class="fs-48 text-muted mb-2 d-block mx-auto"></iconify-icon>
                                     <p class="mb-1 fw-semibold fs-14">No GST Sales Records Found</p>
                                     <span class="text-muted small">No outward supplies matching the selected dates and filters.</span>
@@ -259,7 +265,7 @@
                                 <td class="text-center fw-bold text-dark">
                                     {{ (float) ($summaryStats['total_quantity'] ?? 0) == (int) ($summaryStats['total_quantity'] ?? 0) ? (int) ($summaryStats['total_quantity'] ?? 0) : number_format($summaryStats['total_quantity'] ?? 0, 2) }}
                                 </td>
-                                <td colspan="2"></td>
+                                <td colspan="3"></td>
                                 <td class="text-end text-dark">₹{{ number_format($summaryStats['total_taxable'], 2) }}</td>
                                 <td class="text-end text-info">₹{{ number_format($summaryStats['total_sgst'], 2) }}</td>
                                 <td class="text-end text-primary">₹{{ number_format($summaryStats['total_cgst'], 2) }}</td>
