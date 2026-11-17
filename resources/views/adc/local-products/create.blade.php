@@ -292,6 +292,9 @@
                 if (!selectEl) return;
                 var valToSet = (targetValue !== null && targetValue !== undefined) ? String(targetValue) : selectEl.value;
                 if (typeof TomSelect !== 'undefined' && selectEl.tomselect) {
+                    if (selectEl.id === 'hsn_code_select') {
+                        selectEl.tomselect.settings.create = true;
+                    }
                     if (!valToSet && valToSet !== '0') {
                         var selectedOpt = selectEl.querySelector('option[selected]');
                         if (selectedOpt) valToSet = selectedOpt.value;
@@ -684,7 +687,6 @@
             }
 
             // ── Barcode Generator & Live Preview Logic ──
-            const barcodeInput = document.getElementById('barcode_input');
             const formatSelect = document.getElementById('barcode_format_select');
             const btnGenerateBarcode = document.getElementById('btn_generate_barcode');
             const btnTogglePreview = document.getElementById('btn_toggle_preview');
