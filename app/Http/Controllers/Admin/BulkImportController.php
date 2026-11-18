@@ -5764,11 +5764,12 @@ class BulkImportController extends Controller
 
             // Parse columns A to V
             $ddcCode          = trim($row['A'] ?? '');
-            $productName      = trim($row['B'] ?? '');
+            $productName      = preg_replace('/\s+/', ' ', trim($row['B'] ?? ''));
             $localProductCode = trim($row['C'] ?? '');
             $categoryInput    = trim($row['D'] ?? '');
-            $hsnCode          = trim($row['E'] ?? '');
-            $barcode          = trim($row['F'] ?? '');
+            $hsnCode          = preg_replace('/\s+/', '', trim($row['E'] ?? ''));
+            $barcodeRaw       = trim($row['F'] ?? '');
+            $barcode          = in_array(strtoupper($barcodeRaw), ['NA', 'N/A', 'NULL', '-']) ? '' : $barcodeRaw;
             $uom              = trim($row['G'] ?? '');
             $quantity         = trim($row['H'] ?? '');
             $mrp              = trim($row['I'] ?? '');
@@ -5919,6 +5920,7 @@ class BulkImportController extends Controller
         $details  = [];
 
         $localProductMap = [];
+        $usedCodesInBatch = [];
 
         DB::beginTransaction();
         try {
@@ -5938,22 +5940,16 @@ class BulkImportController extends Controller
 
                 try {
                     $ddcId = $record['ddc_id'];
-                    $pNameNorm = strtolower(trim($record['product_name']));
+                    $pName = trim($record['product_name']);
+                    $pNameNorm = strtolower($pName);
                     $pCodeNorm = !empty($record['local_product_code']) ? strtoupper(trim($record['local_product_code'])) : null;
 
                     $keyByName = "{$ddcId}:name:{$pNameNorm}";
-                    $keyByCode = $pCodeNorm ? "{$ddcId}:code:{$pCodeNorm}" : null;
 
-                    // 1. Find or create DdcLocalProduct (Cache + DB lookup)
+                    // 1. Find or create DdcLocalProduct (Cache + DB lookup scoped STRICTLY to THIS DDC)
                     $localProduct = null;
-                    if ($keyByCode && isset($localProductMap[$keyByCode])) {
-                        $localProduct = $localProductMap[$keyByCode];
-                    } elseif (isset($localProductMap[$keyByName])) {
+                    if (isset($localProductMap[$keyByName])) {
                         $localProduct = $localProductMap[$keyByName];
-                    }
-
-                    if (!$localProduct && $pCodeNorm) {
-                        $localProduct = DdcLocalProduct::where('local_product_code', $pCodeNorm)->first();
                     }
 
                     if (!$localProduct) {
@@ -5962,11 +5958,22 @@ class BulkImportController extends Controller
                             ->first();
                     }
 
+                    // If not found by name, check by code ONLY within THIS DDC, AND only if product name matches
+                    if (!$localProduct && $pCodeNorm) {
+                        $existingByCode = DdcLocalProduct::where('ddc_id', $ddcId)
+                            ->where('local_product_code', $pCodeNorm)
+                            ->first();
+
+                        if ($existingByCode && strtolower(trim($existingByCode->product_name)) === $pNameNorm) {
+                            $localProduct = $existingByCode;
+                        }
+                    }
+
                     if ($localProduct) {
                         // Update existing Local Product attributes if missing
                         $updateData = [];
-                        if (empty($localProduct->barcode) && !empty($record['barcode'])) {
-                            $updateData['barcode'] = $record['barcode'];
+                        if (empty($localProduct->barcode) && !empty($record['barcode']) && !in_array(strtoupper(trim($record['barcode'])), ['NA', 'N/A', 'NULL', '-'])) {
+                            $updateData['barcode'] = trim($record['barcode']);
                         }
                         if (empty($localProduct->hsn_code) && !empty($record['hsn_code'])) {
                             $updateData['hsn_code'] = $record['hsn_code'];
@@ -5978,11 +5985,28 @@ class BulkImportController extends Controller
                             $localProduct->update($updateData);
                         }
                     } else {
-                        // Create new DdcLocalProduct (guarantee unique code)
+                        // Create new DdcLocalProduct
+                        // Check if the provided code is already taken (in this batch, or in database by any DDC)
                         $code = $pCodeNorm;
-                        if (empty($code) || DdcLocalProduct::where('local_product_code', $code)->exists()) {
-                            $code = DdcLocalProduct::generateLocalProductCode();
+                        $isCodeTaken = false;
+                        if (empty($code)) {
+                            $isCodeTaken = true;
+                        } elseif (isset($usedCodesInBatch[$code])) {
+                            $isCodeTaken = true;
+                        } elseif (DdcLocalProduct::where('local_product_code', $code)->exists()) {
+                            $isCodeTaken = true;
                         }
+
+                        // If code is duplicate or taken, auto-update it with a fresh unique code
+                        if ($isCodeTaken) {
+                            $code = DdcLocalProduct::generateLocalProductCode();
+                            while (isset($usedCodesInBatch[$code]) || DdcLocalProduct::where('local_product_code', $code)->exists()) {
+                                $num = ((int) substr($code, 3)) + 1;
+                                $code = 'LCL' . str_pad((string)$num, 6, '0', STR_PAD_LEFT);
+                            }
+                        }
+
+                        $cleanBarcode = (!empty($record['barcode']) && !in_array(strtoupper(trim($record['barcode'])), ['NA', 'N/A', 'NULL', '-'])) ? trim($record['barcode']) : null;
 
                         $localProduct = DdcLocalProduct::create([
                             'ddc_id'             => $ddcId,
@@ -5992,26 +6016,32 @@ class BulkImportController extends Controller
                             'hsn_code'           => $record['hsn_code'] ?: null,
                             'gst_rate'           => $record['gst_rate'] ?? 0,
                             'unit_of_measure'    => $this->normalizeUom($record['unit_of_measure'] ?? null, 'Piece'),
-                            'barcode'            => $record['barcode'] ?: null,
+                            'barcode'            => $cleanBarcode,
                             'status'             => 'Active',
                         ]);
+
+                        $usedCodesInBatch[$code] = true;
+                        if ($pCodeNorm) {
+                            $usedCodesInBatch[$pCodeNorm] = true;
+                        }
                     }
 
                     // Save into in-memory batch map
                     $localProductMap[$keyByName] = $localProduct;
-                    if ($localProduct->local_product_code) {
-                        $localProductMap["{$ddcId}:code:" . strtoupper($localProduct->local_product_code)] = $localProduct;
-                    }
 
                     // 2. Insert separate Stock entry into ddc_inventories for every row
+                    $cleanBarcodeInv = (!empty($record['barcode']) && !in_array(strtoupper(trim($record['barcode'])), ['NA', 'N/A', 'NULL', '-']))
+                        ? trim($record['barcode'])
+                        : $localProduct->barcode;
+
                     DB::table('ddc_inventories')->insert([
                         'ddc_id'                 => $ddcId,
                         'inventory_source'       => 'LOCAL',
                         'product_id'             => null,
                         'ddc_local_product_id'   => $localProduct->id,
-                        'product_name'           => $localProduct->product_name,
+                        'product_name'           => $record['product_name'],
                         'product_code'           => $localProduct->local_product_code,
-                        'barcode'                => $record['barcode'] ?? $localProduct->barcode,
+                        'barcode'                => $cleanBarcodeInv,
                         'unit_of_measure'        => $this->normalizeUom($record['unit_of_measure'] ?? $localProduct->unit_of_measure ?? null, 'Piece'),
                         'quantity'               => (float)($record['quantity'] ?? 0),
                         'reserved_quantity'      => 0,
