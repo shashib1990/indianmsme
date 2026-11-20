@@ -280,6 +280,12 @@
                 initSUIDropdown();
             }
 
+            const uomSelectEl = document.getElementById('uom_select');
+            if (uomSelectEl && uomSelectEl.tomselect) {
+                uomSelectEl.tomselect.settings.create = true;
+                uomSelectEl.tomselect.settings.createOnBlur = true;
+            }
+
             const categorySelect = document.getElementById('category_id_select');
             const hsnSelect = document.getElementById('hsn_code_select');
             const gstInput = document.getElementById('gst_rate_input');
@@ -292,7 +298,7 @@
                 if (!selectEl) return;
                 var valToSet = (targetValue !== null && targetValue !== undefined) ? String(targetValue) : selectEl.value;
                 if (typeof TomSelect !== 'undefined' && selectEl.tomselect) {
-                    if (selectEl.id === 'hsn_code_select') {
+                    if (selectEl.id === 'hsn_code_select' || selectEl.id === 'uom_select') {
                         selectEl.tomselect.settings.create = true;
                     }
                     if (!valToSet && valToSet !== '0') {

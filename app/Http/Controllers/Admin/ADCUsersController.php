@@ -106,6 +106,126 @@ class ADCUsersController extends Controller
         ));
     }
 
+    /**
+     * Export all ADC data with Wallet Balance to Excel/CSV
+     */
+    public function exportAll(Request $request)
+    {
+        @ini_set('memory_limit', '-1');
+        @set_time_limit(300);
+
+        $records = ADC::with(['adcProfile', 'profile'])->orderBy('id', 'asc')->get();
+
+        $headers = [
+            'S.No.',
+            'Name',
+            'Canteen Name',
+            'ADC Code',
+            'Code',
+            'Email',
+            'Phone',
+            'State',
+            'Wallet Balance',
+        ];
+
+        $format = strtolower((string) $request->get('format', 'xlsx'));
+
+        if ($format === 'csv') {
+            return response()->streamDownload(function () use ($records, $headers) {
+                $file = fopen('php://output', 'w');
+                fputs($file, "\xEF\xBB\xBF"); // UTF-8 BOM for Excel
+                fputcsv($file, $headers);
+
+                $sNo = 1;
+                foreach ($records as $row) {
+                    $canteenName = $row->adcProfile?->company_name ?? ($row->adcProfile?->trade_name ?? ($row->profile?->company_name ?? '—'));
+                    $adcCode = $row->adcProfile?->adc_code ?? $row->adc_code ?? ('ASC' . str_pad($row->id, 3, '0', STR_PAD_LEFT));
+                    $code = $row->adcProfile?->code ?? '—';
+                    $phone = $row->phone ?? ($row->mobile ?? '—');
+                    $state = $row->state ?? ($row->profile?->state ?? ($row->adcProfile?->state ?? '—'));
+                    $walletBalance = number_format((float) ($row->adcProfile?->wallet_balance ?? 0), 2, '.', '');
+
+                    fputcsv($file, [
+                        $sNo++,
+                        $row->name,
+                        $canteenName,
+                        $adcCode,
+                        $code,
+                        $row->email,
+                        $phone,
+                        $state,
+                        $walletBalance,
+                    ]);
+                }
+                fclose($file);
+            }, 'all_adc_data_' . date('Y-m-d_H-i-s') . '.csv', [
+                'Content-Type' => 'text/csv; charset=UTF-8'
+            ]);
+        }
+
+        // Export as real Excel (.xlsx) spreadsheet
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('All ADC Data');
+
+        // Header Row
+        $sheet->fromArray($headers, null, 'A1');
+
+        // Style Header
+        $headerRange = 'A1:I1';
+        $sheet->getStyle($headerRange)->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_WHITE));
+        $sheet->getStyle($headerRange)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('FF1E293B');
+        $sheet->getStyle($headerRange)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        $rowsData = [];
+        $sNo = 1;
+        foreach ($records as $row) {
+            $canteenName = $row->adcProfile?->company_name ?? ($row->adcProfile?->trade_name ?? ($row->profile?->company_name ?? '—'));
+            $adcCode = $row->adcProfile?->adc_code ?? $row->adc_code ?? ('ASC' . str_pad($row->id, 3, '0', STR_PAD_LEFT));
+            $code = $row->adcProfile?->code ?? '—';
+            $phone = (string) ($row->phone ?? ($row->mobile ?? '—'));
+            $state = $row->state ?? ($row->profile?->state ?? ($row->adcProfile?->state ?? '—'));
+            $walletBalance = (float) ($row->adcProfile?->wallet_balance ?? 0);
+
+            $rowsData[] = [
+                $sNo++,
+                $row->name,
+                $canteenName,
+                $adcCode,
+                $code,
+                $row->email,
+                $phone,
+                $state,
+                $walletBalance,
+            ];
+        }
+
+        if (!empty($rowsData)) {
+            $sheet->fromArray($rowsData, null, 'A2');
+
+            $lastRow = count($rowsData) + 1;
+            // Format column I (Wallet Balance) as currency decimal
+            $sheet->getStyle('I2:I' . $lastRow)->getNumberFormat()->setFormatCode('#,##0.00');
+            // Center S.No, ADC Code, Code
+            $sheet->getStyle('A2:A' . $lastRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('D2:E' . $lastRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            // Format Phone as text to prevent scientific notation
+            $sheet->getStyle('G2:G' . $lastRow)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_TEXT);
+        }
+
+        // Auto-fit column widths
+        foreach (range('A', 'I') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        return response()->streamDownload(function () use ($spreadsheet) {
+            $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
+            $writer->save('php://output');
+        }, 'all_adc_data_' . date('Y-m-d_H-i-s') . '.xlsx', [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
+
     public function getDetails($id)
     {
         $adc = ADC::with(['adcProfile'])->find($id);
