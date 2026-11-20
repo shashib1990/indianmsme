@@ -191,6 +191,7 @@ Route::name('admin.')->group(function () {
 
         // External Users - ADC (Separate Pages)
         Route::get('external/adc', [ADCUsersController::class, 'index'])->name('external.adc.index')->middleware('permission:users.view');
+        Route::get('external/adc/export-all', [ADCUsersController::class, 'exportAll'])->name('external.adc.export-all')->middleware('permission:users.view');
         Route::get('external/adc/create', [ADCUsersController::class, 'create'])->name('external.adc.create')->middleware('permission:users.manage');
         Route::post('external/adc', [ADCUsersController::class, 'store'])->name('external.adc.store')->middleware('permission:users.manage');
         Route::get('external/adc/get-details/{id}', [ADCUsersController::class, 'getDetails'])->name('external.adc.get-details')->middleware('permission:users.view');

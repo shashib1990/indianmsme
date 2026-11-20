@@ -314,6 +314,133 @@
             color: #dc2626;
         }
 
+        /* ── UOM Custom Trigger & Floating Menu ── */
+        .uom-wrap {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            min-width: 95px;
+            max-width: 125px;
+        }
+
+        .uom-btn {
+            width: 100%;
+            min-width: 95px;
+            max-width: 125px;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #334155;
+            padding: 3px 6px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 6px;
+            background-color: #fff;
+            cursor: pointer;
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: all .2s;
+            user-select: none;
+            box-sizing: border-box;
+        }
+
+        .uom-btn:hover {
+            border-color: #cbd5e1;
+            background-color: #f8fafc;
+        }
+
+        .uom-btn.active, .uom-btn:focus {
+            border-color: #ff9933;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 153, 51, .12);
+            justify-content: space-between;
+        }
+
+        .uom-val-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        .uom-arrow-icon {
+            display: inline-flex;
+            font-size: 11px;
+            color: #ea580c;
+            flex-shrink: 0;
+        }
+
+        .uom-btn.saving {
+            border-color: #a78bfa;
+            background-color: #faf5ff;
+        }
+
+        .uom-btn.saved {
+            border-color: #4ade80;
+            background-color: #f0fdf4;
+        }
+
+        .uom-btn.err {
+            border-color: #f87171;
+            background-color: #fef2f2;
+        }
+
+        /* ── Compact Floating UOM Menu (5 items visible, always opens downwards) ── */
+        #uom-dropdown-menu {
+            position: fixed;
+            z-index: 100050;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            max-height: 155px; /* Exactly 5 items visible */
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            display: none;
+            padding: 4px;
+            box-sizing: border-box;
+        }
+
+        #uom-dropdown-menu::-webkit-scrollbar {
+            width: 5px;
+        }
+        #uom-dropdown-menu::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        #uom-dropdown-menu::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .uom-menu-item {
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #334155;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background .15s, color .15s;
+            height: 30px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .uom-menu-item:hover {
+            background-color: #fff7ed;
+            color: #ea580c;
+            font-weight: 600;
+        }
+
+        .uom-menu-item.selected {
+            background-color: #ffedd5;
+            color: #c2410c;
+            font-weight: 700;
+        }
+
         /* ── Margin cell ── */
         .margin-wrap {
             position: relative;
@@ -481,7 +608,7 @@
                             <th class="group-product" style="min-width:210px;">Product</th>
                             <th style="min-width:70px;">Source</th>
                             <th style="min-width:75px;">Batch</th>
-                            <th style="min-width:70px;">UOM</th>
+                            <th style="min-width:110px;">UOM ✎</th>
 
                             {{-- Stock --}}
                             <th class="group-stock" style="min-width:85px;">Received</th>
@@ -538,7 +665,7 @@
                                         ? $inv->product->featured_image
                                         : asset('storage/' . $inv->product->featured_image);
                                 }
-                                $uom = $inv->unit_of_measure ?? ($inv->product?->unit_of_measure ?? 'Units');
+                                $uom = $inv->unit_of_measure ?? ($inv->product?->unit_of_measure ?? ($inv->localProduct?->unit_of_measure ?? 'Piece'));
                                 $gstRateVal = (float) (
                                     $inv->gst_rate
                                     ?? $inv->product?->gst_rate
@@ -609,8 +736,15 @@
                                     </span>
                                 </td>
 
-                                {{-- UOM --}}
-                                <td><span class="text-muted small">{{ $uom }}</span></td>
+                                {{-- UOM (editable) --}}
+                                <td>
+                                    <div class="uom-wrap">
+                                        <div class="uom-btn" tabindex="0" data-field="unit_of_measure" data-val="{{ $uom }}" title="Click to change UOM">
+                                            <span class="uom-val-text">{{ $uom }}</span>
+                                        </div>
+                                        <span class="save-tip" id="si-uom-{{ $inv->id }}"></span>
+                                    </div>
+                                </td>
 
                                 {{-- ── Stock Tracking ── --}}
                                 <td class="col-stock">
@@ -735,6 +869,9 @@
             {{ $inventories->links() }}
         </div>
     @endif
+
+    {{-- Floating UOM Dropdown Menu --}}
+    <div id="uom-dropdown-menu"></div>
 
     <!-- Inventory Barcode View & Download Modal -->
     <div class="modal fade" id="invBarcodeViewModal" tabindex="-1" aria-hidden="true">
@@ -920,6 +1057,7 @@
                 if (field === 'margin') return `si-margin-${invId}`;
                 if (field === 'mfg_date') return `si-mfg-${invId}`;
                 if (field === 'expire_date') return `si-exp-${invId}`;
+                if (field === 'unit_of_measure') return `si-uom-${invId}`;
                 return `si-${field}-${invId}`;
             }
 
@@ -992,6 +1130,167 @@
 
             document.querySelectorAll('.mfg-field, .exp-field').forEach(inp => {
                 inp.addEventListener('change', () => saveField(inp));
+            });
+
+            // ── Floating UOM Dropdown Handler ──
+            const uomUnits = {!! json_encode($units ?? ['Piece', 'Box', 'Pack', 'Bottle', 'Kg', 'Gram', 'Litre', 'ML', 'Pair', 'Set', 'Meter', 'Dozen', 'Container', 'Other']) !!};
+            const uomMenu = document.getElementById('uom-dropdown-menu');
+            let activeUomBtn = null;
+
+            function closeUomMenu() {
+                if (activeUomBtn) {
+                    activeUomBtn.classList.remove('active');
+                    const arrow = activeUomBtn.querySelector('.uom-arrow-icon');
+                    if (arrow) arrow.remove();
+                    activeUomBtn = null;
+                }
+                if (uomMenu) {
+                    uomMenu.style.display = 'none';
+                    uomMenu.innerHTML = '';
+                }
+            }
+
+            function openUomMenu(btn) {
+                if (activeUomBtn === btn) {
+                    closeUomMenu();
+                    return;
+                }
+                if (activeUomBtn) {
+                    closeUomMenu();
+                }
+                activeUomBtn = btn;
+                btn.classList.add('active');
+
+                // Add arrow icon ONLY to the clicked active box
+                const existingArrow = btn.querySelector('.uom-arrow-icon');
+                if (!existingArrow) {
+                    const arrow = document.createElement('iconify-icon');
+                    arrow.setAttribute('icon', 'solar:alt-arrow-up-bold');
+                    arrow.className = 'uom-arrow-icon';
+                    arrow.style.cssText = 'color:#ea580c; font-size:11px; flex-shrink:0;';
+                    btn.appendChild(arrow);
+                }
+
+                const currentVal = (btn.dataset.val || '').trim();
+                const rect = btn.getBoundingClientRect();
+
+                let html = '';
+                uomUnits.forEach(u => {
+                    const isSel = (u.toLowerCase() === currentVal.toLowerCase());
+                    html += `<div class="uom-menu-item ${isSel ? 'selected' : ''}" data-value="${u}">
+                        <span>${u}</span>
+                        ${isSel ? '<span style="background-color:#ea580c; color:#ffffff; border-radius:4px; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;"><iconify-icon icon="solar:check-bold" style="font-size:11px;"></iconify-icon></span>' : ''}
+                    </div>`;
+                });
+                uomMenu.innerHTML = html;
+
+                // Always opens downwards directly below the button
+                const top = rect.bottom + 2;
+                const left = rect.left;
+                const width = Math.max(rect.width, 110);
+
+                uomMenu.style.top = top + 'px';
+                uomMenu.style.left = left + 'px';
+                uomMenu.style.width = width + 'px';
+                uomMenu.style.display = 'block';
+
+                const selectedItem = uomMenu.querySelector('.uom-menu-item.selected');
+                if (selectedItem) {
+                    selectedItem.scrollIntoView({ block: 'nearest' });
+                }
+            }
+
+            document.querySelectorAll('.uom-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    openUomMenu(this);
+                });
+            });
+
+            if (uomMenu) {
+                uomMenu.addEventListener('click', function(e) {
+                    const item = e.target.closest('.uom-menu-item');
+                    if (!item || !activeUomBtn) return;
+
+                    const newVal = item.dataset.value;
+                    const btn = activeUomBtn; // Save local reference before closeUomMenu resets activeUomBtn!
+                    const row = btn.closest('tr');
+                    const invId = row.dataset.invId;
+                    const updateUrl = row.dataset.updateUrl;
+                    const tipId = `si-uom-${invId}`;
+                    const valTextEl = btn.querySelector('.uom-val-text');
+
+                    closeUomMenu();
+
+                    if (btn.dataset.val === newVal) {
+                        return;
+                    }
+
+                    btn.dataset.val = newVal;
+                    if (valTextEl) valTextEl.textContent = newVal;
+
+                    btn.classList.remove('saved', 'err');
+                    btn.classList.add('saving');
+                    showTip(tipId, 'saving', '⏳ Saving…');
+
+                    const body = new URLSearchParams();
+                    body.append('_method', 'PUT');
+                    body.append('_token', CSRF);
+                    body.append('unit_of_measure', newVal);
+
+                    fetch(updateUrl, {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                        body: body,
+                    })
+                        .then(r => r.json().then(data => ({ ok: r.ok, data })))
+                        .then(({ ok, data }) => {
+                            btn.classList.remove('saving');
+                            if (ok && data.success) {
+                                btn.classList.add('saved');
+                                showTip(tipId, 'saved', '✓ Saved');
+                                setTimeout(() => {
+                                    btn.classList.remove('saved');
+                                }, 2500);
+                            } else {
+                                btn.classList.add('err');
+                                showTip(tipId, 'err', '✗ ' + (data.message || 'Update failed'));
+                            }
+                        })
+                        .catch(() => {
+                            btn.classList.remove('saving');
+                            btn.classList.add('err');
+                            showTip(tipId, 'err', '✗ Failed');
+                        });
+                });
+            }
+
+            if (uomMenu) {
+                uomMenu.addEventListener('wheel', function(e) {
+                    e.stopPropagation();
+                }, { passive: true });
+            }
+
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.uom-btn') && !e.target.closest('#uom-dropdown-menu')) {
+                    closeUomMenu();
+                }
+            });
+
+            window.addEventListener('scroll', function(e) {
+                // If scrolling inside the dropdown menu itself, do NOT close it
+                if (e.target && (e.target === uomMenu || (e.target.closest && e.target.closest('#uom-dropdown-menu')))) {
+                    return;
+                }
+                if (activeUomBtn) {
+                    closeUomMenu();
+                }
+            }, true);
+
+            window.addEventListener('resize', function() {
+                if (activeUomBtn) {
+                    closeUomMenu();
+                }
             });
 
             // Toggle POS Status Ajax Handler

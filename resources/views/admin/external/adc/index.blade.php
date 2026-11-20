@@ -153,6 +153,13 @@
     <x-admin.page-header title="Manage ADC"
         subtitle="Manage ADC accounts, reset credentials, and monitor ADC sessions." :actions="[
             [
+                'label' => 'Export all ADC data',
+                'icon' => 'solar:file-download-bold-duotone',
+                'url' => route('admin.external.adc.export-all'),
+                'permission' => 'users.view',
+                'btnClass' => 'btn-success'
+            ],
+            [
                 'label' => 'Manage DDC',
                 'icon' => 'solar:user-id-bold-duotone',
                 'url' => route('admin.external.ddc.index'),

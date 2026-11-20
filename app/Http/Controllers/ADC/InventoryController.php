@@ -91,7 +91,11 @@ class InventoryController extends Controller
 
         $inventories = $query->orderBy('id', 'desc')->paginate($perPage)->withQueryString();
 
-        return view('adc.inventory.index', compact('inventories', 'search', 'source', 'perPage', 'expiryFilter'));
+        $defaultUnits = ['Piece', 'Box', 'Pack', 'Bottle', 'Kg', 'Gram', 'Litre', 'ML', 'Pair', 'Set', 'Meter', 'Dozen', 'Container', 'Other'];
+        $dbUnits = \App\Models\UnitOfMeasure::getUnitsList();
+        $units = array_values(array_unique(array_merge($defaultUnits, $dbUnits)));
+
+        return view('adc.inventory.index', compact('inventories', 'search', 'source', 'perPage', 'expiryFilter', 'units'));
     }
 
     /**
@@ -299,6 +303,7 @@ class InventoryController extends Controller
             'margin' => 'nullable|numeric|min:0|max:100',
             'adc_margin' => 'nullable|numeric|min:0|max:100',
             'csp_margin' => 'nullable|numeric|min:0|max:100',
+            'unit_of_measure' => 'nullable|string|max:50',
         ]);
 
         $mrp = array_key_exists('mrp', $validated) && $validated['mrp'] !== null 
@@ -334,6 +339,15 @@ class InventoryController extends Controller
                 'success' => false,
                 'message' => 'CSP (₹' . number_format($checkCsp, 2) . ') cannot be greater than MRP (₹' . number_format($mrp, 2) . ').',
             ], 422);
+        }
+
+        if (array_key_exists('unit_of_measure', $validated)) {
+            $uomVal = trim((string) $validated['unit_of_measure']);
+            $validated['unit_of_measure'] = $uomVal ?: null;
+            if ($uomVal && $inv->adc_local_product_id) {
+                \App\Models\AdcLocalProduct::where('id', $inv->adc_local_product_id)
+                    ->update(['unit_of_measure' => $uomVal]);
+            }
         }
 
         $inv->update($validated);
@@ -373,6 +387,7 @@ class InventoryController extends Controller
             'success' => true,
             'message' => 'Inventory updated successfully.',
             'inventory' => $freshInv,
+            'unit_of_measure' => $freshInv->unit_of_measure,
             'mrp' => number_format((float) $freshInv->mrp, 2, '.', ''),
             'purchase_price' => number_format((float) $freshInv->purchase_price, 2, '.', ''),
             'csp' => number_format((float) $freshInv->csp, 2, '.', ''),
