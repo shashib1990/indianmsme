@@ -152,6 +152,19 @@ class Invoice extends Model
         } else {
             $gstinVal = !empty($supplierGstin) ? $supplierGstin : 'N/A';
 
+            // Auto-detect if this supplier already has an active series prefix for retail POS (e.g. UPR/26-27, BRR/26-27)
+            if ($normalizedMode === 'retail') {
+                $latestCustomInv = self::where('financial_year', $fyStr)
+                    ->where('supplier_gstin', $gstinVal)
+                    ->whereIn('type', ['ddc_pos_retail', 'pos_retail'])
+                    ->latest('id')
+                    ->first();
+
+                if ($latestCustomInv && preg_match('#^([A-Z0-9_\-]+/' . preg_quote($fyStr, '#') . ')/(\d+)$#', $latestCustomInv->invoice_number, $m)) {
+                    $seriesPrefix = $m[1];
+                }
+            }
+
             // Category 2 & 3: Sequence is maintained per Supplier GSTIN per Financial Year
             $query = self::where('financial_year', $fyStr)
                 ->where('supplier_gstin', $gstinVal)
