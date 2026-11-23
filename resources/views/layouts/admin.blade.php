@@ -1211,6 +1211,29 @@
                         </div>
                     </li>
 
+                    {{-- ========= REPORTS ========= --}}
+                    <li class="menu-title mt-2">Reports</li>
+                    <li class="nav-item">
+                        <a class="nav-link menu-arrow {{ request()->routeIs('admin.reports.*') ? '' : '' }}"
+                            href="#sidebarProductWiseSaleReport" data-bs-toggle="collapse" role="button"
+                            aria-expanded="{{ request()->routeIs('admin.reports.*') ? 'true' : 'false' }}"
+                            aria-controls="sidebarProductWiseSaleReport">
+                            <span class="nav-icon">
+                                <iconify-icon icon="solar:chart-2-bold-duotone" class="text-primary"></iconify-icon>
+                            </span>
+                            <span class="nav-text fw-semibold">Product wise sale report</span>
+                        </a>
+                        <div class="collapse {{ request()->routeIs('admin.reports.*') ? 'show' : '' }}"
+                            id="sidebarProductWiseSaleReport">
+                            <ul class="nav sub-navbar-nav">
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link {{ request()->routeIs('admin.reports.ddc.*') ? 'active' : '' }}"
+                                        href="{{ route('admin.reports.ddc.index') }}">DDC</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+
                     {{-- ========= DISCREPANCY DEBIT & CREDIT NOTES ========= --}}
                     <li class="menu-title mt-2">Discrepancy Claims & Notes</li>
                     <li class="nav-item">
