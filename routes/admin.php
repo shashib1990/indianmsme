@@ -372,11 +372,16 @@ Route::name('admin.')->group(function () {
         Route::get('adc-excess-invoices/{id}', [\App\Http\Controllers\Admin\ExcessInvoiceController::class, 'showAdcExcessInvoice'])->name('adc-excess-invoices.show')->middleware('permission:users.view');
         Route::get('adc-credit-notes/{id}', [\App\Http\Controllers\Admin\CreditNoteController::class, 'showAdcCreditNote'])->name('adc-credit-notes.show')->middleware('permission:users.view');
 
-        // Reports - DDC Sales Report
+        // Reports - Product Wise Sales Reports (DDC & ADC)
         Route::prefix('reports')->name('reports.')->group(function () {
+            // DDC Sales Report
             Route::get('ddc', [\App\Http\Controllers\Admin\DdcSalesReportController::class, 'index'])->name('ddc.index')->middleware('permission:users.view');
             Route::get('ddc/export', [\App\Http\Controllers\Admin\DdcSalesReportController::class, 'export'])->name('ddc.export')->middleware('permission:users.view');
             Route::get('ddc/{id}', [\App\Http\Controllers\Admin\DdcSalesReportController::class, 'show'])->name('ddc.show')->middleware('permission:users.view');
+
+            // ADC Sales Report (from adc_orders)
+            Route::get('adc', [\App\Http\Controllers\Admin\AdcSalesReportController::class, 'index'])->name('adc.index')->middleware('permission:users.view');
+            Route::get('adc/export', [\App\Http\Controllers\Admin\AdcSalesReportController::class, 'export'])->name('adc.export')->middleware('permission:users.view');
         });
 
         // Seller Payments Dashboard

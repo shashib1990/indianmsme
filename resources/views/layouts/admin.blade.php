@@ -1230,6 +1230,10 @@
                                     <a class="sub-nav-link {{ request()->routeIs('admin.reports.ddc.*') ? 'active' : '' }}"
                                         href="{{ route('admin.reports.ddc.index') }}">DDC</a>
                                 </li>
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link {{ request()->routeIs('admin.reports.adc.*') ? 'active' : '' }}"
+                                        href="{{ route('admin.reports.adc.index') }}">ADC</a>
+                                </li>
                             </ul>
                         </div>
                     </li>
@@ -1922,7 +1926,9 @@
                 { parent: 'System Settings', title: 'ASWT Bank & Payment QR', url: "{{ route('admin.settings.aswt-bank.index') }}", icon: 'solar:bank-bold-duotone', keywords: 'aswt bank details upi qr code account' },
                 { parent: 'System Settings', title: 'Logos & Platform Branding', url: "{{ route('admin.settings.logos.index') }}", icon: 'solar:gallery-wide-bold-duotone', keywords: 'logo header logo footer logo favicon branding' },
                 { parent: 'System Settings', title: 'Google Gemini AI API Key & Model', url: "{{ route('admin.settings.gemini.index') }}", icon: 'solar:magic-stick-3-bold-duotone', keywords: 'gemini ai api key google invoice scanner' },
-                { parent: 'System Settings', title: 'Homepage Banners', url: "{{ route('admin.banners.index') }}", icon: 'solar:slider-minimalistic-bold-duotone', keywords: 'banners hero slider homepage image' }
+                { parent: 'System Settings', title: 'Homepage Banners', url: "{{ route('admin.banners.index') }}", icon: 'solar:slider-minimalistic-bold-duotone', keywords: 'banners hero slider homepage image' },
+                { parent: 'Reports', title: 'DDC Sales Report', url: "{{ route('admin.reports.ddc.index') }}", icon: 'solar:chart-2-bold-duotone', keywords: 'ddc sales report pos paid product wise orders export excel csv' },
+                { parent: 'Reports', title: 'ADC Sales Report', url: "{{ route('admin.reports.adc.index') }}", icon: 'solar:chart-2-bold-duotone', keywords: 'adc sales report orders paid product wise export excel csv' }
             ];
 
             // 2. Dynamically Scrape any active sidebar links
