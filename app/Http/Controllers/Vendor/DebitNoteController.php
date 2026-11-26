@@ -21,7 +21,7 @@ class DebitNoteController extends Controller
         $search = $request->get('search');
 
         $query = DebitNote::where('debit_notes.seller_id', $sellerId)
-            ->with(['purchaseOrder', 'purchaseOrderItem', 'ddc']);
+            ->with(['purchaseOrder.invoice', 'purchaseOrderItem', 'ddc']);
 
         if ($status) {
             $query->where('debit_notes.status', $status);
@@ -41,7 +41,7 @@ class DebitNoteController extends Controller
         $adcQuery = \App\Models\AdcDebitNote::where('adc_debit_notes.seller_id', $sellerId)
             ->where('adc_debit_notes.discrepancy_type', '!=', 'EXCESS')
             ->whereNotIn('adc_debit_notes.status', ['PENDING', 'PENDING_ADMIN_APPROVAL', 'ADMIN_REJECTED', 'CANCELLED'])
-            ->with(['order.invoice', 'invoice', 'items.adcOrderItem.product', 'adc', 'creditNote']);
+            ->with(['order.invoice', 'order.purchaseOrders', 'invoice', 'items.adcOrderItem.purchaseOrder', 'items.adcOrderItem.product', 'adc', 'creditNote']);
 
         if ($status) {
             $adcQuery->where('adc_debit_notes.status', $status);
@@ -56,6 +56,12 @@ class DebitNoteController extends Controller
                   })
                   ->orWhereHas('invoice', function ($invQ) use ($search) {
                       $invQ->where('invoice_number', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('items.adcOrderItem.purchaseOrder', function ($poQ) use ($search) {
+                      $poQ->where('po_number', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('order.purchaseOrders', function ($poQ) use ($search) {
+                      $poQ->where('po_number', 'like', "%{$search}%");
                   });
             });
         }
@@ -309,7 +315,7 @@ class DebitNoteController extends Controller
         $sellerId = auth('vendor')->id();
         $debitNote = \App\Models\AdcDebitNote::where('seller_id', $sellerId)
             ->whereNotIn('status', ['PENDING', 'PENDING_ADMIN_APPROVAL', 'ADMIN_REJECTED', 'CANCELLED'])
-            ->with(['order.invoice', 'invoice', 'items.adcOrderItem.product', 'adc', 'creditNote'])
+            ->with(['order.invoice', 'order.purchaseOrders', 'invoice', 'items.adcOrderItem.purchaseOrder', 'items.adcOrderItem.product', 'adc', 'creditNote', 'seller'])
             ->findOrFail($id);
 
         return view('vendor.debit-notes.show-adc', compact('debitNote'));
