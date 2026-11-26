@@ -42,6 +42,12 @@
                         <span class="text-muted small d-block">PO Number:</span>
                         <strong class="text-dark">#{{ $debitNote->purchaseOrder?->po_number }}</strong>
                     </div>
+                    @if($debitNote->purchaseOrder?->invoice?->invoice_number)
+                        <div class="col-6">
+                            <span class="text-muted small d-block">Invoice No:</span>
+                            <strong class="text-dark font-monospace">{{ $debitNote->purchaseOrder->invoice->invoice_number }}</strong>
+                        </div>
+                    @endif
                     <div class="col-6">
                         <span class="text-muted small d-block">DDC Center:</span>
                         <strong class="text-dark">{{ $debitNote->ddc?->name }}</strong>

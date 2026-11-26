@@ -108,6 +108,62 @@ class AdcDebitNote extends Model
         return $this->hasOne(AdcCreditNote::class, 'adc_debit_note_id');
     }
 
+    public function purchaseOrders()
+    {
+        return $this->hasMany(PurchaseOrder::class, 'adc_order_id', 'adc_order_id');
+    }
+
+    /**
+     * Get the PurchaseOrder linked to this ADC Debit Note
+     */
+    public function getPurchaseOrderAttribute(): ?PurchaseOrder
+    {
+        // 1. Through items relation if loaded
+        if ($this->relationLoaded('items')) {
+            foreach ($this->items as $item) {
+                if ($item->relationLoaded('adcOrderItem') && $item->adcOrderItem?->relationLoaded('purchaseOrder') && $item->adcOrderItem->purchaseOrder) {
+                    return $item->adcOrderItem->purchaseOrder;
+                }
+                if ($item->adcOrderItem?->purchaseOrder) {
+                    return $item->adcOrderItem->purchaseOrder;
+                }
+                if ($item->adcOrderItem?->purchase_order_id) {
+                    $po = PurchaseOrder::find($item->adcOrderItem->purchase_order_id);
+                    if ($po) {
+                        return $po;
+                    }
+                }
+            }
+        }
+
+        // 2. Through order purchaseOrders relation if loaded
+        if ($this->relationLoaded('order') && $this->order?->relationLoaded('purchaseOrders')) {
+            $po = $this->order->purchaseOrders->firstWhere('seller_id', $this->seller_id) ?? $this->order->purchaseOrders->first();
+            if ($po) {
+                return $po;
+            }
+        }
+
+        // 3. Direct database lookup
+        if ($this->adc_order_id) {
+            $poQuery = PurchaseOrder::where('adc_order_id', $this->adc_order_id);
+            if ($this->seller_id) {
+                $poQuery->where('seller_id', $this->seller_id);
+            }
+            return $poQuery->first();
+        }
+
+        return null;
+    }
+
+    /**
+     * Get the PO Number linked to this ADC Debit Note
+     */
+    public function getPoNumberAttribute(): ?string
+    {
+        return $this->purchase_order?->po_number;
+    }
+
     public static function generateNumber(): string
     {
         $prefix = 'ADN/' . date('y') . '-' . (date('y') + 1) . '/';

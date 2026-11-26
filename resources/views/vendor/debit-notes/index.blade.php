@@ -56,7 +56,7 @@
                         <thead class="bg-light">
                             <tr>
                                 <th class="ps-3">DN Number</th>
-                                <th>PO Number</th>
+                                <th>PO & Invoice No.</th>
                                 <th>DDC Center</th>
                                 <th>Discrepancy Type</th>
                                 <th>Short / Damaged</th>
@@ -73,9 +73,12 @@
                                         <span class="d-block text-muted small">{{ $dn->created_at->format('d M Y, h:i A') }}</span>
                                     </td>
                                     <td>
-                                        <a href="{{ route('vendor.purchase-orders.show', $dn->purchase_order_id) }}" class="fw-semibold text-decoration-none">
+                                        <a href="{{ route('vendor.purchase-orders.show', $dn->purchase_order_id) }}" class="fw-bold text-primary font-monospace text-decoration-none d-block">
                                             #{{ $dn->purchaseOrder?->po_number }}
                                         </a>
+                                        @if($dn->purchaseOrder?->invoice?->invoice_number)
+                                            <span class="fw-bold text-dark font-monospace d-block">{{ $dn->purchaseOrder->invoice->invoice_number }}</span>
+                                        @endif
                                     </td>
                                     <td>{{ $dn->ddc?->name }}</td>
                                     <td>
@@ -134,7 +137,7 @@
                         <thead class="bg-light">
                             <tr>
                                 <th class="ps-3">DN Number</th>
-                                <th>Invoice No</th>
+                                <th>PO & Invoice No.</th>
                                 {{-- <th>ADC Store</th> --}}
                                 <th>Discrepancy Type</th>
                                 <th>Short / Damaged</th>
@@ -151,7 +154,26 @@
                                         <span class="d-block text-muted small">{{ $adn->created_at->format('d M Y, h:i A') }}</span>
                                     </td>
                                     <td>
-                                        <span class="fw-bold font-monospace text-dark">{{ $adn->invoice_number ?: ('#' . ($adn->order?->order_number ?? 'N/A')) }}</span>
+                                        @php
+                                            $po = $adn->purchase_order;
+                                            $poNum = $adn->po_number;
+                                            $invNum = $adn->invoice_number ?: ($adn->order?->order_number ? '#' . $adn->order->order_number : null);
+                                        @endphp
+                                        @if($poNum)
+                                            @if($po)
+                                                <a href="{{ route('vendor.purchase-orders.show', $po->id) }}" class="fw-bold text-decoration-none font-monospace d-block text-primary">
+                                                    #{{ $poNum }}
+                                                </a>
+                                            @else
+                                                <span class="fw-bold font-monospace d-block text-primary">#{{ $poNum }}</span>
+                                            @endif
+                                        @else
+                                            <span class="text-muted small d-block">PO: N/A</span>
+                                        @endif
+
+                                        @if($invNum)
+                                            <span class="fw-bold text-dark font-monospace d-block">{{ $invNum }}</span>
+                                        @endif
                                     </td>
                                     {{-- <td>{{ $adn->adc?->name ?? 'ADC #'.$adn->adc_id }}</td> --}}
                                     <td>

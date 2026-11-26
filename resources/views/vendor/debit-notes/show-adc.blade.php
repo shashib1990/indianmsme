@@ -36,6 +36,18 @@
             <div class="card-body">
                 <div class="row g-3 mb-3">
                     <div class="col-6">
+                        <span class="text-muted small d-block">PO Number:</span>
+                        @if($debitNote->purchase_order)
+                            <a href="{{ route('vendor.purchase-orders.show', $debitNote->purchase_order->id) }}" class="fw-bold text-primary font-monospace fs-14 text-decoration-none">
+                                #{{ $debitNote->po_number }}
+                            </a>
+                        @elseif($debitNote->po_number)
+                            <strong class="fw-bold text-dark font-monospace fs-14">#{{ $debitNote->po_number }}</strong>
+                        @else
+                            <span class="text-muted">N/A</span>
+                        @endif
+                    </div>
+                    <div class="col-6">
                         <span class="text-muted small d-block">Invoice No:</span>
                         <strong class="fw-bold text-dark font-monospace fs-14">{{ $debitNote->invoice_number ?: ('#' . ($debitNote->adcOrder?->order_number ?? 'N/A')) }}</strong>
                     </div>
