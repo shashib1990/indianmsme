@@ -19,5 +19,15 @@ class AdcWallet extends Model
     {
         return $this->belongsTo(ADC::class, 'adc_id');
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'adc_id');
+    }
+
+    public function adcProfile()
+    {
+        return $this->hasOne(AdcProfile::class, 'user_id', 'adc_id');
+    }
 }
 

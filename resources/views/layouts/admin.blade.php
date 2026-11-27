@@ -1214,16 +1214,16 @@
                     {{-- ========= REPORTS ========= --}}
                     <li class="menu-title mt-2">Reports</li>
                     <li class="nav-item">
-                        <a class="nav-link menu-arrow {{ request()->routeIs('admin.reports.*') ? '' : '' }}"
+                        <a class="nav-link menu-arrow {{ request()->routeIs('admin.reports.ddc.*') || request()->routeIs('admin.reports.adc.*') ? '' : 'collapsed' }}"
                             href="#sidebarProductWiseSaleReport" data-bs-toggle="collapse" role="button"
-                            aria-expanded="{{ request()->routeIs('admin.reports.*') ? 'true' : 'false' }}"
+                            aria-expanded="{{ request()->routeIs('admin.reports.ddc.*') || request()->routeIs('admin.reports.adc.*') ? 'true' : 'false' }}"
                             aria-controls="sidebarProductWiseSaleReport">
                             <span class="nav-icon">
                                 <iconify-icon icon="solar:chart-2-bold-duotone" class="text-primary"></iconify-icon>
                             </span>
                             <span class="nav-text fw-semibold">Product wise sale report</span>
                         </a>
-                        <div class="collapse {{ request()->routeIs('admin.reports.*') ? 'show' : '' }}"
+                        <div class="collapse {{ request()->routeIs('admin.reports.ddc.*') || request()->routeIs('admin.reports.adc.*') ? 'show' : '' }}"
                             id="sidebarProductWiseSaleReport">
                             <ul class="nav sub-navbar-nav">
                                 <li class="sub-nav-item">
@@ -1236,6 +1236,15 @@
                                 </li>
                             </ul>
                         </div>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.reports.adc-platform-fee.*') ? 'active' : '' }}"
+                            href="{{ route('admin.reports.adc-platform-fee.index') }}">
+                            <span class="nav-icon">
+                                <iconify-icon icon="solar:wallet-money-bold-duotone" class="text-info"></iconify-icon>
+                            </span>
+                            <span class="nav-text fw-semibold">Platform Deduction Fee for ADC</span>
+                        </a>
                     </li>
 
                     {{-- ========= DISCREPANCY DEBIT & CREDIT NOTES ========= --}}
@@ -1928,7 +1937,8 @@
                 { parent: 'System Settings', title: 'Google Gemini AI API Key & Model', url: "{{ route('admin.settings.gemini.index') }}", icon: 'solar:magic-stick-3-bold-duotone', keywords: 'gemini ai api key google invoice scanner' },
                 { parent: 'System Settings', title: 'Homepage Banners', url: "{{ route('admin.banners.index') }}", icon: 'solar:slider-minimalistic-bold-duotone', keywords: 'banners hero slider homepage image' },
                 { parent: 'Reports', title: 'DDC Sales Report', url: "{{ route('admin.reports.ddc.index') }}", icon: 'solar:chart-2-bold-duotone', keywords: 'ddc sales report pos paid product wise orders export excel csv' },
-                { parent: 'Reports', title: 'ADC Sales Report', url: "{{ route('admin.reports.adc.index') }}", icon: 'solar:chart-2-bold-duotone', keywords: 'adc sales report orders paid product wise export excel csv' }
+                { parent: 'Reports', title: 'ADC Sales Report', url: "{{ route('admin.reports.adc.index') }}", icon: 'solar:chart-2-bold-duotone', keywords: 'adc sales report orders paid product wise export excel csv' },
+                { parent: 'Reports', title: 'Platform Deduction Fee for ADC', url: "{{ route('admin.reports.adc-platform-fee.index') }}", icon: 'solar:wallet-money-bold-duotone', keywords: 'adc platform deduction fee daily charge wallet report export excel csv' }
             ];
 
             // 2. Dynamically Scrape any active sidebar links
