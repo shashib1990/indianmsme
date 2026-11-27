@@ -301,6 +301,10 @@ class AdcPlatformFeeReportController extends Controller
             'State',
             'Days Charged',
             'Daily Fee Rate (₹)',
+            'Taxable Value (₹)',
+            'IGST (₹)',
+            'CGST (₹)',
+            'SGST (₹)',
             'Monthly Amount (₹)',
             'Wallet Balance (₹)',
             'Status',
@@ -310,6 +314,10 @@ class AdcPlatformFeeReportController extends Controller
         $rowsData = [];
         $sumMonthlyAmount = 0;
         $sumDays = 0;
+        $sumTaxable = 0;
+        $sumIgst = 0;
+        $sumCgst = 0;
+        $sumSgst = 0;
 
         foreach ($items as $item) {
             $user = $item->user;
@@ -319,6 +327,10 @@ class AdcPlatformFeeReportController extends Controller
             $days = (int) $item->total_days;
             $sumMonthlyAmount += $amount;
             $sumDays += $days;
+            $sumTaxable += (float) ($item->taxable_value ?? 0);
+            $sumIgst += (float) ($item->igst_amount ?? 0);
+            $sumCgst += (float) ($item->cgst_amount ?? 0);
+            $sumSgst += (float) ($item->sgst_amount ?? 0);
 
             $calYear = (int) substr($item->month_year, 0, 4);
             $calMonth = (int) substr($item->month_year, 5, 2);
@@ -343,9 +355,13 @@ class AdcPlatformFeeReportController extends Controller
                 $user?->mobile ?? $profile?->official_phone ?? '—',
                 $user?->email ?? $profile?->official_email ?? '—',
                 $profile?->district ?? '—',
-                $profile?->state ?? '—',
+                $item->customer_state ?? $profile?->state ?? '—',
                 $days,
                 $dailyRate,
+                (float) ($item->taxable_value ?? 0),
+                (float) ($item->igst_amount ?? 0),
+                (float) ($item->cgst_amount ?? 0),
+                (float) ($item->sgst_amount ?? 0),
                 $amount,
                 $runningBalance,
                 $isActive,
@@ -381,10 +397,10 @@ class AdcPlatformFeeReportController extends Controller
         // Headers
         $sheet->fromArray($headersList, null, 'A1');
 
-        // Style Header
-        $sheet->getStyle('A1:O1')->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_WHITE));
-        $sheet->getStyle('A1:O1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF0D9488'); // teal-600
-        $sheet->getStyle('A1:O1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        // Style Header (A1 to T1)
+        $sheet->getStyle('A1:T1')->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_WHITE));
+        $sheet->getStyle('A1:T1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF0D9488'); // teal-600
+        $sheet->getStyle('A1:T1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         // Data Rows
         if (!empty($rowsData)) {
@@ -392,37 +408,46 @@ class AdcPlatformFeeReportController extends Controller
             $lastRow = count($rowsData) + 1;
 
             // Numeric Formats
-            $sheet->getStyle('K2:K' . $lastRow)->getNumberFormat()->setFormatCode('#,##0');
-            $sheet->getStyle('L2:N' . $lastRow)->getNumberFormat()->setFormatCode('#,##0.00');
+            $sheet->getStyle('L2:L' . $lastRow)->getNumberFormat()->setFormatCode('#,##0');
+            $sheet->getStyle('M2:S' . $lastRow)->getNumberFormat()->setFormatCode('#,##0.00');
 
             // Summary Totals Row
             $summaryRow = $lastRow + 2;
             $sheet->setCellValue('A' . $summaryRow, 'TOTAL');
             $sheet->setCellValue('B' . $summaryRow, count($rowsData) . ' Invoices');
-            $sheet->setCellValue('K' . $summaryRow, $sumDays);
-            $sheet->setCellValue('M' . $summaryRow, $sumMonthlyAmount);
+            $sheet->setCellValue('L' . $summaryRow, $sumDays);
+            $sheet->setCellValue('N' . $summaryRow, $sumTaxable);
+            $sheet->setCellValue('O' . $summaryRow, $sumIgst);
+            $sheet->setCellValue('P' . $summaryRow, $sumCgst);
+            $sheet->setCellValue('Q' . $summaryRow, $sumSgst);
+            $sheet->setCellValue('R' . $summaryRow, $sumMonthlyAmount);
 
-            $sheet->getStyle('A' . $summaryRow . ':O' . $summaryRow)->getFont()->setBold(true);
-            $sheet->getStyle('A' . $summaryRow . ':O' . $summaryRow)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFF1F5F9');
-            $sheet->getStyle('M' . $summaryRow)->getNumberFormat()->setFormatCode('#,##0.00');
+            $sheet->getStyle('A' . $summaryRow . ':T' . $summaryRow)->getFont()->setBold(true);
+            $sheet->getStyle('A' . $summaryRow . ':T' . $summaryRow)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFF1F5F9');
+            $sheet->getStyle('M' . $summaryRow . ':S' . $summaryRow)->getNumberFormat()->setFormatCode('#,##0.00');
         }
 
         $columnWidths = [
             'A' => 8,   // S.No
-            'B' => 18,  // Month
-            'C' => 24,  // ADC Name
-            'D' => 16,  // Adc Code
-            'E' => 16,  // Asc Code
-            'F' => 26,  // Company
-            'G' => 16,  // Phone
-            'H' => 26,  // Email
-            'I' => 18,  // District
-            'J' => 18,  // State
-            'K' => 16,  // Days Charged
-            'L' => 18,  // Daily Rate
-            'M' => 20,  // Monthly Amount
-            'N' => 22,  // Wallet Balance
-            'O' => 18,  // Status
+            'B' => 18,  // Invoice No.
+            'C' => 16,  // Month & Year
+            'D' => 24,  // ADC Name
+            'E' => 15,  // Adc Code
+            'F' => 15,  // Asc Code
+            'G' => 26,  // Company
+            'H' => 16,  // Phone
+            'I' => 26,  // Email
+            'J' => 18,  // District
+            'K' => 18,  // State
+            'L' => 14,  // Days Charged
+            'M' => 18,  // Daily Rate
+            'N' => 18,  // Taxable Value
+            'O' => 15,  // IGST
+            'P' => 15,  // CGST
+            'Q' => 15,  // SGST
+            'R' => 20,  // Monthly Amount
+            'S' => 20,  // Wallet Balance
+            'T' => 15,  // Status
         ];
 
         foreach ($columnWidths as $col => $w) {
@@ -559,6 +584,8 @@ class AdcPlatformFeeReportController extends Controller
             ->get(['id', 'adc_id', 'amount', 'type'])
             ->groupBy('adc_id');
 
+        $taxRate = 18.0;
+
         foreach ($items as $item) {
             $item->user = $users[$item->adc_id] ?? null;
             $item->profile = $item->user?->adcProfile ?? null;
@@ -569,21 +596,60 @@ class AdcPlatformFeeReportController extends Controller
 
             if (!$subForAdc) {
                 $item->running_balance = round($currentBal, 2);
-                continue;
+            } else {
+                $delta = 0.00;
+                foreach ($subForAdc as $sub) {
+                    if ($sub->id > $item->latest_wallet_id) {
+                        if ($sub->type === 'debit') {
+                            $delta += (float) $sub->amount;
+                        } elseif ($sub->type === 'credit') {
+                            $delta -= (float) $sub->amount;
+                        }
+                    }
+                }
+                $item->running_balance = round($currentBal + $delta, 2);
             }
 
-            $delta = 0.00;
-            foreach ($subForAdc as $sub) {
-                if ($sub->id > $item->latest_wallet_id) {
-                    if ($sub->type === 'debit') {
-                        $delta += (float) $sub->amount;
-                    } elseif ($sub->type === 'credit') {
-                        $delta -= (float) $sub->amount;
-                    }
+            // GST Calculations (18% inclusive)
+            $monthlyAmount = (float) $item->monthly_amount;
+            $taxableValue = round($monthlyAmount / (1 + ($taxRate / 100)), 2);
+            $taxAmount = round($monthlyAmount - $taxableValue, 2);
+
+            $profile = $item->profile;
+            $customerGstin = trim($profile?->gst_number ?? '');
+            $customerState = trim($profile?->state ?? '');
+            $customerStateCode = '';
+
+            if (!empty($customerGstin) && strlen($customerGstin) >= 2 && ctype_digit(substr($customerGstin, 0, 2))) {
+                $customerStateCode = substr($customerGstin, 0, 2);
+                if (empty($customerState)) {
+                    $customerState = $this->getStateNameFromCode($customerStateCode);
                 }
             }
 
-            $item->running_balance = round($currentBal + $delta, 2);
+            if (empty($customerStateCode) && !empty($customerState)) {
+                $customerStateCode = $this->getStateCode($customerState);
+            }
+
+            if (empty($customerStateCode)) {
+                $customerStateCode = '03'; // default
+                $customerState = $customerState ?: 'Punjab';
+            }
+
+            // Supplier State is Uttar Pradesh ('09')
+            $isSameState = ($customerStateCode === '09');
+
+            $cgst = $isSameState ? round($taxAmount / 2, 2) : 0.00;
+            $sgst = $isSameState ? round($taxAmount - $cgst, 2) : 0.00;
+            $igst = !$isSameState ? $taxAmount : 0.00;
+
+            $item->taxable_value = $taxableValue;
+            $item->igst_amount = $igst;
+            $item->cgst_amount = $cgst;
+            $item->sgst_amount = $sgst;
+            $item->is_same_state = $isSameState;
+            $item->customer_state = $customerState;
+            $item->customer_state_code = $customerStateCode;
         }
     }
 
