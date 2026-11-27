@@ -221,17 +221,21 @@
                     <thead>
                         <tr>
                             <th class="ps-3 text-center" style="width: 45px;">S.No</th>
-                            <th style="min-width: 140px;">Invoice No.</th>
+                            <th style="min-width: 130px;">Invoice No.</th>
                             <th>Billing Month</th>
                             <th>ADC Center Name</th>
                             <th>ADC Code</th>
                             <th>ASC Code</th>
-                            <th class="text-center">Days Charged</th>
+                            <th class="text-center">Days</th>
                             <th class="text-end">Daily Rate</th>
-                            <th class="text-end">Monthly Amount</th>
+                            <th class="text-end">Taxable Value</th>
+                            <th class="text-end">IGST</th>
+                            <th class="text-end">CGST</th>
+                            <th class="text-end">SGST</th>
+                            <th class="text-end">Monthly Total</th>
                             <th class="text-end">Wallet Balance</th>
                             <th class="text-center">Status</th>
-                            <th class="pe-3 text-center" style="width: 140px;">Invoice View</th>
+                            <th class="pe-3 text-center" style="width: 130px;">Invoice View</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -286,11 +290,23 @@
                                 </td>
                                 <td class="text-center">
                                     <span class="badge bg-light text-dark border px-2 py-1 fw-bold fs-12">
-                                        {{ $row->total_days }} Days
+                                        {{ $row->total_days }}
                                     </span>
                                 </td>
                                 <td class="text-end fw-semibold text-secondary">
                                     ₹{{ number_format($dailyRate, 2) }}
+                                </td>
+                                <td class="text-end fw-semibold text-slate-800">
+                                    ₹{{ number_format($row->taxable_value ?? 0, 2) }}
+                                </td>
+                                <td class="text-end {{ ($row->igst_amount ?? 0) > 0 ? 'fw-bold text-primary' : 'text-muted' }}">
+                                    {{ ($row->igst_amount ?? 0) > 0 ? ('₹' . number_format($row->igst_amount, 2)) : '—' }}
+                                </td>
+                                <td class="text-end {{ ($row->cgst_amount ?? 0) > 0 ? 'fw-bold text-primary' : 'text-muted' }}">
+                                    {{ ($row->cgst_amount ?? 0) > 0 ? ('₹' . number_format($row->cgst_amount, 2)) : '—' }}
+                                </td>
+                                <td class="text-end {{ ($row->sgst_amount ?? 0) > 0 ? 'fw-bold text-primary' : 'text-muted' }}">
+                                    {{ ($row->sgst_amount ?? 0) > 0 ? ('₹' . number_format($row->sgst_amount, 2)) : '—' }}
                                 </td>
                                 <td class="text-end">
                                     <span class="fw-bold text-danger fs-14">₹{{ number_format($monthlyAmount, 2) }}</span>
@@ -318,7 +334,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="12" class="text-center py-5">
+                                <td colspan="16" class="text-center py-5">
                                     <div class="text-muted">
                                         <iconify-icon icon="solar:bill-cross-bold-duotone" class="fs-48 text-muted mb-2"></iconify-icon>
                                         <p class="mb-1 fw-semibold fs-15">No Monthly Platform Fee Records Found</p>
