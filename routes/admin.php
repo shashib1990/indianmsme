@@ -382,6 +382,12 @@ Route::name('admin.')->group(function () {
             // ADC Sales Report (from adc_orders)
             Route::get('adc', [\App\Http\Controllers\Admin\AdcSalesReportController::class, 'index'])->name('adc.index')->middleware('permission:users.view');
             Route::get('adc/export', [\App\Http\Controllers\Admin\AdcSalesReportController::class, 'export'])->name('adc.export')->middleware('permission:users.view');
+
+            // ADC Platform Deduction Fee Report
+            Route::get('adc-platform-fee', [\App\Http\Controllers\Admin\AdcPlatformFeeReportController::class, 'index'])->name('adc-platform-fee.index')->middleware('permission:users.view');
+            Route::get('adc-platform-fee/export', [\App\Http\Controllers\Admin\AdcPlatformFeeReportController::class, 'export'])->name('adc-platform-fee.export')->middleware('permission:users.view');
+            Route::get('adc-platform-fee/invoice/{adc_id}/{month}', [\App\Http\Controllers\Admin\AdcPlatformFeeReportController::class, 'monthlyInvoice'])->name('adc-platform-fee.monthly-invoice')->middleware('permission:users.view');
+            Route::get('adc-platform-fee/{id}/invoice', [\App\Http\Controllers\Admin\AdcPlatformFeeReportController::class, 'invoice'])->name('adc-platform-fee.invoice')->middleware('permission:users.view');
         });
 
         // Seller Payments Dashboard
