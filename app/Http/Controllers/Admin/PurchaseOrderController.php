@@ -171,6 +171,14 @@ class PurchaseOrderController extends Controller
                     if ($remainingActiveCount === 0) {
                         $adcOrder->status = 'Cancelled';
                         $adcOrder->save();
+
+                        // When the whole order is cancelled, ensure full order amount is refunded
+                        $alreadyRefunded = (float) AdcWallet::where('adc_id', $adcOrder->adc_id)
+                            ->where('type', 'credit')
+                            ->where('description', 'like', "%{$adcOrder->order_number}%")
+                            ->sum('amount');
+                        $maxDueRefund = max(0, round((float) $adcOrder->total_amount - $alreadyRefunded, 2));
+                        $refundAmount = max($refundAmount, $maxDueRefund);
                     }
 
                     // Refund to ADC Wallet if paid via wallet
