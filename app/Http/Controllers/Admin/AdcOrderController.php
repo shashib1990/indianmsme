@@ -440,6 +440,16 @@ class AdcOrderController extends Controller
                 }
             }
 
+            // Ensure 100% of the paid order amount is refunded when order is cancelled
+            if ($order->payment_method === 'Wallet' || $order->payment_status === 'Paid') {
+                $alreadyRefunded = (float) AdcWallet::where('adc_id', $order->adc_id)
+                    ->where('type', 'credit')
+                    ->where('description', 'like', "%{$order->order_number}%")
+                    ->sum('amount');
+                $maxDueRefund = max(0, round((float) $order->total_amount - $alreadyRefunded, 2));
+                $refundAmount = max($refundAmount, $maxDueRefund);
+            }
+
             // Refund ADC Wallet
             if ($refundAmount > 0 && ($order->payment_method === 'Wallet' || $order->payment_status === 'Paid')) {
                 $adc = $order->adc;
